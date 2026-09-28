@@ -1,0 +1,60 @@
+specVersion: "4.0"
+metadata:
+  name: demo.fe
+type: application
+framework:
+  # Fiori elements for OData V4 (sap.fe) is part of SAPUI5, not of OpenUI5
+  name: SAPUI5
+  version: "1.136.21"
+  # The embedded abap2UI5 apps load whatever library their ABAP view names -
+  # the hello world app uses sap.ui.layout (SimpleForm). List every library
+  # your ABAP apps use, not only the ones the Fiori elements app uses itself.
+  libraries:
+    - name: sap.m
+    - name: sap.ui.core
+    - name: sap.fe.templates
+    - name: sap.ui.layout
+    - name: themelib_sap_horizon
+# The control comes from npm like any dependency; `ui5 serve` serves it
+# anyway, `ui5 build` copies it into dist/thirdparty/z2ui5/embed/ only when
+# it is named here. The abap2UI5 frontend is no part of the build: the
+# control loads it from the backend at run time.
+builder:
+  settings:
+    includeDependency:
+      - "@abap2ui5/embed-control"
+server:
+  customMiddleware:
+    # The OData V4 service of the Fiori elements app, answered from
+    # webapp/localService - metadata with the UI annotations, and the data.
+    # An app of your own talks to its RAP service instead.
+    - name: sap-fe-mockserver
+      beforeMiddleware: csp
+      configuration:
+        mountPath: /
+        services:
+          - urlPath: /odata/v4/customers
+            metadataPath: ./webapp/localService/metadata.xml
+            mockdataPath: ./webapp/localService/data
+            generateMockData: false
+        annotations: []
+    - name: same-origin-for-abap2ui5
+      afterMiddleware: compression
+      mountPath: /sap
+    # /sap/** goes to the abap2UI5 backend. Default: the transpiled abap2UI5
+    # running locally in Node (see README). For a real system set
+    # UI5_MIDDLEWARE_SIMPLE_PROXY_BASEURI (and user/password) in .env -
+    # .env.example lists them.
+    - name: ui5-middleware-simpleproxy
+      afterMiddleware: same-origin-for-abap2ui5
+      mountPath: /sap
+      configuration:
+        baseUri: http://localhost:3000/sap
+---
+specVersion: "4.0"
+kind: extension
+type: server-middleware
+metadata:
+  name: same-origin-for-abap2ui5
+middleware:
+  path: lib/sameOrigin.js

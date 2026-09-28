@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-// The example host app (examples/host-app) with three z2ui5.embed.Container
+// The freestyle example (examples/freestyle) with three z2ui5.embed.Container
 // controls - one bound to the host's model (#single), two side by side
 // (#left, #right) - all running Z2UI5_CL_UI5_APP_HI_WORLD on the backend.
 // Every test runs once per project in playwright.config.mjs (UI5 release).

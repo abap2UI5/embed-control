@@ -1,0 +1,30 @@
+[
+  {
+    "ID": "1000",
+    "Name": "Blue Harbor Trading",
+    "City": "Hamburg",
+    "Country": "DE",
+    "Email": "orders@blue-harbor.example"
+  },
+  {
+    "ID": "1001",
+    "Name": "Alpine Tools",
+    "City": "Innsbruck",
+    "Country": "AT",
+    "Email": "sales@alpine-tools.example"
+  },
+  {
+    "ID": "1002",
+    "Name": "Lakeside Foods",
+    "City": "Zurich",
+    "Country": "CH",
+    "Email": "hello@lakeside-foods.example"
+  },
+  {
+    "ID": "1003",
+    "Name": "Northwind Cycles",
+    "City": "Copenhagen",
+    "Country": "DK",
+    "Email": "service@northwind-cycles.example"
+  }
+]

@@ -5,8 +5,8 @@ name: publish
 #
 # To cut a release:
 #   1. bump "version" in packages/embed-control/package.json - and the
-#      example's range in examples/host-app/package.json when the new version
-#      leaves it (ci.yaml fails while the example does not use this package)
+#      examples' ranges in examples/*/package.json when the new version
+#      leaves them (ci.yaml fails while an example does not use this package)
 #   2. in packages/embed-control/CHANGELOG.md, move what is under
 #      "## Unreleased" under "## <version>"
 #   3. merge, then create a GitHub release with the tag v<version>

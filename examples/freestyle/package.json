@@ -1,8 +1,8 @@
 {
-  "name": "host-app",
+  "name": "freestyle",
   "version": "0.1.0",
   "private": true,
-  "description": "Example: a plain UI5 app that embeds abap2UI5 apps with @abap2ui5/embed-control",
+  "description": "Example: a UI5 freestyle app that embeds abap2UI5 apps with @abap2ui5/embed-control",
   "license": "MIT",
   "scripts": {
     "start": "ui5 serve --open index.html",
