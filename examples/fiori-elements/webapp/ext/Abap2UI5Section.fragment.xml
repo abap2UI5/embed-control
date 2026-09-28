@@ -1,0 +1,14 @@
+<!-- The custom section of the object page (manifest.json, "sections"): an
+     abap2UI5 app next to the sections the annotations make. The fragment is
+     bound to the customer on the page, and the customer's key goes to the
+     app as a startup parameter - the ABAP class reads it with
+     client->get( )-t_comp_params. -->
+<core:FragmentDefinition
+    xmlns:core="sap.ui.core"
+    xmlns:z2ui5="z2ui5.embed">
+    <z2ui5:Container
+        core:require="{ Section: 'demo/fe/ext/Abap2UI5Section' }"
+        app="{ path: 'ID', formatter: 'Section.app' }"
+        params="{ path: 'ID', targetType: 'any', formatter: 'Section.params' }"
+        height="420px"/>
+</core:FragmentDefinition>

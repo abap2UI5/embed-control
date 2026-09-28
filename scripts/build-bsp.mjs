@@ -1,8 +1,8 @@
-// Builds the branch abap2UI5/frontend-embed-control delivers: the example app
-// of this repository the way an app takes @abap2ui5/embed-control from npm -
-// as the UI5 project in app/, and built from it as the BSP Z2UI5_HOST, to
-// install with abapGit and try the control on a real system. No copy of the
-// abap2UI5 frontend in either: the control loads it from the system's
+// Builds the branch abap2UI5/frontend-embed-control delivers: the examples of
+// this repository the way apps take @abap2ui5/embed-control from npm - as UI5
+// projects, and the freestyle one built into the BSP Z2UI5_HOST, to install
+// with abapGit and try the control on a real system. No copy of the abap2UI5
+// frontend anywhere: the control loads it from the system's
 // /sap/bc/z2ui5?z2ui5-bundle, as in any other app.
 //
 //   ABAP2UI5_DIR=../abap2UI5 npm run bsp                  the control of this checkout
@@ -10,13 +10,18 @@
 //
 // The tree lands in the git-ignored out/standard/ and is everything the
 // branch carries:
-//   app/          examples/host-app as git has it, without ui5-1.71.yaml (the
-//                 second UI5 release of the e2e tests): a plain UI5 project
-//                 with the package as an npm dependency
-//   src/          the package and the BSP - what abapGit pulls: app/webapp
-//                 plus the control in thirdparty/z2ui5/embed/, where
-//                 `ui5 build` puts it in any app that names the package under
-//                 includeDependency. Neither is patched
+//   freestyle/       examples/freestyle as git has it, without ui5-1.71.yaml
+//                    (the second UI5 release of the e2e tests): a UI5
+//                    freestyle app with the package as an npm dependency
+//   fiori-elements/  examples/fiori-elements: a Fiori elements app with the
+//                    control in a custom section of its object page. No BSP
+//                    of it - a Fiori elements app needs its OData service,
+//                    which the example mocks and a system does not have
+//   src/             the package and the BSP - what abapGit pulls:
+//                    freestyle/webapp plus the control in
+//                    thirdparty/z2ui5/embed/, where `ui5 build` puts it in
+//                    any app that names the package under includeDependency.
+//                    Neither is patched
 //   .abapgit.xml, README.md (delivery/README.md), LICENSE
 // frontend_deploy.yaml writes it into frontend-embed-control's main as
 // result/standard, and the deliver workflow over there makes the branch of it.
@@ -28,7 +33,7 @@
 //               names, installed with npm like in any app - the delivery. So
 //               the branch carries the published package and never a state
 //               of main that npm does not have, and src/ has the control
-//               app/ gets with `npm install`.
+//               freestyle/ gets with `npm install`.
 //
 // The BSP is made by abap2UI5's own tools, the ones that build its frontend
 // BSP for abap2UI5/frontend, taken from the checkout ABAP2UI5_DIR names:
@@ -66,9 +71,22 @@ const NAME = "z2ui5_host";
 // this build has to follow instead of delivering a page that finds nothing
 const THIRDPARTY = "thirdparty/z2ui5/embed/";
 
-// the example, and what of it stays here: the 1.71 project of the e2e tests
-const EXAMPLE = "examples/host-app";
-const TESTS_ONLY = ["ui5-1.71.yaml"];
+// The examples, delivered under their names in examples/, without what of
+// them only this repository's tests use; the BSP is made of the first.
+const EXAMPLES = ["freestyle", "fiori-elements"];
+const TESTS_ONLY = { freestyle: ["ui5-1.71.yaml"] };
+
+// What delivery/README.md shows of the examples besides the three places
+// every one of them takes the package in (package.json, ui5.yaml,
+// manifest.json - checked for all): where each places the control. If one of
+// them moves, the README points at nothing - so the build fails instead.
+const SHOWN = {
+  freestyle: [["webapp/view/Main.view.xml", 'xmlns:z2ui5="z2ui5.embed"']],
+  "fiori-elements": [
+    ["webapp/manifest.json", '"template": "demo.fe.ext.Abap2UI5Section"'],
+    ["webapp/ext/Abap2UI5Section.fragment.xml", 'xmlns:z2ui5="z2ui5.embed"'],
+  ],
+};
 
 const workspace = join(root, "packages", "embed-control");
 const pkg = JSON.parse(readFileSync(join(workspace, "package.json"), "utf8"));
@@ -155,21 +173,38 @@ function run(command, commandArgs, cwd) {
 }
 const node = (nodeArgs, cwd) => run(process.execPath, nodeArgs, cwd);
 
-// app/: the example as git has it - so never a local .env, node_modules or
-// dist/ - without what only this repository's tests use
-function copyExample(app) {
-  const files = run("git", ["ls-files", "-z", "--", EXAMPLE], root)
+// An example as git has it - so never a local .env, node_modules or dist/ -
+// without what only this repository's tests use
+function copyExample(name, dest) {
+  const example = `examples/${name}`;
+  const files = run("git", ["ls-files", "-z", "--", example], root)
     .split("\0")
     .filter(Boolean);
   if (!files.length) {
-    throw new Error(`build-bsp: git has no file in ${EXAMPLE}`);
+    throw new Error(`build-bsp: git has no file in ${example}`);
   }
   for (const file of files) {
-    const path = relative(EXAMPLE, file);
-    if (TESTS_ONLY.includes(path)) continue;
-    mkdirSync(dirname(join(app, path)), { recursive: true });
-    cpSync(join(root, file), join(app, path));
+    const path = relative(example, file);
+    if ((TESTS_ONLY[name] || []).includes(path)) continue;
+    mkdirSync(dirname(join(dest, path)), { recursive: true });
+    cpSync(join(root, file), join(dest, path));
   }
+}
+
+// The places delivery/README.md shows of an example, one each
+function checkShown(name, dir) {
+  const { dependencies = {} } = JSON.parse(
+    readFileSync(join(dir, "package.json"), "utf8"),
+  );
+  if (!dependencies[pkg.name]) {
+    throw new Error(`build-bsp: ${pkg.name} is no dependency of ${name}/`);
+  }
+  mustContain(join(dir, "ui5.yaml"), `- "${pkg.name}"`);
+  mustContain(
+    join(dir, "webapp", "manifest.json"),
+    `"z2ui5.embed": "./${THIRDPARTY}"`,
+  );
+  for (const [file, text] of SHOWN[name]) mustContain(join(dir, file), text);
 }
 
 // The package the way any app gets it: npm install from the registry, in a
@@ -215,26 +250,10 @@ rmSync(out, { recursive: true, force: true });
 const work = mkdtempSync(join(tmpdir(), "embed-control-bsp-"));
 try {
   const tree = join(work, "standard");
-  const app = join(tree, "app");
-  copyExample(app);
-
-  // What delivery/README.md shows of app/, one place each - if one of them
-  // moves, the README would point at nothing
-  const { dependencies = {} } = JSON.parse(
-    readFileSync(join(app, "package.json"), "utf8"),
-  );
-  if (!dependencies[pkg.name]) {
-    throw new Error(`build-bsp: ${pkg.name} is no dependency of app/`);
+  for (const name of EXAMPLES) {
+    copyExample(name, join(tree, name));
+    checkShown(name, join(tree, name));
   }
-  mustContain(join(app, "ui5.yaml"), `- "${pkg.name}"`);
-  mustContain(
-    join(app, "webapp", "manifest.json"),
-    `"z2ui5.embed": "./${THIRDPARTY}"`,
-  );
-  mustContain(
-    join(app, "webapp", "view", "Main.view.xml"),
-    'xmlns:z2ui5="z2ui5.embed"',
-  );
 
   const control = fromNpm ? installFromNpm(work) : workspace;
   mustContain(join(control, "ui5.yaml"), `/${THIRDPARTY}: ./src/`);
@@ -245,7 +264,7 @@ try {
     recursive: true,
   });
   const webapp = join(work, "frontend", "app", "webapp");
-  cpSync(join(app, "webapp"), webapp, { recursive: true });
+  cpSync(join(tree, EXAMPLES[0], "webapp"), webapp, { recursive: true });
   cpSync(join(control, "src"), join(webapp, THIRDPARTY), { recursive: true });
   node([join(".github", "app2bsp", "run.js")], work);
 
@@ -332,7 +351,8 @@ try {
 }
 
 console.log(
-  `build-bsp: ${relative(root, out)}/ - app/ and BSP ${NAME.toUpperCase()}, ` +
+  `build-bsp: ${relative(root, out)}/ - ${EXAMPLES.map((e) => `${e}/`).join(", ")} ` +
+    `and BSP ${NAME.toUpperCase()}, ` +
     `${pkg.name}@${pkg.version} ` +
     (fromNpm ? "from npm" : "of this checkout"),
 );

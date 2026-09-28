@@ -1,4 +1,4 @@
-# Example: abap2UI5 inside a UI5 app
+# Example: abap2UI5 inside a UI5 freestyle app
 
 A plain UI5 app that runs abap2UI5 apps in `z2ui5.embed.Container`
 controls, with the control from npm:
@@ -48,9 +48,10 @@ system's URL and user there.
 
 The app is developed in
 [abap2UI5/embed-control](https://github.com/abap2UI5/embed-control) as
-`examples/host-app`, next to the package - there, `npm install` at the
+`examples/freestyle`, next to the package - there, `npm install` at the
 repository root links the package from `packages/embed-control`. Its
 delivery repository
 [abap2UI5/frontend-embed-control](https://github.com/abap2UI5/frontend-embed-control)
 carries it as this UI5 project and as the BSP `Z2UI5_HOST`, both with the
-control from npm.
+control from npm - next to the other example, the control in a custom
+section of a Fiori elements app.

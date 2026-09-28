@@ -1,14 +1,15 @@
 name: ci
 
-# check - lint, format, the consumer build of the example (the control has to
-#         land in dist/thirdparty/), the package contents, and the packed
-#         package built in an app of its own with UI5 CLI 3 and 4
+# check - lint, format, the consumer builds of both examples (the control
+#         has to land in dist/thirdparty/), the package contents, and the
+#         packed package built in an app of its own with UI5 CLI 3 and 4
 # bsp   - the tree abap2UI5/frontend-embed-control delivers
-#         (frontend_deploy.yaml): the example as UI5 project in app/ and as
-#         BSP, built and checked with abap2UI5's tools - a change that breaks
-#         it shows here, not in the delivery after the merge. Here with the
-#         control of this commit; the delivery takes it from npm
-# e2e   - the example app in a browser against a live abap2UI5 backend:
+#         (frontend_deploy.yaml): both examples as UI5 projects and the
+#         freestyle one as BSP, built and checked with abap2UI5's tools - a
+#         change that breaks it shows here, not in the delivery after the
+#         merge. Here with the control of this commit; the delivery takes it
+#         from npm
+# e2e   - both examples in a browser against a live abap2UI5 backend:
 #         abap2UI5 main, transpiled to JavaScript and served by its own
 #         express server (npm run express) - no SAP system involved. The
 #         control loads the frontend from that backend (?z2ui5-bundle), so
@@ -45,30 +46,35 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      # The example names the package by version range, as an app from the
+      # The examples name the package by version range, as an app from the
       # registry does, and npm links the workspace only while its version is
       # inside that range. Past it, npm installs the PUBLISHED version into
-      # the example without a word, and the build and the e2e test that
-      # instead of this commit. Raise the example's range with the version.
-      - name: The example uses this package, not a published one
+      # an example without a word, and the build and the e2e test that
+      # instead of this commit. Raise the examples' ranges with the version.
+      - name: The examples use this package, not a published one
         if: ${{ !cancelled() }}
         run: |
           test -L node_modules/@abap2ui5/embed-control
-          test ! -e examples/host-app/node_modules/@abap2ui5/embed-control
+          for example in examples/*/; do
+            test ! -e "${example}node_modules/@abap2ui5/embed-control"
+          done
       - run: npm run lint
         if: ${{ !cancelled() }}
       - run: npm run format:check
         if: ${{ !cancelled() }}
       - run: npm run build
         if: ${{ !cancelled() }}
-      # the consumer build: the control is copied into the app (includeDependency
-      # in the example's ui5.yaml), next to it and not under resources/
-      - name: The control is part of the built app
+      # the consumer build: the control is copied into each app
+      # (includeDependency in its ui5.yaml), next to it and not under
+      # resources/ - the Fiori elements app as much as the freestyle one
+      - name: The control is part of the built apps
         if: ${{ !cancelled() }}
         run: |
-          test -f examples/host-app/dist/thirdparty/z2ui5/embed/Container.js
-          test -f examples/host-app/dist/thirdparty/z2ui5/embed/Container.css
-          test ! -e examples/host-app/dist/resources
+          for example in examples/freestyle examples/fiori-elements; do
+            test -f "$example/dist/thirdparty/z2ui5/embed/Container.js"
+            test -f "$example/dist/thirdparty/z2ui5/embed/Container.css"
+            test ! -e "$example/dist/resources"
+          done
       - run: npm run pack:check
         if: ${{ !cancelled() }}
       # the tarball, installed into an app outside this workspace and built

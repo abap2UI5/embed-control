@@ -45,7 +45,7 @@ on:
     paths:
       # everything the tree is made of - but the control, which comes from
       # npm and arrives with a publish
-      - "examples/host-app/**"
+      - "examples/**"
       - "scripts/build-bsp.mjs"
       - "delivery/**"
       - "LICENSE"

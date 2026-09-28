@@ -83,14 +83,19 @@ class do not share state. Changing `app`, `endpoint` or `params` ends the
 running session and starts a new one; destroying the control ends it too.
 All three are ordinary properties, so they can be bound to your model.
 
-## Example
+## Examples
 
-A complete app that uses the package is in
+Two complete apps that use the package are in
 [abap2UI5/frontend-embed-control](https://github.com/abap2UI5/frontend-embed-control),
-on its branch `standard`: as a UI5 project (`app/`) that takes the package
-from npm, and as the BSP `Z2UI5_HOST` to try it on a system with a plain
-abapGit pull. Its README walks through the four places the package is wired
-in.
+on its branch `standard`, both taking the package from npm:
+
+- `freestyle/` - a UI5 freestyle app with three controls, also as the BSP
+  `Z2UI5_HOST` to try it on a system with a plain abapGit pull
+- `fiori-elements/` - a Fiori elements app with the control in a **custom
+  section of its object page**: the abap2UI5 app gets the key of the object
+  on the page as a parameter
+
+Its README walks through the places the package is wired in.
 
 ## Backend
 
@@ -108,6 +113,11 @@ GET  /sap/bc/z2ui5                abap2UI5's own page, unchanged
 An older abap2UI5 answers with its page; the control then fires
 `componentFailed` ("no abap2UI5 frontend at ...") instead of starting.
 
+**A host that routes by the URL hash** - a Fiori elements app, an app with a
+UI5 router - needs **the first abap2UI5 release after 1.145.0**. Its frontend
+knows it is embedded and leaves the hash to your app; 1.145.0 clears it after
+every roundtrip, and a Fiori elements object page goes back to its list.
+
 **The page and the service have to share an origin.** abap2UI5 rejects a
 POST whose `Origin` names another host than its own (its CSRF defense), and
 the control loads the frontend only from a path on this server - an
@@ -120,8 +130,8 @@ app's origin:
 - **`ui5 serve`** - a proxy middleware forwards `/sap` to the system. The
   proxy rewrites `Host` but passes the browser's `Origin` on, so it also has
   to drop `Origin` and `Referer`; the
-  [example app](https://github.com/abap2UI5/embed-control/tree/main/examples/host-app)
-  shows both pieces
+  [examples](https://github.com/abap2UI5/embed-control/tree/main/examples/freestyle)
+  show both pieces
 
 **Content-Security-Policy:** the frontend is a `<script src>` of your own
 origin, and every module in it is a function - nothing is evaluated from a
@@ -137,8 +147,9 @@ world app, for instance, needs `sap.ui.layout`.
 
 ## Supported UI5 versions
 
-The same floor as abap2UI5: OpenUI5 / SAPUI5 **1.71** and later. The example
-app is tested on 1.71 and 1.136.
+The same floor as abap2UI5: OpenUI5 / SAPUI5 **1.71** and later. The
+freestyle example is tested on 1.71 and 1.136, the Fiori elements example on
+SAPUI5 1.136.
 
 Your app's tooling: UI5 CLI 3 or 4 - the package's `ui5.yaml` is
 specVersion 3.0, and every release is built with both.
@@ -148,12 +159,13 @@ specVersion 3.0, and every release is built with both.
 - **One frontend per page**: the first control that starts decides which
   endpoint the frontend comes from; every control still sends its roundtrips
   to its own endpoint.
-- abap2UI5 was built to own the whole page. Until its embedded mode exists
-  ([backlog item](https://github.com/abap2UI5/abap2UI5/blob/main/backlog/items/embed-as-reuse-component.md)),
+- abap2UI5 was built to own the whole page. Its embedded mode leaves the
+  URL to your app (from the release after 1.145.0); the rest of it is still
+  to come
+  ([backlog item](https://github.com/abap2UI5/abap2UI5/blob/main/backlog/items/embed-as-reuse-component.md)):
   an embedded app still shows the global busy indicator during a roundtrip,
-  may set the document title and favicon when the ABAP app asks for it, takes
-  part in hash routing when the ABAP app opts into it, and renders its root
-  as `sap.m.App`.
+  may set the document title and favicon when the ABAP app asks for it, and
+  renders its root as `sap.m.App`.
 
 ## What is inside
 

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customers - Fiori elements with abap2UI5 inside</title>
+    <style>
+        html, body, body > div, #container, #container-uiarea {
+            height: 100%;
+        }
+    </style>
+    <!-- Nothing about abap2UI5 here either: the control's namespace is
+         registered in manifest.json, the control is placed by the custom
+         section in ext/. Key user changes stay in the session storage - there
+         is no layered repository behind this page. -->
+    <script
+        id="sap-ui-bootstrap"
+        src="resources/sap-ui-core.js"
+        data-sap-ui-theme="sap_horizon"
+        data-sap-ui-resource-roots='{
+            "demo.fe": "./"
+        }'
+        data-sap-ui-on-init="module:sap/ui/core/ComponentSupport"
+        data-sap-ui-compat-version="edge"
+        data-sap-ui-async="true"
+        data-sap-ui-flexibility-services='[{"connector": "SessionStorageConnector"}]'
+    ></script>
+</head>
+<body class="sapUiBody sapUiSizeCompact" id="content">
+    <div
+        data-sap-ui-component
+        data-name="demo.fe"
+        data-id="container"
+        data-settings='{"id" : "fe"}'
+        data-handle-validation="true"
+    ></div>
+</body>
+</html>

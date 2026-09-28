@@ -3,8 +3,10 @@
 Home of **[`@abap2ui5/embed-control`](packages/embed-control)**:
 a UI5 custom control, published on npm, that runs an
 [abap2UI5](https://github.com/abap2UI5/abap2UI5) app inside any UI5 app, plus
-an **[example app](examples/host-app)** that shows how to use it - delivered
-with the package from npm, as UI5 project and as BSP, to
+two example apps that show how to use it - a
+**[UI5 freestyle app](examples/freestyle)** and a
+**[Fiori elements app](examples/fiori-elements)** with the control in a custom
+section of its object page - delivered with the package from npm to
 [abap2UI5/frontend-embed-control](https://github.com/abap2UI5/frontend-embed-control).
 
 ```xml
@@ -21,18 +23,19 @@ How to use the package is in its [README](packages/embed-control/README.md)
 ```
 packages/embed-control/        the npm package - a UI5 CLI project of type "module"
   src/                           the control and its stylesheet
-examples/host-app/             a plain UI5 app using the package like any consumer
-test/e2e/                      Playwright tests of the example against a live backend
+examples/freestyle/            a UI5 freestyle app using the package like any consumer
+examples/fiori-elements/       a Fiori elements app with the control in a custom section
+test/e2e/                      Playwright tests of both examples against a live backend
 scripts/                       the consumer check, the release check and the delivery build
 delivery/                      the README of abap2UI5/frontend-embed-control
 ```
 
-The two workspaces are linked by npm: the example depends on
+The workspaces are linked by npm: each example depends on
 `@abap2ui5/embed-control@^0.1.0` exactly as an app from the registry
 would, and npm resolves it to `packages/embed-control` - as long as the
 package's version is inside that range. Past it, npm would quietly install
-the published version into the example instead; CI fails then, and the
-range goes up with the version.
+the published version into the examples instead; CI fails then, and the
+ranges go up with the version.
 
 ## The frontend is not here
 
@@ -49,11 +52,13 @@ A change the control needs from the frontend (an embedded mode, a new
 component setting, ...) is a pull request to abap2UI5; the control can rely
 on it once the abap2UI5 installations it targets have it.
 
-## Run the example
+## Run the examples
 
-It needs an abap2UI5 backend that answers `?z2ui5-bundle` (1.145.0 or
-later). Without an SAP system, run abap2UI5 transpiled to JavaScript in Node,
-from an abap2UI5 checkout (the first build takes a few minutes):
+They need an abap2UI5 backend that answers `?z2ui5-bundle` (1.145.0 or
+later), the Fiori elements one an abap2UI5 that leaves the URL hash to the
+page it is embedded in (the first release after 1.145.0 - its main has it).
+Without an SAP system, run abap2UI5 transpiled to JavaScript in Node, from an
+abap2UI5 checkout (the first build takes a few minutes):
 
 ```bash
 git clone https://github.com/abap2UI5/abap2UI5.git && cd abap2UI5
@@ -65,22 +70,25 @@ Then, here:
 
 ```bash
 npm install
-npm start                        # ui5 serve, opens the example
+npm start                        # the freestyle example
+npm run start:fe                 # the Fiori elements example, on its mock OData service
 ```
 
-Against a real system instead: copy `examples/host-app/.env.example` to
-`.env` and set the system's URL and user there.
+Against a real system instead: copy an example's `.env.example` to `.env`
+next to it and set the system's URL and user there. The Fiori elements
+example takes SAPUI5 from npm - Fiori elements for OData V4 is not part of
+OpenUI5 - so its first start downloads more.
 
 ## Checks
 
 | Command | |
 |---|---|
 | `npm run lint` / `npm run format:check` | ESLint and Prettier |
-| `npm run build` | `ui5 build` of the example - proves a consumer build takes the control into `dist/thirdparty/z2ui5/embed/` |
+| `npm run build` | `ui5 build` of both examples - proves a consumer build takes the control into `dist/thirdparty/z2ui5/embed/`, the Fiori elements app's too |
 | `npm run pack:check` | what `npm publish` would put into the package |
 | `npm run consumer:check` | the packed package, installed into an app of its own and built with UI5 CLI 3 and 4 |
-| `ABAP2UI5_DIR=../abap2UI5 npm run bsp` | the tree abap2UI5/frontend-embed-control delivers - the example as UI5 project and as BSP - into `out/standard/`, checked with abap2UI5's page invariants. With the control of this checkout; `-- --from-npm` takes it from the registry, as the delivery does |
-| `npx playwright test` | the example in a browser on UI5 1.136 and 1.71, against the backend on port 3000 (`PW_CHROMIUM_PATH` for an installed Chromium) |
+| `ABAP2UI5_DIR=../abap2UI5 npm run bsp` | the tree abap2UI5/frontend-embed-control delivers - both examples as UI5 projects, the freestyle one as BSP - into `out/standard/`, checked with abap2UI5's page invariants. With the control of this checkout; `-- --from-npm` takes it from the registry, as the delivery does |
+| `npx playwright test` | both examples in a browser against the backend on port 3000 - the freestyle one on UI5 1.136 and 1.71, the Fiori elements one on SAPUI5 1.136 (`PW_CHROMIUM_PATH` for an installed Chromium) |
 
 CI (`.github/workflows/ci.yaml`) runs all of them; its e2e job builds the
 backend from abap2UI5's default branch, so it tests the pair a user gets
@@ -93,9 +101,9 @@ A published npm version can never be replaced, so a release is a deliberate
 step:
 
 1. Bump `version` in `packages/embed-control/package.json`. When the new
-   version leaves the example's range (`^0.1.0` takes 0.1.x only), raise the
-   range in `examples/host-app/package.json` as well; `npm install` updates
-   the lockfile.
+   version leaves the examples' range (`^0.1.0` takes 0.1.x only), raise the
+   range in `examples/*/package.json` as well; `npm install` updates the
+   lockfile.
 2. In [`packages/embed-control/CHANGELOG.md`](packages/embed-control/CHANGELOG.md),
    move the entries under `## Unreleased` under `## <version>`.
 3. Merge, then create a GitHub release with the tag `v<version>`.
@@ -138,11 +146,13 @@ Then:
 [abap2UI5/frontend-embed-control](https://github.com/abap2UI5/frontend-embed-control)
 shows the example the way an app uses the package, on its branch `standard`:
 
-- `app/` - the example as a UI5 project, `@abap2ui5/embed-control` an npm
-  dependency: `examples/host-app` without what only the tests here use
-- `src/` - the same app as the BSP `Z2UI5_HOST`, with the control where
+- `freestyle/` and `fiori-elements/` - the examples as UI5 projects,
+  `@abap2ui5/embed-control` an npm dependency: `examples/*` without what
+  only the tests here use
+- `src/` - the freestyle app as the BSP `Z2UI5_HOST`, with the control where
   `ui5 build` puts it, to try the control on a real system with a plain
-  abapGit pull
+  abapGit pull (the Fiori elements app needs an OData service, which only
+  the example's mockserver has)
 
 Neither carries a copy of the abap2UI5 frontend, and the control in both is
 the **published** package: `scripts/build-bsp.mjs --from-npm` installs the
@@ -167,8 +177,11 @@ checks the tree and warns that nothing was delivered.
 What is still open is tracked in abap2UI5 as the
 [embed-as-reuse-component](https://github.com/abap2UI5/abap2UI5/blob/main/backlog/items/embed-as-reuse-component.md)
 backlog item: an embedded mode of the frontend that leaves page-wide things
-(busy indicator, title, favicon, hash, `sap.m.App` root) to the host app. The
-control forwards it once abap2UI5 has it.
+to the host app. The first part is there - the bundle marks the component
+embedded, and it leaves the URL hash alone (abap2UI5 after 1.145.0), which
+is what the Fiori elements example needs. Busy indicator, title, favicon
+and the `sap.m.App` root are still the frontend's; nothing in the control
+has to change when they follow.
 
 ## License
 

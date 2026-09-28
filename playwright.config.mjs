@@ -1,23 +1,26 @@
 import { defineConfig } from "@playwright/test";
 
-// The example app, driven in a browser against a live abap2UI5 backend - on
-// the UI5 release the example targets and on 1.71, the oldest one abap2UI5
-// (and so the control) supports.
+// Both examples, driven in a browser against a live abap2UI5 backend:
+//   freestyle        on the UI5 release the example targets and on 1.71, the
+//                    oldest one abap2UI5 (and so the control) supports
+//   fiori-elements   on SAPUI5 1.136 - Fiori elements for OData V4 is SAPUI5
+//                    only, and needs far more than 1.71
 //
 // The UI5 dev servers are started here. The backend is NOT: it has to be
-// running already where the example's proxy points - http://localhost:3000
+// running already where the examples' proxies point - http://localhost:3000
 // by default, the transpiled abap2UI5 from an abap2UI5 checkout
-// (`npm run express` there, see README), or any system set in
-// examples/host-app/.env.
+// (`npm run express` there, see README), or any system set in an example's
+// .env. The Fiori elements app's own OData service is a mockserver of its
+// dev server (examples/fiori-elements/ui5.yaml).
 //
 // PW_CHROMIUM_PATH runs a Chromium that is already installed instead of the
 // one `npx playwright install chromium` downloads.
-const serve = (config, port) => ({
-  command: `npm run serve --workspace examples/host-app -- --config ${config} --port ${port}`,
+const serve = (example, config, port, timeout) => ({
+  command: `npm run serve --workspace examples/${example} -- --config ${config} --port ${port}`,
   url: `http://localhost:${port}/index.html`,
   reuseExistingServer: !process.env.CI,
-  // the first start downloads the OpenUI5 libraries
-  timeout: 180_000,
+  // the first start downloads the UI5 libraries
+  timeout,
 });
 
 export default defineConfig({
@@ -34,13 +37,25 @@ export default defineConfig({
   projects: [
     {
       name: "ui5-1.136",
+      testMatch: "freestyle.spec.mjs",
       use: { baseURL: "http://localhost:8080" },
     },
     {
       name: "ui5-1.71",
+      testMatch: "freestyle.spec.mjs",
       use: { baseURL: "http://localhost:8081" },
       metadata: { query: "?sap-ui-theme=sap_fiori_3" },
     },
+    {
+      name: "fiori-elements",
+      testMatch: "fiori-elements.spec.mjs",
+      use: { baseURL: "http://localhost:8082" },
+    },
   ],
-  webServer: [serve("ui5.yaml", 8080), serve("ui5-1.71.yaml", 8081)],
+  webServer: [
+    serve("freestyle", "ui5.yaml", 8080, 180_000),
+    serve("freestyle", "ui5-1.71.yaml", 8081, 180_000),
+    // SAPUI5 with sap.fe and everything it needs is the biggest download
+    serve("fiori-elements", "ui5.yaml", 8082, 300_000),
+  ],
 });
