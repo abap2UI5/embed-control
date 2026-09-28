@@ -1,4 +1,4 @@
-# AGENTS.md — AI Assistant Guide for the abap2UI5 reuse custom control
+# AGENTS.md — AI Assistant Guide for the abap2UI5 embed control
 
 > This file follows the cross-tool AGENTS.md convention and is the single
 > agent instruction file of this repository. `CLAUDE.md` next to it is a
@@ -6,9 +6,9 @@
 
 ## What this repository is
 
-The source of the npm package **`@abap2ui5/reuse-custom-control`**
-(`packages/reuse-custom-control`): the UI5 custom control
-`z2ui5.reuse.Container`, which runs an abap2UI5 app - an ABAP class
+The source of the npm package **`@abap2ui5/embed-control`**
+(`packages/embed-control`): the UI5 custom control
+`z2ui5.embed.Container`, which runs an abap2UI5 app - an ABAP class
 implementing `z2ui5_if_app` - inside any UI5 app. Next to it an example app
 (`examples/host-app`) that consumes the package the way an app from the
 registry would, and Playwright tests (`test/e2e`) that drive that example
@@ -39,12 +39,15 @@ the generated `z2ui5_cl_ui5f_preload`; its only source is
 
 | Path | |
 |---|---|
-| `packages/reuse-custom-control/src/` | The control (`Container.js`) and its stylesheet |
-| `packages/reuse-custom-control/ui5.yaml` | UI5 CLI project of type `module`: `/thirdparty/z2ui5/reuse/` → `src/` |
-| `packages/reuse-custom-control/README.md` | The consumer documentation - what npm shows |
-| `examples/host-app/` | The example: a plain UI5 app, `includeDependency` and the `z2ui5.reuse` resourceRoot, `ui5-middleware-simpleproxy` to the backend, `lib/sameOrigin.js` for the backend's CSRF check |
+| `packages/embed-control/src/` | The control (`Container.js`) and its stylesheet |
+| `packages/embed-control/ui5.yaml` | UI5 CLI project of type `module`: `/thirdparty/z2ui5/embed/` → `src/` |
+| `packages/embed-control/README.md` | The consumer documentation - what npm shows |
+| `packages/embed-control/CHANGELOG.md` | Every release; the publish checks it |
+| `examples/host-app/` | The example: a plain UI5 app, `includeDependency` and the `z2ui5.embed` resourceRoot, `ui5-middleware-simpleproxy` to the backend, `lib/sameOrigin.js` for the backend's CSRF check |
 | `test/e2e/` | Playwright tests of the example |
-| `.github/workflows/` | `ci.yaml` (checks, consumer build, e2e against abap2UI5's default branch), `publish.yaml` (npm, on a GitHub release) |
+| `scripts/consumer-check.mjs` | The packed package in an app of its own, built with UI5 CLI 3 and 4 |
+| `scripts/release-check.mjs` | The gate before `npm publish`: tag, version, changelog and repository agree |
+| `.github/workflows/` | `ci.yaml` (checks, consumer builds, e2e against abap2UI5's default branch - on every pull request, every night, and before every publish), `publish.yaml` (npm, on a GitHub release) |
 
 ## Rules for `src/`
 
@@ -71,14 +74,27 @@ the generated `z2ui5_cl_ui5f_preload`; its only source is
   `params` replaces the component; nothing is patched into a running one.
 - **`thirdparty/`, not `resources/`.** An app deployed to an ABAP system
   answers every `<app>/resources/` path from the system's UI5; the control is
-  served and built under `thirdparty/z2ui5/reuse/` and registered with a
+  served and built under `thirdparty/z2ui5/embed/` and registered with a
   relative resourceRoot. Keep `ui5.yaml`, the consumer README and the
   example's `manifest.json` in step.
+- **`z2ui5/embed` is the backend's module, `z2ui5/embed/` this package's
+  namespace.** The bundle defines the module; the control's own modules live
+  below it. Never add a module named `z2ui5/embed` here, and a folder
+  `app/webapp/embed/` in abap2UI5 would collide with this namespace.
 - **No inline styles for descendants and no `eval`**: a host with a strict
   Content-Security-Policy must need nothing extra. Styles go into
-  `Container.css`, scoped under `.z2ui5ReuseContainer`.
+  `Container.css`, scoped under `.z2ui5EmbedContainer`.
 - A UI5 module id is case-sensitive and a wrong one only fails in the browser
   (`includeStylesheet`, not `includeStyleSheet`) - run the e2e tests.
+
+## Rules for the package
+
+- **The package's `ui5.yaml` stays at specVersion 3.0.** The consumer's UI5
+  CLI reads it, and UI5 CLI 3 refuses a dependency with 4.0.
+  `npm run consumer:check` builds the packed package with CLI 3 and 4.
+- **abap2UI5 1.145.0 is the backend floor** - the first release that answers
+  `?z2ui5-bundle`. The package README names it; raise it there when the
+  control starts to rely on something newer.
 
 ## Validation
 
@@ -87,6 +103,7 @@ npm ci
 npm run lint && npm run format:check
 npm run build          # ui5 build of the example - the control lands in dist/thirdparty/
 npm run pack:check     # package contents: ui5.yaml and src/ only
+npm run consumer:check # the tarball in an app of its own, built with UI5 CLI 3 and 4
 npx playwright test    # needs an abap2UI5 backend with ?z2ui5-bundle on :3000 - see README
 ```
 
@@ -95,4 +112,20 @@ All text files are LF-only, formatted with Prettier (`.prettierrc`).
 ## Publishing
 
 A GitHub release `v<version>` publishes the version in
-`packages/reuse-custom-control/package.json` (`publish.yaml`, `NPM_TOKEN`).
+`packages/embed-control/package.json` - by trusted publishing (OIDC, no
+token), after the whole CI passed on that commit (`publish.yaml` calls
+`ci.yaml`). The steps are in the README; the one-time setup is in the header
+of `publish.yaml`.
+
+- **Bump the example's range with the version** once the version leaves it
+  (`^0.1.0` takes 0.1.x only). Past the range npm installs the published
+  package into the example instead of linking the workspace; the check job
+  fails then.
+- **Every release has its section in `packages/embed-control/CHANGELOG.md`**,
+  and nothing stays under "Unreleased". `scripts/release-check.mjs` refuses
+  the publish otherwise, and a tag that does not name the version.
+- **`repository.url` names the repository the workflow runs in** - npm
+  refuses the provenance otherwise. A renamed repository needs package.json
+  and the Trusted Publisher entry on npmjs.com to follow.
+- Running `publish.yaml` by hand is a dry run. Never publish from a
+  developer machine except the one-time first version.

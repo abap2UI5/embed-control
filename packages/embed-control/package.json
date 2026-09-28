@@ -1,24 +1,25 @@
 {
-  "name": "@abap2ui5/reuse-custom-control",
+  "name": "@abap2ui5/embed-control",
   "version": "0.1.0",
-  "description": "Run abap2UI5 apps inside any UI5 app: a UI5 custom control that embeds an ABAP class implementing z2ui5_if_app",
+  "description": "Embed abap2UI5 apps in any UI5 app: a UI5 control that runs an ABAP class implementing z2ui5_if_app",
   "keywords": [
     "ui5",
     "openui5",
     "sapui5",
     "ui5-cc",
     "custom-control",
+    "embed",
     "abap",
     "abap2ui5"
   ],
-  "homepage": "https://github.com/abap2UI5/reuse-custom-control/tree/main/packages/reuse-custom-control#readme",
+  "homepage": "https://github.com/abap2UI5/reuse-custom-control/tree/main/packages/embed-control#readme",
   "bugs": {
     "url": "https://github.com/abap2UI5/reuse-custom-control/issues"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/abap2UI5/reuse-custom-control.git",
-    "directory": "packages/reuse-custom-control"
+    "directory": "packages/embed-control"
   },
   "license": "MIT",
   "files": [

@@ -1,7 +1,8 @@
 name: ci
 
 # check - lint, format, the consumer build of the example (the control has to
-#         land in dist/thirdparty/) and the package contents
+#         land in dist/thirdparty/), the package contents, and the packed
+#         package built in an app of its own with UI5 CLI 3 and 4
 # e2e   - the example app in a browser against a live abap2UI5 backend:
 #         abap2UI5 main, transpiled to JavaScript and served by its own
 #         express server (npm run express) - no SAP system involved. The
@@ -13,7 +14,14 @@ on:
   pull_request:
   push:
     branches: [main]
+  # abap2UI5 changes without a pull request here, and the e2e job tests
+  # against its current main - so everything runs every night as well, and a
+  # change there that breaks the control shows up the next morning
+  schedule:
+    - cron: "23 4 * * *"
   workflow_dispatch:
+  # publish.yaml runs all of it on the commit it publishes
+  workflow_call:
 
 permissions:
   contents: read
@@ -32,6 +40,16 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      # The example names the package by version range, as an app from the
+      # registry does, and npm links the workspace only while its version is
+      # inside that range. Past it, npm installs the PUBLISHED version into
+      # the example without a word, and the build and the e2e test that
+      # instead of this commit. Raise the example's range with the version.
+      - name: The example uses this package, not a published one
+        if: ${{ !cancelled() }}
+        run: |
+          test -L node_modules/@abap2ui5/embed-control
+          test ! -e examples/host-app/node_modules/@abap2ui5/embed-control
       - run: npm run lint
         if: ${{ !cancelled() }}
       - run: npm run format:check
@@ -43,10 +61,15 @@ jobs:
       - name: The control is part of the built app
         if: ${{ !cancelled() }}
         run: |
-          test -f examples/host-app/dist/thirdparty/z2ui5/reuse/Container.js
-          test -f examples/host-app/dist/thirdparty/z2ui5/reuse/Container.css
+          test -f examples/host-app/dist/thirdparty/z2ui5/embed/Container.js
+          test -f examples/host-app/dist/thirdparty/z2ui5/embed/Container.css
           test ! -e examples/host-app/dist/resources
       - run: npm run pack:check
+        if: ${{ !cancelled() }}
+      # the tarball, installed into an app outside this workspace and built
+      # with UI5 CLI 3 and 4 - what a consumer gets, which the example cannot
+      # show: it takes the package through the workspace link, on CLI 4 only
+      - run: npm run consumer:check
         if: ${{ !cancelled() }}
 
   e2e:

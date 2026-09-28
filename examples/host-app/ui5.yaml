@@ -14,13 +14,13 @@ framework:
     - name: sap.ui.layout
     - name: themelib_sap_horizon
 # The control comes from npm like any dependency; `ui5 serve` serves it
-# anyway, `ui5 build` copies it into dist/thirdparty/z2ui5/reuse/ only when
+# anyway, `ui5 build` copies it into dist/thirdparty/z2ui5/embed/ only when
 # it is named here. The abap2UI5 frontend is no part of the build: the
 # control loads it from the backend at run time.
 builder:
   settings:
     includeDependency:
-      - "@abap2ui5/reuse-custom-control"
+      - "@abap2ui5/embed-control"
 server:
   customMiddleware:
     - name: same-origin-for-abap2ui5

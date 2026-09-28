@@ -1,7 +1,7 @@
 {
-  "name": "reuse-custom-control-workspace",
+  "name": "embed-control-workspace",
   "private": true,
-  "description": "Workspace of @abap2ui5/reuse-custom-control: the npm package (packages/) and an example app that uses it (examples/)",
+  "description": "Workspace of @abap2ui5/embed-control: the npm package (packages/) and an example app that uses it (examples/)",
   "license": "MIT",
   "engines": {
     "node": ">=22"
@@ -13,7 +13,8 @@
   "scripts": {
     "start": "npm run start --workspace examples/host-app",
     "build": "npm run build --workspace examples/host-app",
-    "pack:check": "npm pack --dry-run --workspace packages/reuse-custom-control",
+    "pack:check": "npm pack --dry-run --workspace packages/embed-control",
+    "consumer:check": "node scripts/consumer-check.mjs",
     "lint": "eslint .",
     "format": "prettier --write \"**/*.{js,mjs,json}\"",
     "format:check": "prettier --check \"**/*.{js,mjs,json}\""
