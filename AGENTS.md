@@ -12,7 +12,9 @@ The source of the npm package **`@abap2ui5/embed-control`**
 implementing `z2ui5_if_app` - inside any UI5 app. Next to it an example app
 (`examples/host-app`) that consumes the package the way an app from the
 registry would, and Playwright tests (`test/e2e`) that drive that example
-against a live abap2UI5 backend.
+against a live abap2UI5 backend. The example is delivered, with the published
+package, to
+[abap2UI5/frontend-embed-control](https://github.com/abap2UI5/frontend-embed-control).
 
 **Language:** English for all code, comments, docs, commit messages, PRs.
 
@@ -43,13 +45,13 @@ the generated `z2ui5_cl_ui5f_preload`; its only source is
 | `packages/embed-control/ui5.yaml` | UI5 CLI project of type `module`: `/thirdparty/z2ui5/embed/` → `src/` |
 | `packages/embed-control/README.md` | The consumer documentation - what npm shows |
 | `packages/embed-control/CHANGELOG.md` | Every release; the publish checks it |
-| `examples/host-app/` | The example: a plain UI5 app, `includeDependency` and the `z2ui5.embed` resourceRoot, `ui5-middleware-simpleproxy` to the backend, `lib/sameOrigin.js` for the backend's CSRF check |
+| `examples/host-app/` | The example: a plain UI5 app, `includeDependency` and the `z2ui5.embed` resourceRoot, `ui5-middleware-simpleproxy` to the backend, `lib/sameOrigin.js` for the backend's CSRF check. Delivered as `app/` - its README is written for both places |
 | `test/e2e/` | Playwright tests of the example |
 | `scripts/consumer-check.mjs` | The packed package in an app of its own, built with UI5 CLI 3 and 4 |
 | `scripts/release-check.mjs` | The gate before `npm publish`: tag, version, changelog and repository agree |
-| `scripts/build-bsp.mjs` | The BSP abap2UI5/frontend-cc delivers - the example app with the control, built with abap2UI5's tools into `out/standard/` |
-| `delivery/README.md` | The README of abap2UI5/frontend-cc, on its `main` and its branch |
-| `.github/workflows/` | `ci.yaml` (checks, consumer builds, the BSP, e2e against abap2UI5's default branch - on every pull request, every night, and before every publish), `publish.yaml` (npm, on a GitHub release), `frontend_cc_deploy.yaml` (the BSP into abap2UI5/frontend-cc, on every change to what it is made of) |
+| `scripts/build-bsp.mjs` | The tree abap2UI5/frontend-embed-control delivers - the example as UI5 project (`app/`) and as BSP (`src/`), built with abap2UI5's tools into `out/standard/`; `--from-npm` takes the control from the registry |
+| `delivery/README.md` | The README of abap2UI5/frontend-embed-control, on its `main` and its branch |
+| `.github/workflows/` | `ci.yaml` (checks, consumer builds, the delivered tree, e2e against abap2UI5's default branch - on every pull request, every night, and before every publish), `publish.yaml` (npm, on a GitHub release, then the delivery), `frontend_deploy.yaml` (the tree into abap2UI5/frontend-embed-control, after a publish and on every change to the example, the build or its README) |
 
 ## Rules for `src/`
 
@@ -98,28 +100,48 @@ the generated `z2ui5_cl_ui5f_preload`; its only source is
   `?z2ui5-bundle`. The package README names it; raise it there when the
   control starts to rely on something newer.
 
-## Delivery: abap2UI5/frontend-cc
+## Delivery: abap2UI5/frontend-embed-control
 
-[abap2UI5/frontend-cc](https://github.com/abap2UI5/frontend-cc) delivers the
-example app as the BSP `Z2UI5_HOST` (its branch `standard`), to try the
-control on a real system with a plain abapGit pull. Everything in it comes
-from here: `scripts/build-bsp.mjs` builds the tree from
-`examples/host-app/webapp` and the control in `thirdparty/z2ui5/embed/`, with
-abap2UI5's BSP tools (`ABAP2UI5_DIR`, abap2UI5's main in CI), and
-`frontend_cc_deploy.yaml` writes it into frontend-cc's `main` as
-`result/standard`, where frontend-cc's `deliver` workflow makes the branch.
+[abap2UI5/frontend-embed-control](https://github.com/abap2UI5/frontend-embed-control)
+shows the example the way an app uses the package from npm, on its branch
+`standard`: `app/` is the example as a UI5 project, `src/` the same app as
+the BSP `Z2UI5_HOST`, to try the control on a real system with a plain
+abapGit pull. Everything in it comes from here: `scripts/build-bsp.mjs`
+builds the tree from `examples/host-app` and the control in
+`thirdparty/z2ui5/embed/`, with abap2UI5's BSP tools (`ABAP2UI5_DIR`,
+abap2UI5's main in CI), and `frontend_deploy.yaml` writes it into
+frontend-embed-control's `main` as `result/standard`, where the `deliver`
+workflow over there makes the branch.
 
-- **No frontend in the BSP.** The control loads it from the system, as in
+- **No frontend in the tree.** The control loads it from the system, as in
   any app - the branch is the example app and the control, nothing else.
-- **Never change the delivered tree in frontend-cc.** It takes no pull
-  requests except for its own docs and workflows; the app, the control, the
-  build and the README (`delivery/README.md`) are changed here.
+- **The delivered control is the published package.** The delivery builds
+  with `--from-npm`, which installs the version
+  `packages/embed-control/package.json` names from the registry - and only
+  from a commit whose `src/` and `ui5.yaml` are that published version. A
+  change to the control, and an example that needs it, reach
+  frontend-embed-control with the release that publishes them;
+  `publish.yaml` calls the delivery right after the publish. The
+  pull-request check (`ci.yaml`, job `bsp`) builds without `--from-npm`,
+  with the control of the commit.
+- **`app/` is `examples/host-app` as git has it**, without
+  `ui5-1.71.yaml` - a file the example gets only for the tests goes into
+  `TESTS_ONLY` in `build-bsp.mjs`. `delivery/README.md` walks through
+  `app/package.json`, `app/ui5.yaml`, `app/webapp/manifest.json` and
+  `app/webapp/view/Main.view.xml` and links them on the branch; the build
+  fails when one of them no longer has what the README shows. The example's
+  README is `app/README.md` as well - no links into the rest of this
+  repository.
+- **Never change the delivered tree in frontend-embed-control.** It takes no
+  pull requests except for its own docs and workflows; the app, the control,
+  the build and the README (`delivery/README.md`) are changed here.
 - **The guards in `build-bsp.mjs` are assumptions about abap2UI5's tools**
   (the short texts they write, the page paths bsp_rename touches). One that
   fails means the tools moved: follow them, do not loosen the guard.
-- The push needs the secret `ACTION_KEY_FRONTEND_CC`, the private half of a
-  deploy key with write access on frontend-cc. Without it the workflow builds
-  and checks the tree and warns that nothing was delivered.
+- The push needs the secret `ACTION_KEY_FRONTEND_EMBED_CONTROL`, the private
+  half of a deploy key with write access on frontend-embed-control. Without it
+  the workflow builds and checks the tree and warns that nothing was
+  delivered.
 
 ## Validation
 
@@ -129,7 +151,7 @@ npm run lint && npm run format:check
 npm run build          # ui5 build of the example - the control lands in dist/thirdparty/
 npm run pack:check     # package contents: ui5.yaml and src/ only
 npm run consumer:check # the tarball in an app of its own, built with UI5 CLI 3 and 4
-ABAP2UI5_DIR=../abap2UI5 npm run bsp   # the frontend-cc BSP, with abap2UI5's page checks
+ABAP2UI5_DIR=../abap2UI5 npm run bsp   # the frontend-embed-control tree, with abap2UI5's page checks
 npx playwright test    # needs an abap2UI5 backend with ?z2ui5-bundle on :3000 - see README
 ```
 
@@ -154,4 +176,5 @@ of `publish.yaml`.
   refuses the provenance otherwise. A renamed repository needs package.json
   and the Trusted Publisher entry on npmjs.com to follow.
 - Running `publish.yaml` by hand is a dry run. Never publish from a
-  developer machine except the one-time first version.
+  developer machine except the one-time first version (README, "The first
+  version").

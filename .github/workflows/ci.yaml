@@ -3,9 +3,11 @@ name: ci
 # check - lint, format, the consumer build of the example (the control has to
 #         land in dist/thirdparty/), the package contents, and the packed
 #         package built in an app of its own with UI5 CLI 3 and 4
-# bsp   - the BSP abap2UI5/frontend-cc delivers (frontend_cc_deploy.yaml),
-#         built and checked with abap2UI5's tools - a change that breaks it
-#         shows here, not in the delivery after the merge
+# bsp   - the tree abap2UI5/frontend-embed-control delivers
+#         (frontend_deploy.yaml): the example as UI5 project in app/ and as
+#         BSP, built and checked with abap2UI5's tools - a change that breaks
+#         it shows here, not in the delivery after the merge. Here with the
+#         control of this commit; the delivery takes it from npm
 # e2e   - the example app in a browser against a live abap2UI5 backend:
 #         abap2UI5 main, transpiled to JavaScript and served by its own
 #         express server (npm run express) - no SAP system involved. The
