@@ -9,11 +9,12 @@
 The source of the npm package **`@abap2ui5/embed-control`**
 (`packages/embed-control`): the UI5 custom control
 `z2ui5.embed.Container`, which runs an abap2UI5 app - an ABAP class
-implementing `z2ui5_if_app` - inside any UI5 app. Next to it two example
-apps that consume the package the way an app from the registry would - a UI5
-freestyle app (`examples/freestyle`) and a Fiori elements app with the
-control in a custom section of its object page (`examples/fiori-elements`) -
-and Playwright tests (`test/e2e`) that drive both against a live abap2UI5
+implementing `z2ui5_if_app` - inside any UI5 app. Next to it the examples
+that consume the package the way an app from the registry would - a UI5
+freestyle app (`examples/freestyle`), a Fiori elements app with the control
+in a custom section of its object page (`examples/fiori-elements`) and a
+generic UI Integration Card for SAP Build Work Zone (`examples/card`) - and
+Playwright tests (`test/e2e`) that drive them against a live abap2UI5
 backend. The examples are delivered, with the published package, to
 [abap2UI5/frontend-embed-control](https://github.com/abap2UI5/frontend-embed-control).
 
@@ -48,10 +49,11 @@ the generated `z2ui5_cl_ui5f_preload`; its only source is
 | `packages/embed-control/CHANGELOG.md` | Every release; the publish checks it |
 | `examples/freestyle/` | The freestyle example: a plain UI5 app, `includeDependency` and the `z2ui5.embed` resourceRoot, `ui5-middleware-simpleproxy` to the backend, `lib/sameOrigin.js` for the backend's CSRF check. Delivered as `freestyle/` and as the BSP - its README is written for both places |
 | `examples/fiori-elements/` | The Fiori elements example: SAPUI5, list report and object page on a mock OData V4 service (`@sap-ux/ui5-middleware-fe-mockserver`, `webapp/localService/`), the control in the object page's custom section (`webapp/ext/`). Delivered as `fiori-elements/` |
-| `test/e2e/` | Playwright tests of both examples, one spec file each |
+| `examples/card/` | The card example: a UI Integration Card of type `Component`, generic - the class it runs is a card parameter, the backend a card destination the host resolves (`webapp/Component.js`, `onCardReady`) - with `webapp/dt/Configuration.js` for the host's configuration editor and a preview page in `webapp/test/` that `ui5 build` leaves out. OpenUI5, the same `includeDependency`, resourceRoot and proxy as the freestyle app. Delivered as `card/` |
+| `test/e2e/` | Playwright tests of the examples, one spec file each |
 | `scripts/consumer-check.mjs` | The packed package in an app of its own, built with UI5 CLI 3 and 4 |
 | `scripts/release-check.mjs` | The gate before `npm publish`: tag, version, changelog and repository agree |
-| `scripts/build-bsp.mjs` | The tree abap2UI5/frontend-embed-control delivers - both examples as UI5 projects (`freestyle/`, `fiori-elements/`) and the freestyle one as BSP (`src/`), built with abap2UI5's tools into `out/standard/`; `--from-npm` takes the control from the registry |
+| `scripts/build-bsp.mjs` | The tree abap2UI5/frontend-embed-control delivers - the examples as UI5 projects (`freestyle/`, `fiori-elements/`, `card/`) and the freestyle one as BSP (`src/`), built with abap2UI5's tools into `out/standard/`; `--from-npm` takes the control from the registry |
 | `delivery/README.md` | The README of abap2UI5/frontend-embed-control, on its `main` and its branch |
 | `.github/workflows/` | `ci.yaml` (checks, consumer builds, the delivered tree, e2e against abap2UI5's default branch - on every pull request, every night, and before every publish), `publish.yaml` (npm, on a GitHub release, then the delivery), `frontend_deploy.yaml` (the tree into abap2UI5/frontend-embed-control, after a publish and on every change to the examples, the build or its README) |
 
@@ -106,9 +108,10 @@ the generated `z2ui5_cl_ui5f_preload`; its only source is
   bundle marks the component embedded (`componentData.embedded`, abap2UI5
   `Component.init`), and an embedded component leaves the URL hash to the
   host - 1.145.0 clears it after every roundtrip, which sends a Fiori
-  elements object page back to its list. The control passes the bundle's
-  component data through and sets no flag of its own. The package README,
-  the Fiori elements example's README and `delivery/README.md` say "the
+  elements object page back to its list, and takes SAP Build Work Zone off
+  the page a card sits on. The control passes the bundle's component data
+  through and sets no flag of its own. The package README, the READMEs of
+  the Fiori elements and the card example and `delivery/README.md` say "the
   first abap2UI5 release after 1.145.0" - name the version there once it
   is out.
 
@@ -116,8 +119,8 @@ the generated `z2ui5_cl_ui5f_preload`; its only source is
 
 [abap2UI5/frontend-embed-control](https://github.com/abap2UI5/frontend-embed-control)
 shows the examples the way apps use the package from npm, on its branch
-`standard`: `freestyle/` and `fiori-elements/` are the examples as UI5
-projects, `src/` the freestyle app as the BSP `Z2UI5_HOST`, to try the
+`standard`: `freestyle/`, `fiori-elements/` and `card/` are the examples as
+UI5 projects, `src/` the freestyle app as the BSP `Z2UI5_HOST`, to try the
 control on a real system with a plain abapGit pull. Everything in it comes
 from here: `scripts/build-bsp.mjs` builds the tree from `examples/*` and the
 control in `thirdparty/z2ui5/embed/`, with abap2UI5's BSP tools
@@ -140,7 +143,8 @@ into frontend-embed-control's `main` as `result/standard`, where the
   what only the tests here use (`ui5-1.71.yaml` - `TESTS_ONLY` in
   `build-bsp.mjs`). A new example goes into `EXAMPLES` there. Only the
   freestyle app becomes the BSP: a Fiori elements app needs its OData
-  service, which the example mocks and a system does not have.
+  service, which the example mocks and a system does not have, and a card
+  is deployed to its host.
   `delivery/README.md` walks through the package's three places in
   `freestyle/` and where each example places the control, linked on the
   branch; the build fails when one of them no longer has what the README

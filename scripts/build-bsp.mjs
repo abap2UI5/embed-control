@@ -17,6 +17,10 @@
 //                    control in a custom section of its object page. No BSP
 //                    of it - a Fiori elements app needs its OData service,
 //                    which the example mocks and a system does not have
+//   card/            examples/card: a UI Integration Card for SAP Build Work
+//                    Zone that runs any abap2UI5 app, its `ui5 build` output
+//                    the card. No BSP of it either - a card is deployed to
+//                    its host, not to the ABAP system
 //   src/             the package and the BSP - what abapGit pulls:
 //                    freestyle/webapp plus the control in
 //                    thirdparty/z2ui5/embed/, where `ui5 build` puts it in
@@ -73,7 +77,7 @@ const THIRDPARTY = "thirdparty/z2ui5/embed/";
 
 // The examples, delivered under their names in examples/, without what of
 // them only this repository's tests use; the BSP is made of the first.
-const EXAMPLES = ["freestyle", "fiori-elements"];
+const EXAMPLES = ["freestyle", "fiori-elements", "card"];
 const TESTS_ONLY = { freestyle: ["ui5-1.71.yaml"] };
 
 // What delivery/README.md shows of the examples besides the three places
@@ -85,6 +89,12 @@ const SHOWN = {
   "fiori-elements": [
     ["webapp/manifest.json", '"template": "demo.fe.ext.Abap2UI5Section"'],
     ["webapp/ext/Abap2UI5Section.fragment.xml", 'xmlns:z2ui5="z2ui5.embed"'],
+  ],
+  card: [
+    ["webapp/manifest.json", '"type": "Component"'],
+    ["webapp/manifest.json", '"destinations"'],
+    ["webapp/Component.js", 'resolveDestination("abap2UI5")'],
+    ["webapp/view/Card.view.xml", 'xmlns:z2ui5="z2ui5.embed"'],
   ],
 };
 

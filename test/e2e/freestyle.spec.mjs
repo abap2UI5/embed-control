@@ -53,6 +53,22 @@ test("the embedded app stays inside its container", async ({ page }) => {
   }
 });
 
+// sap.m.App - the frontend's root - and sap.m.Shell set height:100% on every
+// ancestor that has no height, up to <html>, unless they meet an element
+// marked as root content. The control marks its area, so the host's layout
+// above it stays the way the host made it.
+test("the embedded app leaves the host's layout alone", async ({ page }) => {
+  const heights = await container(page, "single").evaluate((el) => {
+    const set = [];
+    for (let ref = el.parentElement; ref; ref = ref.parentElement) {
+      if (ref.classList.contains("sapMPage")) break;
+      if (ref.style.height) set.push(`${ref.className}: ${ref.style.height}`);
+    }
+    return set;
+  });
+  expect(heights).toEqual([]);
+});
+
 // The endpoint is handed over as componentData.endpoint, which the frontend
 // reads itself since abap2UI5 2f93737 (#2791) and does not send on - so the
 // POST has to arrive at that path, with only the startup parameters in it.

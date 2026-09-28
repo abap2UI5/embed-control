@@ -14,12 +14,13 @@ session, wherever the host app places it:
 </mvc:View>
 ```
 
-The branch `standard` has two host apps:
+The branch `standard` has two host apps and a card:
 
 | Path | |
 |---|---|
 | [`freestyle/`](https://github.com/abap2UI5/frontend-embed-control/tree/standard/freestyle) | a UI5 freestyle app with three containers - the package is an npm dependency like any other |
 | [`fiori-elements/`](https://github.com/abap2UI5/frontend-embed-control/tree/standard/fiori-elements) | a Fiori elements app, list report and object page, with the control in a **custom section** of the object page - the abap2UI5 app gets the key of the object on the page |
+| [`card/`](https://github.com/abap2UI5/frontend-embed-control/tree/standard/card) | a **UI Integration Card** for SAP Build Work Zone that runs any abap2UI5 app - the class is a card parameter, the backend a card destination |
 | [`src/`](https://github.com/abap2UI5/frontend-embed-control/tree/standard/src) | the freestyle app as the BSP `Z2UI5_HOST`, with the control from npm where `ui5 build` puts it - to try it on a system with a plain abapGit pull |
 | `VERSION` | the commit of abap2UI5/embed-control and the version of `@abap2ui5/embed-control` the branch is built from |
 
@@ -72,7 +73,8 @@ every `<app>/resources/` path from the UI5 of the system.
 </mvc:View>
 ```
 
-or, in a Fiori elements app, in a custom section - [below](#in-a-fiori-elements-app-a-custom-section).
+or, in a Fiori elements app, in a custom section - [below](#in-a-fiori-elements-app-a-custom-section) -
+or in a card - [further below](#in-sap-build-work-zone-a-ui-integration-card).
 
 That is all a deployed app needs, as long as the page and abap2UI5 share an
 origin: the app served from the same system (BSP, launchpad), or an
@@ -135,11 +137,50 @@ to leave the hash to the page it is embedded in: **the first abap2UI5
 release after 1.145.0** does. An older one clears the hash after every
 roundtrip, and the object page goes back to the list.
 
+## In SAP Build Work Zone: a UI Integration Card
+
+The cards of SAP Build Work Zone are UI Integration Cards, and one of type
+`Component` runs a UI5 component of its own - here one with the control in
+its view. The card is generic: the class it runs is a card parameter, so an
+administrator places it on a page as often as needed and configures each
+one, the way an FLP tile names its class with `?app_start=`.
+[`card/webapp/manifest.json`](https://github.com/abap2UI5/frontend-embed-control/blob/standard/card/webapp/manifest.json)
+names a destination instead of a URL, and the class as a parameter:
+
+```json
+"sap.card": {
+  "type": "Component",
+  "configuration": {
+    "destinations": { "abap2UI5": { "name": "ABAP2UI5" } },
+    "parameters": { "app": { "value": "Z2UI5_CL_UI5_APP_HI_WORLD" } }
+  }
+}
+```
+
+[`card/webapp/Component.js`](https://github.com/abap2UI5/frontend-embed-control/blob/standard/card/webapp/Component.js)
+resolves the destination in `onCardReady` - Work Zone answers with a path of
+its own origin that it proxies to the system behind the BTP destination -
+and hands the class, the endpoint and every further parameter to the
+control in
+[`card/webapp/view/Card.view.xml`](https://github.com/abap2UI5/frontend-embed-control/blob/standard/card/webapp/view/Card.view.xml):
+
+```xml
+<z2ui5:Container app="{embed>/app}" endpoint="{embed>/endpoint}" params="{embed>/params}" height="{embed>/height}"/>
+```
+
+The further parameters reach the ABAP class as startup parameters,
+`client->get( )-t_comp_params` - one class, configured per card. Work Zone
+routes by the URL hash as well, so the card needs the same abap2UI5 as the
+Fiori elements app: the first release after 1.145.0.
+[`card/README.md`](https://github.com/abap2UI5/frontend-embed-control/blob/standard/card/README.md)
+lists the parameters and the way into Work Zone, and what to check on the
+first card.
+
 ## Run the examples
 
 ```bash
 git clone --branch standard https://github.com/abap2UI5/frontend-embed-control.git
-cd frontend-embed-control/freestyle      # or fiori-elements
+cd frontend-embed-control/freestyle      # or fiori-elements, or card
 npm install
 npm start                        # ui5 serve, /sap/** proxied to the backend
 ```
@@ -148,12 +189,15 @@ The proxy goes to `http://localhost:3000` by default - abap2UI5 transpiled
 to JavaScript and run in Node, no SAP system needed. For a real system, copy
 `.env.example` to `.env` and set the system's URL and user there. The
 READMEs of
-[`freestyle/`](https://github.com/abap2UI5/frontend-embed-control/blob/standard/freestyle/README.md)
-and
+[`freestyle/`](https://github.com/abap2UI5/frontend-embed-control/blob/standard/freestyle/README.md),
 [`fiori-elements/`](https://github.com/abap2UI5/frontend-embed-control/blob/standard/fiori-elements/README.md)
+and
+[`card/`](https://github.com/abap2UI5/frontend-embed-control/blob/standard/card/README.md)
 have both. The Fiori elements app answers its own OData service from mock
 data, and takes SAPUI5 from npm - Fiori elements for OData V4 is not part of
-OpenUI5. `npm run build` writes an app to deploy into `dist/`.
+OpenUI5. The card opens on a preview page: three cards and a stand-in for
+Work Zone. `npm run build` writes an app - or the card - to deploy into
+`dist/`.
 
 ## Install the BSP
 
@@ -165,8 +209,8 @@ OpenUI5. `npm run build` writes an app to deploy into `dist/`.
    package. It creates the BSP `Z2UI5_HOST` with the ICF nodes
    `/sap/bc/ui5_ui5/sap/z2ui5_host` and `/sap/bc/bsp/sap/z2ui5_host` -
    nothing else, and nothing shared with the `Z2UI5` BSP of
-   abap2UI5/frontend. abapGit reads `src/` only; `freestyle/` and
-   `fiori-elements/` stay out of the system.
+   abap2UI5/frontend. abapGit reads `src/` only; `freestyle/`,
+   `fiori-elements/` and `card/` stay out of the system.
 3. Activate the two ICF nodes in `SICF`.
 4. Open `/sap/bc/ui5_ui5/sap/z2ui5_host/index.html`.
 
@@ -187,7 +231,7 @@ BSP Z2UI5_HOST                             the host app
 
 The Fiori elements app has no BSP here: it needs its OData service, which
 the example mocks and a system does not have - an app of your own brings
-its RAP service.
+its RAP service. Neither has the card: a card is deployed to its host.
 
 ## Known limitations
 
@@ -199,6 +243,9 @@ its RAP service.
   the URL hash is the host's from the release after 1.145.0 on.
 - Custom controls from `Z2UI5_CCI`/`Z2UI5_CCC`: the bundle hands over their
   paths like abap2UI5's own page does; not tried yet.
+- The card is tried against a stand-in for Work Zone, not yet on a Work Zone
+  tenant: abap2UI5's Origin check behind the destination proxy is the first
+  thing to look at ("What to check on the first card" in `card/README.md`).
 - The host app's own `Component-preload.js` does not exist in a BSP pulled
   with abapGit (a page name may not contain a hyphen): UI5 answers the 404 by
   loading the host's few files one by one. An app deployed from its
@@ -216,7 +263,7 @@ its RAP service.
 
 | Content | Owned by |
 |---|---|
-| the examples, the build, this README | [abap2UI5/embed-control](https://github.com/abap2UI5/embed-control) - `examples/freestyle`, `examples/fiori-elements`, `scripts/build-bsp.mjs`, `delivery/README.md` |
+| the examples, the build, this README | [abap2UI5/embed-control](https://github.com/abap2UI5/embed-control) - `examples/freestyle`, `examples/fiori-elements`, `examples/card`, `scripts/build-bsp.mjs`, `delivery/README.md` |
 | the control | [abap2UI5/embed-control](https://github.com/abap2UI5/embed-control) - `packages/embed-control`, published to npm as `@abap2ui5/embed-control` |
 | the abap2UI5 frontend and `?z2ui5-bundle`, the BSP tooling | [abap2UI5/abap2UI5](https://github.com/abap2UI5/abap2UI5) - `app/webapp`, `z2ui5_cl_ui5_http_handler`, `tools/` |
 | `result/` on `main`, the branch | machine-written - a hand edit is overwritten by the next delivery |
