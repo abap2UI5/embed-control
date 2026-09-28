@@ -19,3 +19,7 @@ The first release.
   1.145.0 or later), and only from a path on the page's own server.
 - Served and built under `thirdparty/z2ui5/embed/`, so it is found in an app
   deployed to an ABAP system too. UI5 1.71 and later; UI5 CLI 3 and 4.
+- The control's area is the embedded app's root: `sap.m.App` and
+  `sap.m.Shell` stop there instead of setting `height: 100%` on every
+  ancestor up to `<html>` - the host's layout stays the host's, and a UI
+  Integration Card keeps the height of its content.

@@ -152,6 +152,15 @@ sap.ui.define(
         apiVersion: 2,
         render(rm, control) {
           rm.openStart("div", control);
+          // The app's root - sap.m.App, and sap.m.Shell in many abap2UI5
+          // views - walks up the DOM from itself and sets height:100% on
+          // every ancestor that has none, up to <html>, unless it meets an
+          // element marked as root content, the way sap.m.Shell and
+          // sap.ui.unified.SplitContainer mark theirs. Unmarked, the app
+          // reached through the control into the host's layout - a UI
+          // Integration Card grew to the height of the page. This area is
+          // the app's screen, so it is the root.
+          rm.attr("data-sap-ui-root-content", "true");
           rm.class("z2ui5EmbedContainer");
           rm.style("width", control.getWidth());
           rm.style("height", control.getHeight());
