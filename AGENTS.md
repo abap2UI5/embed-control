@@ -47,7 +47,9 @@ the generated `z2ui5_cl_ui5f_preload`; its only source is
 | `test/e2e/` | Playwright tests of the example |
 | `scripts/consumer-check.mjs` | The packed package in an app of its own, built with UI5 CLI 3 and 4 |
 | `scripts/release-check.mjs` | The gate before `npm publish`: tag, version, changelog and repository agree |
-| `.github/workflows/` | `ci.yaml` (checks, consumer builds, e2e against abap2UI5's default branch - on every pull request, every night, and before every publish), `publish.yaml` (npm, on a GitHub release) |
+| `scripts/build-bsp.mjs` | The BSP abap2UI5/frontend-cc delivers - the example app with the control, built with abap2UI5's tools into `out/standard/` |
+| `delivery/README.md` | The README of abap2UI5/frontend-cc, on its `main` and its branch |
+| `.github/workflows/` | `ci.yaml` (checks, consumer builds, the BSP, e2e against abap2UI5's default branch - on every pull request, every night, and before every publish), `publish.yaml` (npm, on a GitHub release), `frontend_cc_deploy.yaml` (the BSP into abap2UI5/frontend-cc, on every change to what it is made of) |
 
 ## Rules for `src/`
 
@@ -96,6 +98,29 @@ the generated `z2ui5_cl_ui5f_preload`; its only source is
   `?z2ui5-bundle`. The package README names it; raise it there when the
   control starts to rely on something newer.
 
+## Delivery: abap2UI5/frontend-cc
+
+[abap2UI5/frontend-cc](https://github.com/abap2UI5/frontend-cc) delivers the
+example app as the BSP `Z2UI5_HOST` (its branch `standard`), to try the
+control on a real system with a plain abapGit pull. Everything in it comes
+from here: `scripts/build-bsp.mjs` builds the tree from
+`examples/host-app/webapp` and the control in `thirdparty/z2ui5/embed/`, with
+abap2UI5's BSP tools (`ABAP2UI5_DIR`, abap2UI5's main in CI), and
+`frontend_cc_deploy.yaml` writes it into frontend-cc's `main` as
+`result/standard`, where frontend-cc's `deliver` workflow makes the branch.
+
+- **No frontend in the BSP.** The control loads it from the system, as in
+  any app - the branch is the example app and the control, nothing else.
+- **Never change the delivered tree in frontend-cc.** It takes no pull
+  requests except for its own docs and workflows; the app, the control, the
+  build and the README (`delivery/README.md`) are changed here.
+- **The guards in `build-bsp.mjs` are assumptions about abap2UI5's tools**
+  (the short texts they write, the page paths bsp_rename touches). One that
+  fails means the tools moved: follow them, do not loosen the guard.
+- The push needs the secret `ACTION_KEY_FRONTEND_CC`, the private half of a
+  deploy key with write access on frontend-cc. Without it the workflow builds
+  and checks the tree and warns that nothing was delivered.
+
 ## Validation
 
 ```bash
@@ -104,6 +129,7 @@ npm run lint && npm run format:check
 npm run build          # ui5 build of the example - the control lands in dist/thirdparty/
 npm run pack:check     # package contents: ui5.yaml and src/ only
 npm run consumer:check # the tarball in an app of its own, built with UI5 CLI 3 and 4
+ABAP2UI5_DIR=../abap2UI5 npm run bsp   # the frontend-cc BSP, with abap2UI5's page checks
 npx playwright test    # needs an abap2UI5 backend with ?z2ui5-bundle on :3000 - see README
 ```
 

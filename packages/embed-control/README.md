@@ -111,7 +111,7 @@ app's origin:
 - **`ui5 serve`** - a proxy middleware forwards `/sap` to the system. The
   proxy rewrites `Host` but passes the browser's `Origin` on, so it also has
   to drop `Origin` and `Referer`; the
-  [example app](https://github.com/abap2UI5/reuse-custom-control/tree/main/examples/host-app)
+  [example app](https://github.com/abap2UI5/embed-control/tree/main/examples/host-app)
   shows both pieces
 
 **Content-Security-Policy:** the frontend is a `<script src>` of your own
