@@ -21,6 +21,7 @@ packages/embed-control/        the npm package - a UI5 CLI project of type "modu
   src/                           the control and its stylesheet
 examples/host-app/             a plain UI5 app using the package like any consumer
 test/e2e/                      Playwright tests of the example against a live backend
+scripts/                       the consumer check and the release check - see Checks and Publish
 ```
 
 The two workspaces are linked by npm: the example depends on
@@ -84,10 +85,31 @@ without a pull request here, CI also runs every night.
 
 ## Publish
 
-Create a GitHub release. `publish.yaml` runs the checks and publishes the
-package with npm provenance. It needs the `NPM_TOKEN` secret of an npm user
-who may publish to the `@abap2ui5` scope; without it the job stops with a
-message instead of publishing.
+A published npm version can never be replaced, so a release is a deliberate
+step:
+
+1. Bump `version` in `packages/embed-control/package.json`. When the new
+   version leaves the example's range (`^0.1.0` takes 0.1.x only), raise the
+   range in `examples/host-app/package.json` as well; `npm install` updates
+   the lockfile.
+2. In [`packages/embed-control/CHANGELOG.md`](packages/embed-control/CHANGELOG.md),
+   move the entries under `## Unreleased` under `## <version>`.
+3. Merge, then create a GitHub release with the tag `v<version>`.
+
+`publish.yaml` runs the whole CI on that commit, e2e included, checks that
+tag, version, changelog and repository agree (`scripts/release-check.mjs`)
+and publishes by trusted publishing - no token, with npm provenance. Run by
+hand (Actions → publish → Run workflow), it is a dry run: everything except
+the publish.
+
+**The first version is published by hand**, because npm sets up trusted
+publishing only for a package that exists. A maintainer of the npm
+organisation `abap2ui5` runs `npm login` and
+`npm publish --workspace packages/embed-control --access public`, then points
+npmjs.com → `@abap2ui5/embed-control` → Settings → Trusted Publisher at this
+repository and `publish.yaml`. A release of a version that is on the registry
+already publishes nothing, so the GitHub release for that first version can
+follow as usual.
 
 ## Next steps
 

@@ -1,13 +1,39 @@
 name: publish
 
-# Publishes @abap2ui5/embed-control when a GitHub release is published.
-# The package version is the one in packages/embed-control/package.json
-# - bump it in the pull request that prepares the release, and tag the release
-# v<version>; the job refuses a tag that says something else.
+# Publishes @abap2ui5/embed-control when a GitHub release is published - by
+# trusted publishing, from a commit that has just passed the whole CI.
 #
-# npm needs NPM_TOKEN: a token of an npm user allowed to publish to the
-# @abap2ui5 scope. Without it the job stops with a message and publishes
-# nothing. --provenance links the published version to this workflow run.
+# To cut a release:
+#   1. bump "version" in packages/embed-control/package.json - and the
+#      example's range in examples/host-app/package.json when the new version
+#      leaves it (ci.yaml fails while the example does not use this package)
+#   2. in packages/embed-control/CHANGELOG.md, move what is under
+#      "## Unreleased" under "## <version>"
+#   3. merge, then create a GitHub release with the tag v<version>
+# scripts/release-check.mjs refuses a tag, version or changelog that
+# disagree before anything reaches the registry.
+#
+# Actions -> publish -> Run workflow is a dry run: the same CI and checks,
+# the tarball printed, nothing published.
+#
+# Trusted publishing (OIDC), set up like @abap2ui5/linter,
+# @abap2ui5/mcp-server and @abap2ui5/node-runtime: no NPM_TOKEN to leak or
+# rotate, and npm records provenance that ties the tarball to this run. npm
+# can set it up only for a package that exists, so the FIRST version is
+# published by hand, once, by a maintainer of the npm organisation abap2ui5:
+#
+#   npm login
+#   npm publish --workspace packages/embed-control --access public
+#
+# (no --provenance - npm generates it only from a supported CI). Then on
+# npmjs.com -> @abap2ui5/embed-control -> Settings -> Trusted Publisher ->
+# GitHub Actions: organisation abap2UI5, this repository, workflow file
+# publish.yaml, no environment. A release whose version is on the registry
+# already - the hand-published first one, a re-run - publishes nothing.
+#
+# The repository's name is part of that setup and of the provenance: after a
+# rename, repository.url in package.json and the Trusted Publisher entry have
+# to follow (the release check says so).
 
 on:
   release:
@@ -16,11 +42,18 @@ on:
 
 permissions:
   contents: read
-  id-token: write # npm provenance
+  id-token: write # trusted publishing and provenance
 
 jobs:
+  # everything ci.yaml runs - the checks, the packed package built with UI5
+  # CLI 3 and 4, the e2e against abap2UI5's main - on the commit to publish
+  ci:
+    uses: ./.github/workflows/ci.yaml
+
   publish:
+    needs: ci
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -29,27 +62,46 @@ jobs:
           cache: npm
           registry-url: https://registry.npmjs.org
 
-      - name: Check the token and the version
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          TAG: ${{ github.event.release.tag_name }}
-        run: |
-          if [ -z "$NODE_AUTH_TOKEN" ]; then
-            echo "::error::NPM_TOKEN is not set - nothing is published"
-            exit 1
-          fi
-          VERSION=$(node -p "require('./packages/embed-control/package.json').version")
-          if [ -n "$TAG" ] && [ "$TAG" != "v$VERSION" ]; then
-            echo "::error::release tag $TAG does not match package version $VERSION"
-            exit 1
-          fi
+      # Node 22 ships npm 10, which cannot publish through OIDC (11.5.1 can).
+      # Pinned, not @latest: this job holds the publishing identity. The same
+      # pin as abap2UI5/linter and abap2UI5/abap2UI5 - raise them together.
+      - name: Use an npm that can publish via OIDC
+        run: npm install -g npm@12.0.2
 
       - run: npm ci
-      - run: npm run lint
-      - run: npm run build
-      - run: npm run pack:check
 
-      - name: Publish
+      # Without a release (the dry run) there is no tag: then only the
+      # repository is checked
+      - name: Tag, version, changelog and repository agree
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish --workspace packages/embed-control --provenance --access public
+          TAG: ${{ github.event.release.tag_name }}
+        run: node scripts/release-check.mjs "$TAG"
+
+      - name: What goes into the package
+        run: npm run pack:check
+
+      - name: Is this version on the registry already?
+        id: registry
+        if: github.event_name == 'release'
+        run: |
+          NAME=$(node -p "require('./packages/embed-control/package.json').name")
+          VERSION=$(node -p "require('./packages/embed-control/package.json').version")
+          if npm view "$NAME@$VERSION" version > /dev/null 2>&1; then
+            echo "::notice::$NAME@$VERSION is on the registry already - nothing to publish"
+            echo "published=true" >> "$GITHUB_OUTPUT"
+          elif ! npm view "$NAME" name > /dev/null 2>&1; then
+            echo "::error::$NAME is not on the registry yet - the first version is published by hand, then trusted publishing is set up (see the header of publish.yaml)"
+            exit 1
+          else
+            echo "published=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # No token: npm trades the run's OIDC token for a short-lived one and
+      # attaches the provenance by itself
+      - name: Publish
+        if: github.event_name == 'release' && steps.registry.outputs.published == 'false'
+        run: npm publish --workspace packages/embed-control --access public
+
+      - name: Dry run
+        if: github.event_name != 'release'
+        run: echo "No release - everything ran except the publish."

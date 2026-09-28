@@ -42,9 +42,11 @@ the generated `z2ui5_cl_ui5f_preload`; its only source is
 | `packages/embed-control/src/` | The control (`Container.js`) and its stylesheet |
 | `packages/embed-control/ui5.yaml` | UI5 CLI project of type `module`: `/thirdparty/z2ui5/embed/` → `src/` |
 | `packages/embed-control/README.md` | The consumer documentation - what npm shows |
+| `packages/embed-control/CHANGELOG.md` | Every release; the publish checks it |
 | `examples/host-app/` | The example: a plain UI5 app, `includeDependency` and the `z2ui5.embed` resourceRoot, `ui5-middleware-simpleproxy` to the backend, `lib/sameOrigin.js` for the backend's CSRF check |
 | `test/e2e/` | Playwright tests of the example |
 | `scripts/consumer-check.mjs` | The packed package in an app of its own, built with UI5 CLI 3 and 4 |
+| `scripts/release-check.mjs` | The gate before `npm publish`: tag, version, changelog and repository agree |
 | `.github/workflows/` | `ci.yaml` (checks, consumer builds, e2e against abap2UI5's default branch - on every pull request, every night, and before every publish), `publish.yaml` (npm, on a GitHub release) |
 
 ## Rules for `src/`
@@ -110,4 +112,20 @@ All text files are LF-only, formatted with Prettier (`.prettierrc`).
 ## Publishing
 
 A GitHub release `v<version>` publishes the version in
-`packages/embed-control/package.json` (`publish.yaml`, `NPM_TOKEN`).
+`packages/embed-control/package.json` - by trusted publishing (OIDC, no
+token), after the whole CI passed on that commit (`publish.yaml` calls
+`ci.yaml`). The steps are in the README; the one-time setup is in the header
+of `publish.yaml`.
+
+- **Bump the example's range with the version** once the version leaves it
+  (`^0.1.0` takes 0.1.x only). Past the range npm installs the published
+  package into the example instead of linking the workspace; the check job
+  fails then.
+- **Every release has its section in `packages/embed-control/CHANGELOG.md`**,
+  and nothing stays under "Unreleased". `scripts/release-check.mjs` refuses
+  the publish otherwise, and a tag that does not name the version.
+- **`repository.url` names the repository the workflow runs in** - npm
+  refuses the provenance otherwise. A renamed repository needs package.json
+  and the Trusted Publisher entry on npmjs.com to follow.
+- Running `publish.yaml` by hand is a dry run. Never publish from a
+  developer machine except the one-time first version.
