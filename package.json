@@ -14,6 +14,7 @@
     "start": "npm run start --workspace examples/host-app",
     "build": "npm run build --workspace examples/host-app",
     "pack:check": "npm pack --dry-run --workspace packages/embed-control",
+    "consumer:check": "node scripts/consumer-check.mjs",
     "lint": "eslint .",
     "format": "prettier --write \"**/*.{js,mjs,json}\"",
     "format:check": "prettier --check \"**/*.{js,mjs,json}\""

@@ -44,6 +44,7 @@ the generated `z2ui5_cl_ui5f_preload`; its only source is
 | `packages/embed-control/README.md` | The consumer documentation - what npm shows |
 | `examples/host-app/` | The example: a plain UI5 app, `includeDependency` and the `z2ui5.embed` resourceRoot, `ui5-middleware-simpleproxy` to the backend, `lib/sameOrigin.js` for the backend's CSRF check |
 | `test/e2e/` | Playwright tests of the example |
+| `scripts/consumer-check.mjs` | The packed package in an app of its own, built with UI5 CLI 3 and 4 |
 | `.github/workflows/` | `ci.yaml` (checks, consumer build, e2e against abap2UI5's default branch), `publish.yaml` (npm, on a GitHub release) |
 
 ## Rules for `src/`
@@ -84,6 +85,15 @@ the generated `z2ui5_cl_ui5f_preload`; its only source is
 - A UI5 module id is case-sensitive and a wrong one only fails in the browser
   (`includeStylesheet`, not `includeStyleSheet`) - run the e2e tests.
 
+## Rules for the package
+
+- **The package's `ui5.yaml` stays at specVersion 3.0.** The consumer's UI5
+  CLI reads it, and UI5 CLI 3 refuses a dependency with 4.0.
+  `npm run consumer:check` builds the packed package with CLI 3 and 4.
+- **abap2UI5 1.145.0 is the backend floor** - the first release that answers
+  `?z2ui5-bundle`. The package README names it; raise it there when the
+  control starts to rely on something newer.
+
 ## Validation
 
 ```bash
@@ -91,6 +101,7 @@ npm ci
 npm run lint && npm run format:check
 npm run build          # ui5 build of the example - the control lands in dist/thirdparty/
 npm run pack:check     # package contents: ui5.yaml and src/ only
+npm run consumer:check # the tarball in an app of its own, built with UI5 CLI 3 and 4
 npx playwright test    # needs an abap2UI5 backend with ?z2ui5-bundle on :3000 - see README
 ```
 

@@ -88,7 +88,7 @@ All three are ordinary properties, so they can be bound to your model.
 The app runs on an ABAP system with
 [abap2UI5 installed](https://abap2ui5.github.io/docs/configuration/installation.html)
 and its HTTP service (by default `/sap/bc/z2ui5`) active. The control needs
-an abap2UI5 whose service answers **`?z2ui5-bundle`**:
+**abap2UI5 1.145.0 or later**, whose service answers `?z2ui5-bundle`:
 
 ```
 GET  /sap/bc/z2ui5?z2ui5-bundle   the frontend as one script - loaded once per page
@@ -96,7 +96,7 @@ POST /sap/bc/z2ui5                the roundtrips, one session per control
 GET  /sap/bc/z2ui5                abap2UI5's own page, unchanged
 ```
 
-An abap2UI5 without it answers with its page; the control then fires
+An older abap2UI5 answers with its page; the control then fires
 `componentFailed` ("no abap2UI5 frontend at ...") instead of starting.
 
 **The page and the service have to share an origin.** abap2UI5 rejects a
@@ -130,6 +130,9 @@ world app, for instance, needs `sap.ui.layout`.
 
 The same floor as abap2UI5: OpenUI5 / SAPUI5 **1.71** and later. The example
 app is tested on 1.71 and 1.136.
+
+Your app's tooling: UI5 CLI 3 or 4 - the package's `ui5.yaml` is
+specVersion 3.0, and every release is built with both.
 
 ## Known limitations
 

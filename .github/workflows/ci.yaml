@@ -1,7 +1,8 @@
 name: ci
 
 # check - lint, format, the consumer build of the example (the control has to
-#         land in dist/thirdparty/) and the package contents
+#         land in dist/thirdparty/), the package contents, and the packed
+#         package built in an app of its own with UI5 CLI 3 and 4
 # e2e   - the example app in a browser against a live abap2UI5 backend:
 #         abap2UI5 main, transpiled to JavaScript and served by its own
 #         express server (npm run express) - no SAP system involved. The
@@ -47,6 +48,11 @@ jobs:
           test -f examples/host-app/dist/thirdparty/z2ui5/embed/Container.css
           test ! -e examples/host-app/dist/resources
       - run: npm run pack:check
+        if: ${{ !cancelled() }}
+      # the tarball, installed into an app outside this workspace and built
+      # with UI5 CLI 3 and 4 - what a consumer gets, which the example cannot
+      # show: it takes the package through the workspace link, on CLI 4 only
+      - run: npm run consumer:check
         if: ${{ !cancelled() }}
 
   e2e:

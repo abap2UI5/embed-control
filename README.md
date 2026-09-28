@@ -44,9 +44,9 @@ on it once the abap2UI5 installations it targets have it.
 
 ## Run the example
 
-It needs an abap2UI5 backend that answers `?z2ui5-bundle`. Without an SAP
-system, run abap2UI5 transpiled to JavaScript in Node, from an abap2UI5
-checkout (the first build takes a few minutes):
+It needs an abap2UI5 backend that answers `?z2ui5-bundle` (1.145.0 or
+later). Without an SAP system, run abap2UI5 transpiled to JavaScript in Node,
+from an abap2UI5 checkout (the first build takes a few minutes):
 
 ```bash
 git clone https://github.com/abap2UI5/abap2UI5.git && cd abap2UI5
@@ -71,6 +71,7 @@ Against a real system instead: copy `examples/host-app/.env.example` to
 | `npm run lint` / `npm run format:check` | ESLint and Prettier |
 | `npm run build` | `ui5 build` of the example - proves a consumer build takes the control into `dist/thirdparty/z2ui5/embed/` |
 | `npm run pack:check` | what `npm publish` would put into the package |
+| `npm run consumer:check` | the packed package, installed into an app of its own and built with UI5 CLI 3 and 4 |
 | `npx playwright test` | the example in a browser on UI5 1.136 and 1.71, against the backend on port 3000 (`PW_CHROMIUM_PATH` for an installed Chromium) |
 
 CI (`.github/workflows/ci.yaml`) runs all of them; its e2e job builds the

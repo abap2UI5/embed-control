@@ -8,7 +8,11 @@
 # would never be found there. The app registers the namespace with a relative
 # resourceRoot ("z2ui5.embed": "./thirdparty/z2ui5/embed/"), which holds in a
 # standalone page and in the launchpad alike.
-specVersion: "4.0"
+#
+# 3.0, not 4.0: this file is read by the CONSUMER's UI5 CLI, and UI5 CLI 3
+# refuses a dependency with specVersion 4.0. Nothing below needs more than
+# 3.0; npm run consumer:check builds the packed package with CLI 3 and 4.
+specVersion: "3.0"
 type: module
 metadata:
   name: "@abap2ui5/embed-control"
