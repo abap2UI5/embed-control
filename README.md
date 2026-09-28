@@ -3,7 +3,9 @@
 Home of **[`@abap2ui5/embed-control`](packages/embed-control)**:
 a UI5 custom control, published on npm, that runs an
 [abap2UI5](https://github.com/abap2UI5/abap2UI5) app inside any UI5 app, plus
-an **[example app](examples/host-app)** that shows how to use it.
+an **[example app](examples/host-app)** that shows how to use it - delivered
+with the package from npm, as UI5 project and as BSP, to
+[abap2UI5/frontend-embed-control](https://github.com/abap2UI5/frontend-embed-control).
 
 ```xml
 <mvc:View xmlns:mvc="sap.ui.core.mvc" xmlns:z2ui5="z2ui5.embed">
@@ -21,8 +23,8 @@ packages/embed-control/        the npm package - a UI5 CLI project of type "modu
   src/                           the control and its stylesheet
 examples/host-app/             a plain UI5 app using the package like any consumer
 test/e2e/                      Playwright tests of the example against a live backend
-scripts/                       the consumer check, the release check and the BSP build
-delivery/                      the README of abap2UI5/frontend-cc
+scripts/                       the consumer check, the release check and the delivery build
+delivery/                      the README of abap2UI5/frontend-embed-control
 ```
 
 The two workspaces are linked by npm: the example depends on
@@ -77,7 +79,7 @@ Against a real system instead: copy `examples/host-app/.env.example` to
 | `npm run build` | `ui5 build` of the example - proves a consumer build takes the control into `dist/thirdparty/z2ui5/embed/` |
 | `npm run pack:check` | what `npm publish` would put into the package |
 | `npm run consumer:check` | the packed package, installed into an app of its own and built with UI5 CLI 3 and 4 |
-| `ABAP2UI5_DIR=../abap2UI5 npm run bsp` | the example as the BSP abap2UI5/frontend-cc delivers, into `out/standard/`, checked with abap2UI5's page invariants |
+| `ABAP2UI5_DIR=../abap2UI5 npm run bsp` | the tree abap2UI5/frontend-embed-control delivers - the example as UI5 project and as BSP - into `out/standard/`, checked with abap2UI5's page invariants. With the control of this checkout; `-- --from-npm` takes it from the registry, as the delivery does |
 | `npx playwright test` | the example in a browser on UI5 1.136 and 1.71, against the backend on port 3000 (`PW_CHROMIUM_PATH` for an installed Chromium) |
 
 CI (`.github/workflows/ci.yaml`) runs all of them; its e2e job builds the
@@ -99,37 +101,66 @@ step:
 3. Merge, then create a GitHub release with the tag `v<version>`.
 
 `publish.yaml` runs the whole CI on that commit, e2e included, checks that
-tag, version, changelog and repository agree (`scripts/release-check.mjs`)
-and publishes by trusted publishing - no token, with npm provenance. Run by
-hand (Actions → publish → Run workflow), it is a dry run: everything except
-the publish.
+tag, version, changelog and repository agree (`scripts/release-check.mjs`),
+publishes by trusted publishing - no token, with npm provenance - and then
+delivers the example with the new version to
+[abap2UI5/frontend-embed-control](#delivery-to-abap2ui5frontend-embed-control).
+Run by hand (Actions → publish → Run workflow), it is a dry run: everything
+except the publish and the delivery.
 
-**The first version is published by hand**, because npm sets up trusted
-publishing only for a package that exists. A maintainer of the npm
-organisation `abap2ui5` runs `npm login` and
-`npm publish --workspace packages/embed-control --access public`, then points
-npmjs.com → `@abap2ui5/embed-control` → Settings → Trusted Publisher at this
-repository and `publish.yaml`. A release of a version that is on the registry
-already publishes nothing, so the GitHub release for that first version can
-follow as usual.
+### The first version
 
-## Delivery to abap2UI5/frontend-cc
+npm sets up trusted publishing only for a package that exists, so the first
+version goes out by hand, once - by a maintainer of the npm organisation
+`abap2ui5`, from a clean checkout of `main` whose CI is green:
 
-To try the control on a real system without any UI5 tooling,
-[abap2UI5/frontend-cc](https://github.com/abap2UI5/frontend-cc) delivers the
-example app as the BSP `Z2UI5_HOST`: pull its branch `standard` with abapGit.
-It carries the example and the control, and no copy of the abap2UI5 frontend.
+```bash
+npm ci
+node scripts/release-check.mjs v0.1.0   # tag, version and changelog agree
+npm run pack:check                      # README, LICENSE, package.json, ui5.yaml, src/
+npm login
+npm publish --workspace packages/embed-control --access public
+```
 
-The branch is built here. On every change to what it is made of,
-`frontend_cc_deploy.yaml` runs `scripts/build-bsp.mjs` with abap2UI5's BSP
-tools and writes the tree into frontend-cc's `main` as `result/standard`;
-frontend-cc's `deliver` workflow makes the branch of it.
+Then:
+
+1. npmjs.com → `@abap2ui5/embed-control` → Settings → Trusted Publisher →
+   GitHub Actions: organisation `abap2UI5`, repository `embed-control`,
+   workflow `publish.yaml`, no environment. From now on `publish.yaml`
+   publishes.
+2. Create the GitHub release `v0.1.0` on that commit. `publish.yaml` finds
+   0.1.0 on the registry and publishes nothing, but delivers the example to
+   abap2UI5/frontend-embed-control - with the deploy key of the
+   [delivery](#delivery-to-abap2ui5frontend-embed-control) set up by then.
+
+## Delivery to abap2UI5/frontend-embed-control
+
+[abap2UI5/frontend-embed-control](https://github.com/abap2UI5/frontend-embed-control)
+shows the example the way an app uses the package, on its branch `standard`:
+
+- `app/` - the example as a UI5 project, `@abap2ui5/embed-control` an npm
+  dependency: `examples/host-app` without what only the tests here use
+- `src/` - the same app as the BSP `Z2UI5_HOST`, with the control where
+  `ui5 build` puts it, to try the control on a real system with a plain
+  abapGit pull
+
+Neither carries a copy of the abap2UI5 frontend, and the control in both is
+the **published** package: `scripts/build-bsp.mjs --from-npm` installs the
+version `packages/embed-control/package.json` names from the registry.
+`frontend_deploy.yaml` builds the tree with abap2UI5's BSP tools and writes
+it into frontend-embed-control's `main` as `result/standard`; the `deliver`
+workflow over there makes the branch of it. It runs after every publish, on
+every change to the example, the build or `delivery/README.md`, and once a
+month - and delivers only from a commit whose control is the published one:
+while main has changes to `src/` or `ui5.yaml` that no release carries yet,
+its example may already need them, so it waits for that release.
 
 **One-time setup:** the push needs a deploy key. Create a key pair
-(`ssh-keygen -t ed25519 -N "" -f frontend-cc`), add the public half to
-frontend-cc under Settings → Deploy keys with write access, and the private
-half here as the Actions secret `ACTION_KEY_FRONTEND_CC`. Until then the
-workflow builds and checks the tree and warns that nothing was delivered.
+(`ssh-keygen -t ed25519 -N "" -f frontend-embed-control`), add the public
+half to frontend-embed-control under Settings → Deploy keys with write
+access, and the private half here as the Actions secret
+`ACTION_KEY_FRONTEND_EMBED_CONTROL`. Until then the workflow builds and
+checks the tree and warns that nothing was delivered.
 
 ## Next steps
 

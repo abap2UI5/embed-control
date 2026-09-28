@@ -83,6 +83,15 @@ class do not share state. Changing `app`, `endpoint` or `params` ends the
 running session and starts a new one; destroying the control ends it too.
 All three are ordinary properties, so they can be bound to your model.
 
+## Example
+
+A complete app that uses the package is in
+[abap2UI5/frontend-embed-control](https://github.com/abap2UI5/frontend-embed-control),
+on its branch `standard`: as a UI5 project (`app/`) that takes the package
+from npm, and as the BSP `Z2UI5_HOST` to try it on a system with a plain
+abapGit pull. Its README walks through the four places the package is wired
+in.
+
 ## Backend
 
 The app runs on an ABAP system with
