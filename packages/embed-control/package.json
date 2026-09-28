@@ -12,13 +12,13 @@
     "abap",
     "abap2ui5"
   ],
-  "homepage": "https://github.com/abap2UI5/reuse-custom-control/tree/main/packages/embed-control#readme",
+  "homepage": "https://github.com/abap2UI5/embed-control/tree/main/packages/embed-control#readme",
   "bugs": {
-    "url": "https://github.com/abap2UI5/reuse-custom-control/issues"
+    "url": "https://github.com/abap2UI5/embed-control/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/abap2UI5/reuse-custom-control.git",
+    "url": "git+https://github.com/abap2UI5/embed-control.git",
     "directory": "packages/embed-control"
   },
   "license": "MIT",
