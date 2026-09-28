@@ -18,6 +18,8 @@ export default [
       // the abap2UI5 checkout the e2e job builds its backend from
       ".abap2ui5/**",
       "**/dist/**",
+      // the BSP scripts/build-bsp.mjs writes - generated pages
+      "out/**",
       "playwright-report/**",
       "test-results/**",
     ],

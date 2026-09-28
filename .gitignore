@@ -5,3 +5,4 @@ dist/
 test-results/
 playwright-report/
 .abap2ui5/
+out/
