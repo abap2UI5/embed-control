@@ -7,7 +7,7 @@
       "version": "0.1.0"
     },
     "title": "abap2UI5 inside a UI5 app",
-    "description": "Example host app of @abap2ui5/reuse-custom-control"
+    "description": "Example host app of @abap2ui5/embed-control"
   },
   "sap.ui": {
     "technology": "UI5",
@@ -27,7 +27,7 @@
       }
     },
     "resourceRoots": {
-      "z2ui5.reuse": "./thirdparty/z2ui5/reuse/"
+      "z2ui5.embed": "./thirdparty/z2ui5/embed/"
     },
     "contentDensities": {
       "compact": true,

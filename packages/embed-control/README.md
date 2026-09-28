@@ -1,4 +1,4 @@
-# @abap2ui5/reuse-custom-control
+# @abap2ui5/embed-control
 
 Run [abap2UI5](https://github.com/abap2UI5/abap2UI5) apps inside any UI5 app.
 
@@ -8,7 +8,7 @@ such an app into **your** UI5 app as an ordinary control, next to your own
 controls:
 
 ```xml
-<mvc:View xmlns:mvc="sap.ui.core.mvc" xmlns:z2ui5="z2ui5.reuse">
+<mvc:View xmlns:mvc="sap.ui.core.mvc" xmlns:z2ui5="z2ui5.embed">
   <z2ui5:Container app="Z2UI5_CL_UI5_APP_HI_WORLD" height="400px"/>
 </mvc:View>
 ```
@@ -20,7 +20,7 @@ version of that backend, and your app never carries a copy of it.
 ## Install
 
 ```bash
-npm install @abap2ui5/reuse-custom-control
+npm install @abap2ui5/embed-control
 ```
 
 Then two entries in your app. `ui5.yaml` - so `ui5 build` copies the control
@@ -30,18 +30,18 @@ into your app (`ui5 serve` serves it anyway):
 builder:
   settings:
     includeDependency:
-      - "@abap2ui5/reuse-custom-control"
+      - "@abap2ui5/embed-control"
 ```
 
 `manifest.json` - where the control's namespace lives:
 
 ```json
 "sap.ui5": {
-  "resourceRoots": { "z2ui5.reuse": "./thirdparty/z2ui5/reuse/" }
+  "resourceRoots": { "z2ui5.embed": "./thirdparty/z2ui5/embed/" }
 }
 ```
 
-The build puts it into `dist/thirdparty/z2ui5/reuse/` and your deployment
+The build puts it into `dist/thirdparty/z2ui5/embed/` and your deployment
 takes it along like every other file of the app. Not under `resources/`: an
 app deployed to an ABAP system answers every `<app>/resources/` path from the
 UI5 library of the system. The relative resource root holds in a standalone
@@ -56,7 +56,7 @@ and any number of apps can carry their own copy.
 In an XML view, as above, or in code:
 
 ```js
-sap.ui.require(["z2ui5/reuse/Container"], (Container) => {
+sap.ui.require(["z2ui5/embed/Container"], (Container) => {
   new Container({
     app: "ZCL_MY_ABAP2UI5_APP",
     params: { customer: "4711" },
@@ -147,9 +147,9 @@ app is tested on 1.71 and 1.136.
 
 | Path | |
 |---|---|
-| `src/Container.js` | The control, `z2ui5.reuse.Container` |
+| `src/Container.js` | The control, `z2ui5.embed.Container` |
 | `src/Container.css` | Its stylesheet, loaded by the control |
-| `ui5.yaml` | Serves `src/` under `/thirdparty/z2ui5/reuse/` |
+| `ui5.yaml` | Serves `src/` under `/thirdparty/z2ui5/embed/` |
 
 ## License
 

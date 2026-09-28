@@ -2,7 +2,7 @@
   "name": "host-app",
   "version": "0.1.0",
   "private": true,
-  "description": "Example: a plain UI5 app that embeds abap2UI5 apps with @abap2ui5/reuse-custom-control",
+  "description": "Example: a plain UI5 app that embeds abap2UI5 apps with @abap2ui5/embed-control",
   "license": "MIT",
   "scripts": {
     "start": "ui5 serve --open index.html",
@@ -10,7 +10,7 @@
     "build": "ui5 build --clean-dest"
   },
   "dependencies": {
-    "@abap2ui5/reuse-custom-control": "^0.1.0"
+    "@abap2ui5/embed-control": "^0.1.0"
   },
   "devDependencies": {
     "@ui5/cli": "^4.0.69",

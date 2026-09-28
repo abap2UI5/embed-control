@@ -43,8 +43,8 @@ jobs:
       - name: The control is part of the built app
         if: ${{ !cancelled() }}
         run: |
-          test -f examples/host-app/dist/thirdparty/z2ui5/reuse/Container.js
-          test -f examples/host-app/dist/thirdparty/z2ui5/reuse/Container.css
+          test -f examples/host-app/dist/thirdparty/z2ui5/embed/Container.js
+          test -f examples/host-app/dist/thirdparty/z2ui5/embed/Container.css
           test ! -e examples/host-app/dist/resources
       - run: npm run pack:check
         if: ${{ !cancelled() }}

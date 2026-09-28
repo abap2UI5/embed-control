@@ -1,12 +1,12 @@
 import { test, expect } from "@playwright/test";
 
-// The example host app (examples/host-app) with three z2ui5.reuse.Container
+// The example host app (examples/host-app) with three z2ui5.embed.Container
 // controls - one bound to the host's model (#single), two side by side
 // (#left, #right) - all running Z2UI5_CL_UI5_APP_HI_WORLD on the backend.
 // Every test runs once per project in playwright.config.mjs (UI5 release).
 
 const container = (page, id) =>
-  page.locator(`.z2ui5ReuseContainer[id$='--${id}']`);
+  page.locator(`.z2ui5EmbedContainer[id$='--${id}']`);
 const postButtons = (page) => page.getByRole("button", { name: "Post" });
 
 test.beforeEach(async ({ page }, testInfo) => {
@@ -64,7 +64,7 @@ test("endpoint and params reach the backend", async ({ page }) => {
     () =>
       new Promise((resolve, reject) => {
         sap.ui.require(
-          ["z2ui5/reuse/Container"],
+          ["z2ui5/embed/Container"],
           (Container) => {
             const host = document.createElement("div");
             document.body.prepend(host);
@@ -109,8 +109,8 @@ test("the frontend comes from the backend, in one request", async ({
 
   expect(requests.sort()).toEqual([
     "/sap/bc/z2ui5?z2ui5-bundle",
-    "/thirdparty/z2ui5/reuse/Container.css",
-    "/thirdparty/z2ui5/reuse/Container.js",
+    "/thirdparty/z2ui5/embed/Container.css",
+    "/thirdparty/z2ui5/embed/Container.js",
   ]);
 });
 
@@ -129,7 +129,7 @@ test("an endpoint on another origin loads no code", async ({ page }) => {
     const reason = await page.evaluate(
       (endpoint) =>
         new Promise((resolve) => {
-          sap.ui.require(["z2ui5/reuse/Container"], (Container) => {
+          sap.ui.require(["z2ui5/embed/Container"], (Container) => {
             const host = document.createElement("div");
             document.body.appendChild(host);
             new Container({

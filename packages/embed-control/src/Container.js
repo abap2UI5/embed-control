@@ -1,6 +1,6 @@
-// z2ui5.reuse.Container - runs an abap2UI5 app inside any UI5 app.
+// z2ui5.embed.Container - runs an abap2UI5 app inside any UI5 app.
 //
-//   <mvc:View xmlns:mvc="sap.ui.core.mvc" xmlns:z2ui5="z2ui5.reuse">
+//   <mvc:View xmlns:mvc="sap.ui.core.mvc" xmlns:z2ui5="z2ui5.embed">
 //     <z2ui5:Container app="Z2UI5_CL_UI5_APP_HI_WORLD" height="400px"/>
 //   </mvc:View>
 //
@@ -51,8 +51,8 @@ sap.ui.define(
     // a strict Content-Security-Policy (no 'unsafe-inline') needs nothing
     // extra for it.
     includeStylesheet(
-      sap.ui.require.toUrl("z2ui5/reuse/Container.css"),
-      "z2ui5-reuse-container-css",
+      sap.ui.require.toUrl("z2ui5/embed/Container.css"),
+      "z2ui5-embed-container-css",
     );
 
     // The frontend is loaded once per page - UI5 has one z2ui5 namespace -
@@ -67,6 +67,12 @@ sap.ui.define(
     // an abap2UI5 without the bundle, defines no such module: the script
     // either does not run (HTML under nosniff) or runs into nothing, and the
     // require below fails.
+    //
+    // z2ui5/embed is the bundle's module, not this package's: this control
+    // lives below it, in z2ui5/embed/ - the namespace the app maps to its
+    // thirdparty/ folder. So when the bundle did not define the module, the
+    // require asks for thirdparty/z2ui5/embed.js, which no app has, and fails
+    // as it should.
     let frontend = null;
 
     function loadFrontend(endpoint) {
@@ -97,7 +103,7 @@ sap.ui.define(
       return frontend;
     }
 
-    return Control.extend("z2ui5.reuse.Container", {
+    return Control.extend("z2ui5.embed.Container", {
       metadata: {
         properties: {
           // The ABAP class to run - it implements z2ui5_if_app, e.g.
@@ -146,7 +152,7 @@ sap.ui.define(
         apiVersion: 2,
         render(rm, control) {
           rm.openStart("div", control);
-          rm.class("z2ui5ReuseContainer");
+          rm.class("z2ui5EmbedContainer");
           rm.style("width", control.getWidth());
           rm.style("height", control.getHeight());
           rm.openEnd();

@@ -1,31 +1,31 @@
-# abap2UI5 reuse custom control
+# abap2UI5 embed control
 
-Home of **[`@abap2ui5/reuse-custom-control`](packages/reuse-custom-control)**:
+Home of **[`@abap2ui5/embed-control`](packages/embed-control)**:
 a UI5 custom control, published on npm, that runs an
 [abap2UI5](https://github.com/abap2UI5/abap2UI5) app inside any UI5 app, plus
 an **[example app](examples/host-app)** that shows how to use it.
 
 ```xml
-<mvc:View xmlns:mvc="sap.ui.core.mvc" xmlns:z2ui5="z2ui5.reuse">
+<mvc:View xmlns:mvc="sap.ui.core.mvc" xmlns:z2ui5="z2ui5.embed">
   <z2ui5:Container app="Z2UI5_CL_UI5_APP_HI_WORLD" height="400px"/>
 </mvc:View>
 ```
 
-How to use the package is in its [README](packages/reuse-custom-control/README.md)
+How to use the package is in its [README](packages/embed-control/README.md)
 (also what npm shows). This file is about working on it.
 
 ## Layout
 
 ```
-packages/reuse-custom-control/ the npm package - a UI5 CLI project of type "module"
+packages/embed-control/        the npm package - a UI5 CLI project of type "module"
   src/                           the control and its stylesheet
 examples/host-app/             a plain UI5 app using the package like any consumer
 test/e2e/                      Playwright tests of the example against a live backend
 ```
 
 The two workspaces are linked by npm: the example depends on
-`@abap2ui5/reuse-custom-control@^0.1.0` exactly as an app from the registry
-would, and npm resolves it to `packages/reuse-custom-control`.
+`@abap2ui5/embed-control@^0.1.0` exactly as an app from the registry
+would, and npm resolves it to `packages/embed-control`.
 
 ## The frontend is not here
 
@@ -69,7 +69,7 @@ Against a real system instead: copy `examples/host-app/.env.example` to
 | Command | |
 |---|---|
 | `npm run lint` / `npm run format:check` | ESLint and Prettier |
-| `npm run build` | `ui5 build` of the example - proves a consumer build takes the control into `dist/thirdparty/z2ui5/reuse/` |
+| `npm run build` | `ui5 build` of the example - proves a consumer build takes the control into `dist/thirdparty/z2ui5/embed/` |
 | `npm run pack:check` | what `npm publish` would put into the package |
 | `npx playwright test` | the example in a browser on UI5 1.136 and 1.71, against the backend on port 3000 (`PW_CHROMIUM_PATH` for an installed Chromium) |
 

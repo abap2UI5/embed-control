@@ -3,7 +3,7 @@
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m"
     xmlns:l="sap.ui.layout"
-    xmlns:z2ui5="z2ui5.reuse"
+    xmlns:z2ui5="z2ui5.embed"
     displayBlock="true"
     height="100%">
     <App id="app">
