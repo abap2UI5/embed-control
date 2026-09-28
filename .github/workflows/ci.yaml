@@ -1,15 +1,15 @@
 name: ci
 
-# check - lint, format, the consumer builds of both examples (the control
+# check - lint, format, the consumer builds of the examples (the control
 #         has to land in dist/thirdparty/), the package contents, and the
 #         packed package built in an app of its own with UI5 CLI 3 and 4
 # bsp   - the tree abap2UI5/frontend-embed-control delivers
-#         (frontend_deploy.yaml): both examples as UI5 projects and the
+#         (frontend_deploy.yaml): the examples as UI5 projects and the
 #         freestyle one as BSP, built and checked with abap2UI5's tools - a
 #         change that breaks it shows here, not in the delivery after the
 #         merge. Here with the control of this commit; the delivery takes it
 #         from npm
-# e2e   - both examples in a browser against a live abap2UI5 backend:
+# e2e   - the examples in a browser against a live abap2UI5 backend:
 #         abap2UI5 main, transpiled to JavaScript and served by its own
 #         express server (npm run express) - no SAP system involved. The
 #         control loads the frontend from that backend (?z2ui5-bundle), so
@@ -66,15 +66,19 @@ jobs:
         if: ${{ !cancelled() }}
       # the consumer build: the control is copied into each app
       # (includeDependency in its ui5.yaml), next to it and not under
-      # resources/ - the Fiori elements app as much as the freestyle one
+      # resources/ - the Fiori elements app as much as the freestyle one, and
+      # the card, which is deployed on its own and registers the control
+      # relative to itself - without its preview page
       - name: The control is part of the built apps
         if: ${{ !cancelled() }}
         run: |
-          for example in examples/freestyle examples/fiori-elements; do
+          for example in examples/freestyle examples/fiori-elements examples/card; do
             test -f "$example/dist/thirdparty/z2ui5/embed/Container.js"
             test -f "$example/dist/thirdparty/z2ui5/embed/Container.css"
             test ! -e "$example/dist/resources"
           done
+          test -f examples/card/dist/manifest.json
+          test ! -e examples/card/dist/test
       - run: npm run pack:check
         if: ${{ !cancelled() }}
       # the tarball, installed into an app outside this workspace and built

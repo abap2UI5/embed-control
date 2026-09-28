@@ -1,11 +1,11 @@
 name: frontend_deploy
 
-# Delivers the example app into abap2UI5/frontend-embed-control - its branch
-# `standard`, the example the way an app takes @abap2ui5/embed-control from
-# npm: the UI5 project in app/, and built from it the BSP Z2UI5_HOST in src/,
-# to try the control on a real system with a plain abapGit pull. A relay of
-# two workflows, the way abap2UI5's frontend_deploy delivers the frontend
-# into abap2UI5/frontend:
+# Delivers the examples into abap2UI5/frontend-embed-control - its branch
+# `standard`, the examples the way apps take @abap2ui5/embed-control from
+# npm: the UI5 projects in freestyle/, fiori-elements/ and card/, and built
+# from the freestyle one the BSP Z2UI5_HOST in src/, to try the control on a
+# real system with a plain abapGit pull. A relay of two workflows, the way
+# abap2UI5's frontend_deploy delivers the frontend into abap2UI5/frontend:
 #
 #   1. THIS workflow builds the tree (scripts/build-bsp.mjs --from-npm, with
 #      abap2UI5's BSP tools from its main) and writes it as result/standard

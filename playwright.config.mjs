@@ -1,10 +1,13 @@
 import { defineConfig } from "@playwright/test";
 
-// Both examples, driven in a browser against a live abap2UI5 backend:
+// The examples, driven in a browser against a live abap2UI5 backend:
 //   freestyle        on the UI5 release the example targets and on 1.71, the
 //                    oldest one abap2UI5 (and so the control) supports
 //   fiori-elements   on SAPUI5 1.136 - Fiori elements for OData V4 is SAPUI5
 //                    only, and needs far more than 1.71
+//   card             on OpenUI5 1.136 - a UI Integration Card, whose hosts
+//                    (SAP Build Work Zone) bring a current UI5; its preview
+//                    page stands in for the host
 //
 // The UI5 dev servers are started here. The backend is NOT: it has to be
 // running already where the examples' proxies point - http://localhost:3000
@@ -15,9 +18,9 @@ import { defineConfig } from "@playwright/test";
 //
 // PW_CHROMIUM_PATH runs a Chromium that is already installed instead of the
 // one `npx playwright install chromium` downloads.
-const serve = (example, config, port, timeout) => ({
+const serve = (example, config, port, timeout, page = "index.html") => ({
   command: `npm run serve --workspace examples/${example} -- --config ${config} --port ${port}`,
-  url: `http://localhost:${port}/index.html`,
+  url: `http://localhost:${port}/${page}`,
   reuseExistingServer: !process.env.CI,
   // the first start downloads the UI5 libraries
   timeout,
@@ -51,11 +54,18 @@ export default defineConfig({
       testMatch: "fiori-elements.spec.mjs",
       use: { baseURL: "http://localhost:8082" },
     },
+    {
+      name: "card",
+      testMatch: "card.spec.mjs",
+      use: { baseURL: "http://localhost:8083" },
+    },
   ],
   webServer: [
     serve("freestyle", "ui5.yaml", 8080, 180_000),
     serve("freestyle", "ui5-1.71.yaml", 8081, 180_000),
     // SAPUI5 with sap.fe and everything it needs is the biggest download
     serve("fiori-elements", "ui5.yaml", 8082, 300_000),
+    // the card itself is no page - its preview is
+    serve("card", "ui5.yaml", 8083, 180_000, "test/index.html"),
   ],
 });

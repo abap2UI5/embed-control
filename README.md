@@ -3,10 +3,12 @@
 Home of **[`@abap2ui5/embed-control`](packages/embed-control)**:
 a UI5 custom control, published on npm, that runs an
 [abap2UI5](https://github.com/abap2UI5/abap2UI5) app inside any UI5 app, plus
-two example apps that show how to use it - a
-**[UI5 freestyle app](examples/freestyle)** and a
+examples that show how to use it - a
+**[UI5 freestyle app](examples/freestyle)**, a
 **[Fiori elements app](examples/fiori-elements)** with the control in a custom
-section of its object page - delivered with the package from npm to
+section of its object page and a generic
+**[UI Integration Card](examples/card)** for SAP Build Work Zone - delivered
+with the package from npm to
 [abap2UI5/frontend-embed-control](https://github.com/abap2UI5/frontend-embed-control).
 
 ```xml
@@ -25,7 +27,8 @@ packages/embed-control/        the npm package - a UI5 CLI project of type "modu
   src/                           the control and its stylesheet
 examples/freestyle/            a UI5 freestyle app using the package like any consumer
 examples/fiori-elements/       a Fiori elements app with the control in a custom section
-test/e2e/                      Playwright tests of both examples against a live backend
+examples/card/                 a UI Integration Card (type Component) that runs any abap2UI5 app
+test/e2e/                      Playwright tests of the examples against a live backend
 scripts/                       the consumer check, the release check and the delivery build
 delivery/                      the README of abap2UI5/frontend-embed-control
 ```
@@ -55,8 +58,9 @@ on it once the abap2UI5 installations it targets have it.
 ## Run the examples
 
 They need an abap2UI5 backend that answers `?z2ui5-bundle` (1.145.0 or
-later), the Fiori elements one an abap2UI5 that leaves the URL hash to the
-page it is embedded in (the first release after 1.145.0 - its main has it).
+later), the Fiori elements one and the card an abap2UI5 that leaves the URL
+hash to the page it is embedded in (the first release after 1.145.0 - its
+main has it).
 Without an SAP system, run abap2UI5 transpiled to JavaScript in Node, from an
 abap2UI5 checkout (the first build takes a few minutes):
 
@@ -72,6 +76,7 @@ Then, here:
 npm install
 npm start                        # the freestyle example
 npm run start:fe                 # the Fiori elements example, on its mock OData service
+npm run start:card               # the card, on its preview page
 ```
 
 Against a real system instead: copy an example's `.env.example` to `.env`
@@ -84,11 +89,11 @@ OpenUI5 - so its first start downloads more.
 | Command | |
 |---|---|
 | `npm run lint` / `npm run format:check` | ESLint and Prettier |
-| `npm run build` | `ui5 build` of both examples - proves a consumer build takes the control into `dist/thirdparty/z2ui5/embed/`, the Fiori elements app's too |
+| `npm run build` | `ui5 build` of the examples - proves a consumer build takes the control into `dist/thirdparty/z2ui5/embed/`, the Fiori elements app's and the card's too |
 | `npm run pack:check` | what `npm publish` would put into the package |
 | `npm run consumer:check` | the packed package, installed into an app of its own and built with UI5 CLI 3 and 4 |
-| `ABAP2UI5_DIR=../abap2UI5 npm run bsp` | the tree abap2UI5/frontend-embed-control delivers - both examples as UI5 projects, the freestyle one as BSP - into `out/standard/`, checked with abap2UI5's page invariants. With the control of this checkout; `-- --from-npm` takes it from the registry, as the delivery does |
-| `npx playwright test` | both examples in a browser against the backend on port 3000 - the freestyle one on UI5 1.136 and 1.71, the Fiori elements one on SAPUI5 1.136 (`PW_CHROMIUM_PATH` for an installed Chromium) |
+| `ABAP2UI5_DIR=../abap2UI5 npm run bsp` | the tree abap2UI5/frontend-embed-control delivers - the examples as UI5 projects, the freestyle one as BSP - into `out/standard/`, checked with abap2UI5's page invariants. With the control of this checkout; `-- --from-npm` takes it from the registry, as the delivery does |
+| `npx playwright test` | the examples in a browser against the backend on port 3000 - the freestyle one on UI5 1.136 and 1.71, the Fiori elements one on SAPUI5 1.136, the card on OpenUI5 1.136 (`PW_CHROMIUM_PATH` for an installed Chromium) |
 
 CI (`.github/workflows/ci.yaml`) runs all of them; its e2e job builds the
 backend from abap2UI5's default branch, so it tests the pair a user gets
@@ -146,13 +151,13 @@ Then:
 [abap2UI5/frontend-embed-control](https://github.com/abap2UI5/frontend-embed-control)
 shows the example the way an app uses the package, on its branch `standard`:
 
-- `freestyle/` and `fiori-elements/` - the examples as UI5 projects,
+- `freestyle/`, `fiori-elements/` and `card/` - the examples as UI5 projects,
   `@abap2ui5/embed-control` an npm dependency: `examples/*` without what
   only the tests here use
 - `src/` - the freestyle app as the BSP `Z2UI5_HOST`, with the control where
   `ui5 build` puts it, to try the control on a real system with a plain
   abapGit pull (the Fiori elements app needs an OData service, which only
-  the example's mockserver has)
+  the example's mockserver has, and a card is deployed to its host)
 
 Neither carries a copy of the abap2UI5 frontend, and the control in both is
 the **published** package: `scripts/build-bsp.mjs --from-npm` installs the

@@ -1,7 +1,7 @@
 {
   "name": "embed-control-workspace",
   "private": true,
-  "description": "Workspace of @abap2ui5/embed-control: the npm package (packages/) and the example apps that use it (examples/)",
+  "description": "Workspace of @abap2ui5/embed-control: the npm package (packages/) and the example apps and card that use it (examples/)",
   "license": "MIT",
   "engines": {
     "node": ">=22"
@@ -13,7 +13,8 @@
   "scripts": {
     "start": "npm run start --workspace examples/freestyle",
     "start:fe": "npm run start --workspace examples/fiori-elements",
-    "build": "npm run build --workspace examples/freestyle --workspace examples/fiori-elements",
+    "start:card": "npm run start --workspace examples/card",
+    "build": "npm run build --workspace examples/freestyle --workspace examples/fiori-elements --workspace examples/card",
     "pack:check": "npm pack --dry-run --workspace packages/embed-control",
     "consumer:check": "node scripts/consumer-check.mjs",
     "bsp": "node scripts/build-bsp.mjs",
