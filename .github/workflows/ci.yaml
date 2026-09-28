@@ -14,7 +14,14 @@ on:
   pull_request:
   push:
     branches: [main]
+  # abap2UI5 changes without a pull request here, and the e2e job tests
+  # against its current main - so everything runs every night as well, and a
+  # change there that breaks the control shows up the next morning
+  schedule:
+    - cron: "23 4 * * *"
   workflow_dispatch:
+  # publish.yaml runs all of it on the commit it publishes
+  workflow_call:
 
 permissions:
   contents: read
@@ -33,6 +40,16 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      # The example names the package by version range, as an app from the
+      # registry does, and npm links the workspace only while its version is
+      # inside that range. Past it, npm installs the PUBLISHED version into
+      # the example without a word, and the build and the e2e test that
+      # instead of this commit. Raise the example's range with the version.
+      - name: The example uses this package, not a published one
+        if: ${{ !cancelled() }}
+        run: |
+          test -L node_modules/@abap2ui5/embed-control
+          test ! -e examples/host-app/node_modules/@abap2ui5/embed-control
       - run: npm run lint
         if: ${{ !cancelled() }}
       - run: npm run format:check

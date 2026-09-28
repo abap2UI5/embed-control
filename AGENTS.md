@@ -45,7 +45,7 @@ the generated `z2ui5_cl_ui5f_preload`; its only source is
 | `examples/host-app/` | The example: a plain UI5 app, `includeDependency` and the `z2ui5.embed` resourceRoot, `ui5-middleware-simpleproxy` to the backend, `lib/sameOrigin.js` for the backend's CSRF check |
 | `test/e2e/` | Playwright tests of the example |
 | `scripts/consumer-check.mjs` | The packed package in an app of its own, built with UI5 CLI 3 and 4 |
-| `.github/workflows/` | `ci.yaml` (checks, consumer build, e2e against abap2UI5's default branch), `publish.yaml` (npm, on a GitHub release) |
+| `.github/workflows/` | `ci.yaml` (checks, consumer builds, e2e against abap2UI5's default branch - on every pull request, every night, and before every publish), `publish.yaml` (npm, on a GitHub release) |
 
 ## Rules for `src/`
 

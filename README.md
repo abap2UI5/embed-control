@@ -25,7 +25,10 @@ test/e2e/                      Playwright tests of the example against a live ba
 
 The two workspaces are linked by npm: the example depends on
 `@abap2ui5/embed-control@^0.1.0` exactly as an app from the registry
-would, and npm resolves it to `packages/embed-control`.
+would, and npm resolves it to `packages/embed-control` - as long as the
+package's version is inside that range. Past it, npm would quietly install
+the published version into the example instead; CI fails then, and the
+range goes up with the version.
 
 ## The frontend is not here
 
@@ -76,7 +79,8 @@ Against a real system instead: copy `examples/host-app/.env.example` to
 
 CI (`.github/workflows/ci.yaml`) runs all of them; its e2e job builds the
 backend from abap2UI5's default branch, so it tests the pair a user gets
-today: this control and the current abap2UI5.
+today: this control and the current abap2UI5. Because abap2UI5 moves on
+without a pull request here, CI also runs every night.
 
 ## Publish
 
