@@ -176,7 +176,7 @@ into frontend-embed-control's `main` as `result/standard`, where the
 npm ci
 npm run lint && npm run format:check
 npm run build          # ui5 build of both examples - the control lands in dist/thirdparty/
-npm run pack:check     # package contents: ui5.yaml and src/ only
+npm run pack:check     # package contents: ui5.yaml, src/ and CHANGELOG.md (npm adds README, LICENSE)
 npm run consumer:check # the tarball in an app of its own, built with UI5 CLI 3 and 4
 ABAP2UI5_DIR=../abap2UI5 npm run bsp   # the frontend-embed-control tree, with abap2UI5's page checks
 npx playwright test    # both examples; needs an abap2UI5 backend with ?z2ui5-bundle on :3000 - see README

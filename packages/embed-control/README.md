@@ -202,6 +202,7 @@ specVersion 3.0, and every release is built with both.
 | `src/Container.js` | The control, `z2ui5.embed.Container` |
 | `src/Container.css` | Its stylesheet, loaded by the control |
 | `ui5.yaml` | Serves `src/` under `/thirdparty/z2ui5/embed/` |
+| `CHANGELOG.md` | Every release |
 
 ## License
 

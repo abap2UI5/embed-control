@@ -24,7 +24,8 @@
   "license": "MIT",
   "files": [
     "ui5.yaml",
-    "src"
+    "src",
+    "CHANGELOG.md"
   ],
   "publishConfig": {
     "access": "public"
