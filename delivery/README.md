@@ -186,7 +186,20 @@ npm start                        # ui5 serve, /sap/** proxied to the backend
 ```
 
 The proxy goes to `http://localhost:3000` by default - abap2UI5 transpiled
-to JavaScript and run in Node, no SAP system needed. For a real system, copy
+to JavaScript and run in Node, no SAP system needed. For the freestyle app
+that is the npm package
+[`@abap2ui5/node-runtime`](https://www.npmjs.com/package/@abap2ui5/node-runtime),
+in a folder of its own, with Node 22 or later:
+
+```bash
+mkdir abap2ui5-backend && cd abap2ui5-backend
+npm install @abap2ui5/node-runtime express
+node --input-type=module -e 'import { serve } from "@abap2ui5/node-runtime"; await serve({ port: 3000 });'
+```
+
+The Fiori elements app and the card need the first abap2UI5 release after
+1.145.0, which is not on npm yet - their READMEs show how to build it from an
+abap2UI5 checkout meanwhile. For a real system, copy
 `.env.example` to `.env` and set the system's URL and user there. The
 READMEs of
 [`freestyle/`](https://github.com/abap2UI5/frontend-embed-control/blob/standard/freestyle/README.md),

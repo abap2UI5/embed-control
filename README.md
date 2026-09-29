@@ -61,8 +61,20 @@ They need an abap2UI5 backend that answers `?z2ui5-bundle` (1.145.0 or
 later), the Fiori elements one and the card an abap2UI5 that leaves the URL
 hash to the page it is embedded in (the first release after 1.145.0 - its
 main has it).
-Without an SAP system, run abap2UI5 transpiled to JavaScript in Node, from an
-abap2UI5 checkout (the first build takes a few minutes):
+Without an SAP system, run abap2UI5 transpiled to JavaScript in Node. For
+the freestyle example, the npm package
+[`@abap2ui5/node-runtime`](https://www.npmjs.com/package/@abap2ui5/node-runtime)
+is enough - abap2UI5 prebuilt, its version the release it was built from
+(Node 22 or later, in a folder of its own):
+
+```bash
+mkdir abap2ui5-backend && cd abap2ui5-backend
+npm install @abap2ui5/node-runtime express
+node --input-type=module -e 'import { serve } from "@abap2ui5/node-runtime"; await serve({ port: 3000 });'
+```
+
+The Fiori elements example and the card need an abap2UI5 checkout until a
+release after 1.145.0 is on npm (the first build takes a few minutes):
 
 ```bash
 git clone https://github.com/abap2UI5/abap2UI5.git && cd abap2UI5

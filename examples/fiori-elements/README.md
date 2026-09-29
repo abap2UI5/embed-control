@@ -100,14 +100,20 @@ The app's own OData service is a mockserver of the dev server - the
 metadata with the UI annotations in `webapp/localService/metadata.xml`, the
 customers in `webapp/localService/data/`. The proxy for `/sap` goes to
 `http://localhost:3000` by default: abap2UI5 transpiled to JavaScript and run
-in Node, no SAP system needed. From an abap2UI5 checkout (the first build
-takes a few minutes):
+in Node, no SAP system needed. From an abap2UI5 checkout, whose main has what
+the app needs (the first build takes a few minutes):
 
 ```bash
 git clone https://github.com/abap2UI5/abap2UI5.git && cd abap2UI5
 npm ci && npm run downport && npm run auto_transpile
 npm run express                  # abap2UI5 on http://localhost:3000
 ```
+
+The npm package
+[`@abap2ui5/node-runtime`](https://www.npmjs.com/package/@abap2ui5/node-runtime)
+is the same prebuilt, but its version is an abap2UI5 release: once one after
+1.145.0 is out, install that one instead of building a checkout - the
+freestyle example's README shows how.
 
 Against a real system instead: copy `.env.example` to `.env` and set the
 system's URL and user there - the list and the object page still come from

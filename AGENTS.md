@@ -113,7 +113,10 @@ the generated `z2ui5_cl_ui5f_preload`; its only source is
   through and sets no flag of its own. The package README, the READMEs of
   the Fiori elements and the card example and `delivery/README.md` say "the
   first abap2UI5 release after 1.145.0" - name the version there once it
-  is out.
+  is out. Until then those READMEs build the local backend from an abap2UI5
+  checkout, and the freestyle one installs `@abap2ui5/node-runtime` from
+  npm (its version is the abap2UI5 release); once the release is on npm,
+  the others switch to the package too.
 
 ## Delivery: abap2UI5/frontend-embed-control
 

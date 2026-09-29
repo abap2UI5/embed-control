@@ -29,14 +29,18 @@ npm start                        # ui5 serve, /sap/** proxied to the backend
 ```
 
 The proxy goes to `http://localhost:3000` by default: abap2UI5 transpiled to
-JavaScript and run in Node, no SAP system needed. From an abap2UI5 checkout
-(the first build takes a few minutes):
+JavaScript and run in Node, no SAP system needed. The npm package
+[`@abap2ui5/node-runtime`](https://www.npmjs.com/package/@abap2ui5/node-runtime)
+is exactly that, prebuilt - in a folder of its own, with Node 22 or later:
 
 ```bash
-git clone https://github.com/abap2UI5/abap2UI5.git && cd abap2UI5
-npm ci && npm run downport && npm run auto_transpile
-npm run express                  # abap2UI5 on http://localhost:3000
+mkdir abap2ui5-backend && cd abap2ui5-backend
+npm install @abap2ui5/node-runtime express
+node --input-type=module -e 'import { serve } from "@abap2ui5/node-runtime"; await serve({ port: 3000 });'
 ```
+
+Its version is the abap2UI5 release it was built from, and it runs the apps
+that come with abap2UI5, the hello world app among them.
 
 Against a real system instead: copy `.env.example` to `.env` and set the
 system's URL and user there.
