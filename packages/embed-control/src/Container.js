@@ -245,22 +245,32 @@ sap.ui.define(
       // container fires nothing any more, so an event of the replaced app
       // cannot reach the host.
       //
-      // The params by what the backend gets from them, not by identity: a
-      // binding hands over a new object whenever the model says it changed -
-      // model.refresh(true), a formatter - and the same parameters must not
-      // restart the app and lose its state.
+      // A change of what the current start was made of, not of the
+      // property: the params by what the backend gets from them, not by
+      // identity - a binding hands over a new object whenever the model says
+      // it changed (model.refresh(true), a formatter), and the same
+      // parameters must not restart the app and lose its state. And a params
+      // object the host changed in place is no longer what the running app
+      // got, although the property holds it already.
       _setStartProperty(name, value) {
-        const key = () =>
-          name === "params"
-            ? JSON.stringify(startupParameters(this.getParams()))
-            : this.getProperty(name);
-        const before = key();
         this.setProperty(name, value);
-        if (key() !== before) {
+        if (this._start && this._start.key !== this._startKey()) {
           this.destroyAggregation("_container");
           this._start = null;
+          // the same object again does not invalidate by itself
+          this.invalidate();
         }
         return this;
+      },
+
+      // what a start is made of - the class, the endpoint and the params as
+      // the backend gets them
+      _startKey() {
+        return JSON.stringify([
+          this.getApp(),
+          this._endpoint(),
+          startupParameters(this.getParams()),
+        ]);
       },
 
       // The start is asynchronous: the frontend may still have to come from
@@ -272,7 +282,7 @@ sap.ui.define(
       onBeforeRendering() {
         if (!this.getApp() || this.getAggregation("_container")) return;
         if (this._start) return;
-        const start = (this._start = {});
+        const start = (this._start = { key: this._startKey() });
         const stale = () => this._exited || this._start !== start;
 
         const endpoint = sameOriginUrl(this._endpoint());

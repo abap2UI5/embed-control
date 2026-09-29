@@ -37,7 +37,10 @@ own, and nothing may be left under "Unreleased".
   same, created without the owner.
 - `params` are compared by value: a binding that hands over the same
   parameters in a new object (`model.refresh(true)`, a formatter) no longer
-  restarts the app and loses its state. A parameter whose value is `null` or
+  restarts the app and loses its state. They are compared with what the
+  running app was started with, so a params object changed in place and
+  handed over again - as a copy or as the same object - does restart it
+  (0.1.0 missed the same object). A parameter whose value is `null` or
   `undefined` is left out instead of reaching the app as the text "null" or
   "undefined".
 - The control no longer leaves `window.z2ui5.embed` behind: UI5 exports

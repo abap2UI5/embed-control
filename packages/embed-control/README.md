@@ -82,8 +82,9 @@ Every control is its **own abap2UI5 session** - two controls with the same
 class do not share state. Changing `app`, `endpoint` or `params` ends the
 running session and starts a new one; destroying the control ends it too.
 All three are ordinary properties, so they can be bound to your model -
-`params` is compared by value, so a binding that hands over the same
-parameters in a new object does not restart the app.
+`params` is compared by value with what the running app was started with,
+so a binding that hands over the same parameters in a new object does not
+restart the app.
 
 ## Examples
 

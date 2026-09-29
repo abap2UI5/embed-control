@@ -439,6 +439,53 @@ test("the same params do not restart the app", async ({ page }) => {
   await expect.poll(() => page.evaluate(() => window.params.created)).toBe(2);
 });
 
+// What counts is what the running app was started with. A host that
+// changes the params object it handed over and hands it over again - as a
+// copy, or as the same object - means other parameters, although the
+// property already holds the changed object.
+for (const handover of ["a copy", "the same object"]) {
+  test(`params changed in place restart the app - handed over as ${handover}`, async ({
+    page,
+  }) => {
+    const starts = await page.evaluate(
+      (handover) =>
+        new Promise((resolve, reject) => {
+          sap.ui.require(
+            ["z2ui5/embed/Container"],
+            (Container) => {
+              const starts = [];
+              const params = { customer: "4711" };
+              const host = document.createElement("div");
+              document.body.prepend(host);
+              const control = new Container({
+                app: "Z2UI5_CL_UI5_APP_HI_WORLD",
+                height: "300px",
+                params,
+                componentCreated: (e) => {
+                  const data = e.getParameter("component").getComponentData();
+                  starts.push(data.startupParameters.customer[0]);
+                  if (starts.length > 1) {
+                    resolve(starts);
+                    return;
+                  }
+                  params.customer = "4712";
+                  control.setParams(
+                    handover === "a copy" ? Object.assign({}, params) : params,
+                  );
+                  setTimeout(() => resolve(starts), 10_000);
+                },
+              });
+              control.placeAt(host);
+            },
+            reject,
+          );
+        }),
+      handover,
+    );
+    expect(starts).toEqual(["4711", "4712"]);
+  });
+}
+
 // UI5 exports every class as a global; abap2UI5 dropped its z2ui5 global on
 // purpose (#2777), and the control takes its own export off again.
 test("the control puts nothing on a z2ui5 global", async ({ page }) => {
