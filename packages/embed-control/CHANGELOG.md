@@ -22,6 +22,14 @@ own, and nothing may be left under "Unreleased".
   the component was still being created left that component running unseen,
   with its backend session. The control creates the component itself now and
   destroys it when the start it belongs to is no longer the current one.
+- The component is created in the context of the control's owner - your
+  app's component - as a `ComponentContainer` in a view creates it; 0.1.0
+  created it without an owner. An app that declares keep-alive
+  (`sap.ui5/keepAlive`, UI5 1.88+) therefore reports no keep-alive support
+  while it has an embedded app: the abap2UI5 frontend does not support it,
+  and 0.1.0 left the embedded app running while its host was inactive. A
+  host deactivated while its app is still starting gets the app all the
+  same, created without the owner.
 - `params` are compared by value: a binding that hands over the same
   parameters in a new object (`model.refresh(true)`, a formatter) no longer
   restarts the app and loses its state. A parameter whose value is `null` or

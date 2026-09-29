@@ -311,6 +311,13 @@ sap.ui.define(
 
       // Created in the owner component of the control, as a
       // ComponentContainer would - the host's component, if there is one.
+      //
+      // Unless that owner is inactive: a host the launchpad keeps alive
+      // (UI5 1.88+) is deactivated when the user leaves it, possibly while
+      // the frontend is still loading, and runAsOwner refuses an inactive
+      // owner - the app would never start. It starts without the owner
+      // then; an error of Component.create itself comes back from that
+      // second call and fails the start.
       _createComponent(embed, path) {
         const create = () =>
           Component.create({
@@ -321,7 +328,14 @@ sap.ui.define(
             componentData: this._componentData(embed, path),
           });
         const owner = Component.getOwnerComponentFor(this);
-        return owner ? owner.runAsOwner(create) : create();
+        if (owner) {
+          try {
+            return owner.runAsOwner(create);
+          } catch (e) {
+            // an inactive owner - see above
+          }
+        }
+        return create();
       },
 
       _createContainer(component) {

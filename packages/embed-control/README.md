@@ -194,6 +194,11 @@ specVersion 3.0, and every release is built with both.
   page, your app included. Its developer tools wrap the `window.console`
   methods while an app runs (the browser console keeps working; its source
   links point to the wrapper) and listen for Ctrl+F12 on the document.
+- **Keep-alive.** The embedded app's component belongs to your app's
+  component, the owner of the control, and the abap2UI5 frontend does not
+  support keep-alive: an app that declares it (`sap.ui5/keepAlive`, UI5
+  1.88+) reports no keep-alive support while it has an embedded app, as UI5
+  does for every nested component without it.
 
 ## What is inside
 

@@ -385,3 +385,58 @@ test("the control puts nothing on a z2ui5 global", async ({ page }) => {
     await page.evaluate(() => typeof (window.z2ui5 && window.z2ui5.embed)),
   ).toBe("undefined");
 });
+
+// A host the launchpad keeps alive (UI5 1.88+) is deactivated when the user
+// leaves it - possibly while an app in it is still starting. UI5 creates no
+// component in the context of an inactive owner (runAsOwner throws), so the
+// app starts without that owner instead of failing for good.
+test("an app whose host is deactivated while it starts still starts", async ({
+  page,
+}) => {
+  const result = await page.evaluate(
+    () =>
+      new Promise((resolve, reject) => {
+        sap.ui.require(
+          ["sap/ui/core/UIComponent", "z2ui5/embed/Container"],
+          (UIComponent, Container) => {
+            if (!UIComponent.prototype.deactivate) {
+              resolve("no keep-alive");
+              return;
+            }
+            const Host = UIComponent.extend("keepalive.Component", {
+              metadata: {
+                manifest: {
+                  "sap.app": { id: "keepalive" },
+                  "sap.ui5": { keepAlive: { supported: true } },
+                },
+              },
+            });
+            const host = new Host();
+            const area = document.createElement("div");
+            document.body.prepend(area);
+            host
+              .runAsOwner(
+                () =>
+                  new Container({
+                    app: "Z2UI5_CL_UI5_APP_HI_WORLD",
+                    height: "300px",
+                    componentCreated: () => resolve("created"),
+                    componentFailed: (e) =>
+                      resolve(String(e.getParameter("reason"))),
+                  }),
+              )
+              .placeAt(area);
+            // the rendering starts the app; the frontend is on the page
+            // already, so the component is asked for right after this task -
+            // by then the user has left the host
+            sap.ui.getCore().applyChanges();
+            host.deactivate();
+          },
+          reject,
+        );
+      }),
+  );
+  test.skip(result === "no keep-alive", "keep-alive needs UI5 1.88");
+  expect(result).toBe("created");
+  await expect(postButtons(page)).toHaveCount(4);
+});
