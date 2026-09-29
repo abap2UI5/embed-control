@@ -17,7 +17,8 @@ class with `?app_start=`.
 | `webapp/Component.js` | `onCardReady`: resolves the destination, builds the endpoint from it and hands class, endpoint and startup parameters to the control |
 | `webapp/view/Card.view.xml` | one `z2ui5:Container`, and a message strip that says why an app did not start |
 | `webapp/dt/Configuration.js` | what an administrator sets per card in the card's configuration editor |
-| `ui5.yaml` | `includeDependency` puts the control into the card's build; the proxy to the backend for `ui5 serve` |
+| `ui5.yaml` | `includeDependency` puts the control into the card's build; the proxy to the SAP system for `ui5 serve` |
+| `ui5-local.yaml` | the same, with the proxy to abap2UI5 running locally in Node |
 | `webapp/test/` | a preview page, not part of the card: three cards on a page, a stand-in for Work Zone |
 
 The card never names a URL. It names a destination, and the host resolves it:
@@ -62,15 +63,20 @@ It needs an abap2UI5 backend that answers `?z2ui5-bundle` and leaves the URL
 hash to the page it is embedded in - **the first abap2UI5 release after
 1.145.0** (its main has it). 1.145.0 answers the bundle but clears the page's
 hash with the card's first roundtrip, and SAP Build Work Zone routes by it.
+Both commands open the preview `test/index.html`.
+
+**Against an SAP system** - `npm start`: set the system's URL as `baseUri`
+in `ui5.yaml`, copy `.env.example` to `.env` and put user and password there.
 
 ```bash
 npm install
-npm start                        # ui5 serve, opens the preview test/index.html
+npm start                        # the preview, /sap/** proxied to the system in ui5.yaml
 ```
 
-`/sap/**` is proxied to `http://localhost:3000` by default: abap2UI5
-transpiled to JavaScript and run in Node, no SAP system needed. From an
-abap2UI5 checkout (the first build takes a few minutes):
+**Without an SAP system** - `npm run start-local` (`ui5-local.yaml`): abap2UI5
+transpiled to JavaScript and run in Node, on `http://localhost:3000`. From an
+abap2UI5 checkout, whose main has what the card needs (the first build takes
+a few minutes):
 
 ```bash
 git clone https://github.com/abap2UI5/abap2UI5.git && cd abap2UI5
@@ -78,8 +84,15 @@ npm ci && npm run downport && npm run auto_transpile
 npm run express                  # abap2UI5 on http://localhost:3000
 ```
 
-Against a real system instead: copy `.env.example` to `.env` and set the
-system's URL and user there.
+```bash
+npm run start-local              # the preview, /sap/** proxied to localhost:3000
+```
+
+The npm package
+[`@abap2ui5/node-runtime`](https://www.npmjs.com/package/@abap2ui5/node-runtime)
+is the same prebuilt, but its version is an abap2UI5 release: once one after
+1.145.0 is out, install that one instead of building a checkout - the
+freestyle example's README shows how.
 
 `npm run build` writes the card into `dist/`: the manifest, the component and
 the control in `dist/thirdparty/z2ui5/embed/` - without the preview.

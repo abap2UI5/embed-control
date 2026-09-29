@@ -78,13 +78,12 @@ or in a card - [further below](#in-sap-build-work-zone-a-ui-integration-card).
 
 That is all a deployed app needs, as long as the page and abap2UI5 share an
 origin: the app served from the same system (BSP, launchpad), or an
-approuter that routes `/sap/bc/z2ui5` to it. `ui5 serve` against a remote
-system needs one more thing: a proxy for `/sap` that drops the browser's
-`Origin`, or abap2UI5's CSRF check rejects the roundtrips -
+approuter that routes `/sap/bc/z2ui5` to it. `ui5 serve` needs a proxy for
+`/sap` to the system -
 [`freestyle/ui5.yaml`](https://github.com/abap2UI5/frontend-embed-control/blob/standard/freestyle/ui5.yaml)
-and
-[`freestyle/lib/sameOrigin.js`](https://github.com/abap2UI5/frontend-embed-control/blob/standard/freestyle/lib/sameOrigin.js)
-show both pieces.
+shows it. `ui5-middleware-simpleproxy` tells the backend the dev server's
+host in `X-Forwarded-Host`, and abap2UI5's CSRF check compares the browser's
+`Origin` with it - nothing else is needed.
 
 Properties, events, the backend the control needs and the UI5 versions it
 supports are in the
@@ -182,18 +181,31 @@ first card.
 git clone --branch standard https://github.com/abap2UI5/frontend-embed-control.git
 cd frontend-embed-control/freestyle      # or fiori-elements, or card
 npm install
-npm start                        # ui5 serve, /sap/** proxied to the backend
 ```
 
-The proxy goes to `http://localhost:3000` by default - abap2UI5 transpiled
-to JavaScript and run in Node, no SAP system needed. For a real system, copy
-`.env.example` to `.env` and set the system's URL and user there. The
-READMEs of
+**Against an SAP system** - `npm start`: set the system's URL as `baseUri` in
+`ui5.yaml`, copy `.env.example` to `.env` and put user and password there.
+
+**Without an SAP system** - `npm run start-local`: the proxy goes to
+`http://localhost:3000` (`ui5-local.yaml`), abap2UI5 transpiled to JavaScript
+and run in Node. For the freestyle app that is the npm package
+[`@abap2ui5/node-runtime`](https://www.npmjs.com/package/@abap2ui5/node-runtime),
+in a folder of its own, with Node 22 or later:
+
+```bash
+mkdir abap2ui5-backend && cd abap2ui5-backend
+npm install @abap2ui5/node-runtime express
+node --input-type=module -e 'import { serve } from "@abap2ui5/node-runtime"; await serve({ port: 3000 });'
+```
+
+The Fiori elements app and the card need the first abap2UI5 release after
+1.145.0, which is not on npm yet - their READMEs show how to build it from an
+abap2UI5 checkout meanwhile. The READMEs of
 [`freestyle/`](https://github.com/abap2UI5/frontend-embed-control/blob/standard/freestyle/README.md),
 [`fiori-elements/`](https://github.com/abap2UI5/frontend-embed-control/blob/standard/fiori-elements/README.md)
 and
 [`card/`](https://github.com/abap2UI5/frontend-embed-control/blob/standard/card/README.md)
-have both. The Fiori elements app answers its own OData service from mock
+have both ways. The Fiori elements app answers its own OData service from mock
 data, and takes SAPUI5 from npm - Fiori elements for OData V4 is not part of
 OpenUI5. The card opens on a preview page: three cards and a stand-in for
 Work Zone. `npm run build` writes an app - or the card - to deploy into

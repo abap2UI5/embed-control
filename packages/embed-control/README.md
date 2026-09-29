@@ -151,11 +151,12 @@ app's origin:
 
 - **deployed** - the app is served from the same system (BSP, launchpad), or
   an approuter / destination routes `/sap/bc/z2ui5` to it
-- **`ui5 serve`** - a proxy middleware forwards `/sap` to the system. The
-  proxy rewrites `Host` but passes the browser's `Origin` on, so it also has
-  to drop `Origin` and `Referer`; the
-  [examples](https://github.com/abap2UI5/embed-control/tree/main/examples/freestyle)
-  show both pieces
+- **`ui5 serve`** - a proxy middleware forwards `/sap` to the system, like
+  `ui5-middleware-simpleproxy` in the
+  [examples](https://github.com/abap2UI5/embed-control/tree/main/examples/freestyle).
+  It rewrites `Host` and tells the backend the dev server's host in
+  `X-Forwarded-Host`, which abap2UI5 compares the browser's `Origin` with
+  (trusted by default; `check_trust_forwarded_host` in the user exit)
 
 **Content-Security-Policy:** the frontend is a `<script src>` of your own
 origin, and every module in it is a function - nothing is evaluated from a

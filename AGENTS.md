@@ -47,9 +47,9 @@ the generated `z2ui5_cl_ui5f_preload`; its only source is
 | `packages/embed-control/ui5.yaml` | UI5 CLI project of type `module`: `/thirdparty/z2ui5/embed/` → `src/` |
 | `packages/embed-control/README.md` | The consumer documentation - what npm shows |
 | `packages/embed-control/CHANGELOG.md` | Every release; the publish checks it |
-| `examples/freestyle/` | The freestyle example: a plain UI5 app, `includeDependency` and the `z2ui5.embed` resourceRoot, `ui5-middleware-simpleproxy` to the backend, `lib/sameOrigin.js` for the backend's CSRF check. Delivered as `freestyle/` and as the BSP - its README is written for both places |
+| `examples/freestyle/` | The freestyle example: a plain UI5 app, `includeDependency` and the `z2ui5.embed` resourceRoot, `ui5-middleware-simpleproxy` to the backend - `ui5.yaml` to an SAP system (`npm start`), `ui5-local.yaml` to abap2UI5 in Node on `localhost:3000` (`npm run start-local`, what the e2e tests use). Delivered as `freestyle/` and as the BSP - its README is written for both places |
 | `examples/fiori-elements/` | The Fiori elements example: SAPUI5, list report and object page on a mock OData V4 service (`@sap-ux/ui5-middleware-fe-mockserver`, `webapp/localService/`), the control in the object page's custom section (`webapp/ext/`). Delivered as `fiori-elements/` |
-| `examples/card/` | The card example: a UI Integration Card of type `Component`, generic - the class it runs is a card parameter, the backend a card destination the host resolves (`webapp/Component.js`, `onCardReady`) - with `webapp/dt/Configuration.js` for the host's configuration editor and a preview page in `webapp/test/` that `ui5 build` leaves out. OpenUI5, the same `includeDependency`, resourceRoot and proxy as the freestyle app. Delivered as `card/` |
+| `examples/card/` | The card example: a UI Integration Card of type `Component`, generic - the class it runs is a card parameter, the backend a card destination the host resolves (`webapp/Component.js`, `onCardReady`) - with `webapp/dt/Configuration.js` for the host's configuration editor and a preview page in `webapp/test/` that `ui5 build` leaves out. OpenUI5, the same `includeDependency`, resourceRoot and the two proxy configurations as the freestyle app. Delivered as `card/` |
 | `test/e2e/` | Playwright tests of the examples, one spec file each |
 | `scripts/consumer-check.mjs` | The packed package in an app of its own, built with UI5 CLI 3 and 4 |
 | `scripts/release-check.mjs` | The gate before `npm publish`: tag, version, changelog and repository agree |
@@ -126,7 +126,27 @@ the generated `z2ui5_cl_ui5f_preload`; its only source is
   through and sets no flag of its own. The package README, the READMEs of
   the Fiori elements and the card example and `delivery/README.md` say "the
   first abap2UI5 release after 1.145.0" - name the version there once it
-  is out.
+  is out. Until then those READMEs build the local backend from an abap2UI5
+  checkout, and the freestyle one installs `@abap2ui5/node-runtime` from
+  npm (its version is the abap2UI5 release); once the release is on npm,
+  the others switch to the package too.
+
+## Rules for the examples' dev server
+
+- **`npm start` goes to an SAP system, `npm run start-local` to
+  `localhost:3000`** - `ui5.yaml` and `ui5-local.yaml`, the split the SAP
+  Fiori tools generate. The two differ in the proxy's `baseUri` only; keep
+  everything else in step. The e2e tests serve `ui5-local.yaml`.
+- **The system's URL stays in `ui5.yaml`, never in `.env`.**
+  `ui5-middleware-simpleproxy` loads `.env` itself, and a value from there
+  wins over the YAML - a `UI5_MIDDLEWARE_SIMPLE_PROXY_BASEURI` in `.env`
+  would send `start-local` to the system too. `.env` carries the user only.
+- **No middleware of our own for abap2UI5's CSRF check.** The standard
+  proxy sends `X-Forwarded-Host` (`xfwd`), and abap2UI5 compares the
+  browser's `Origin` with it (`check_trust_forwarded_host`, on by default
+  in every release the control supports). Dropping `Origin` in the dev
+  server was needed once and is not any more - do not bring it back; a
+  proxy that does not send the header is the thing to fix.
 
 ## Delivery: abap2UI5/frontend-embed-control
 
