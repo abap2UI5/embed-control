@@ -151,7 +151,9 @@ jobs:
         if: ${{ matrix.backend != 'main' }}
         run: |
           mkdir .abap2ui5 && cd .abap2ui5
-          npm init -y > /dev/null
+          # a manifest of its own: `npm init -y` names the package after the
+          # directory, and ".abap2ui5" is no valid package name
+          printf '{ "name": "abap2ui5-backend", "private": true }\n' > package.json
           npm install --no-audit --no-fund \
             "@abap2ui5/node-runtime@${{ matrix.backend }}" express@5
           cat > serve.mjs <<'EOF'
