@@ -187,8 +187,10 @@ specVersion 3.0, and every release is built with both.
   to come
   ([backlog item](https://github.com/abap2UI5/abap2UI5/blob/main/backlog/items/embed-as-reuse-component.md)):
   an embedded app still shows the global busy indicator during a roundtrip,
-  may set the document title and favicon when the ABAP app asks for it, and
-  renders its root as `sap.m.App`.
+  may set the document title and favicon when the ABAP app asks for it,
+  renders its root as `sap.m.App`, and takes the focus when it starts, from
+  wherever it is in your app - `sap.m.App` focuses the first field of its
+  first page, and the ABAP app may set the focus as well.
 - **Page-wide behaviour of the embedded frontend.** Its error dialog's
   "Restart" - and "Refresh" on its fatal error screen - reloads the whole
   page, your app included. Its developer tools wrap the `window.console`

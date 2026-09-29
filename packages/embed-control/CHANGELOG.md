@@ -47,7 +47,8 @@ own, and nothing may be left under "Unreleased".
 - README: the backend floor in Node and CAP too (`@abap2ui5/node-runtime`
   1.145.0, `@cap2ui5/cds-plugin` 0.3.1), what 1.145.0 does not do yet (the
   URL hash, a `#/app/<CLASS>` hash that wins over `app`, no CSRF token for an
-  approuter route) and the page-wide behaviour of the embedded frontend.
+  approuter route), the page-wide behaviour of the embedded frontend and
+  that a starting app takes the focus from the host.
 - The package carries this changelog.
 
 ## 0.1.0
