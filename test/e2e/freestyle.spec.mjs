@@ -149,6 +149,14 @@ test("an endpoint on another origin loads no code", async ({ page }) => {
     "/\n/evil.example/sap/bc/z2ui5",
     "/\r/evil.example/sap/bc/z2ui5",
     " //evil.example/sap/bc/z2ui5",
+    // "." and ".." segments go when the URL is parsed: each of these has
+    // the path //evil.example/sap/bc/z2ui5 - on this origin, but another
+    // host to the browser once that path is used on its own
+    "/.//evil.example/sap/bc/z2ui5",
+    "/sap/..//evil.example/sap/bc/z2ui5",
+    "/%2e//evil.example/sap/bc/z2ui5",
+    "/.\\/evil.example/sap/bc/z2ui5",
+    "..//evil.example/sap/bc/z2ui5",
   ]) {
     const reason = await page.evaluate(
       (endpoint) =>

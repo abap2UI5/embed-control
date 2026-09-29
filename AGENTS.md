@@ -81,7 +81,10 @@ the generated `z2ui5_cl_ui5f_preload`; its only source is
   absolute URL is requested and handed to the frontend - never the raw
   string, which the URL parser rewrites (it drops tabs and line breaks, reads
   a backslash as a slash), and never a bare path, which the browser resolves
-  against the page's `<base>` - another host, possibly. Load it with a
+  against the page's `<base>` - another host, possibly. A path that begins
+  with `//` is refused too: the parser drops `.` and `..` segments, so
+  `/.//host` comes out on the page's origin with the path `//host`, another
+  host wherever that path is used on its own. Load it with a
   `<script src>`, never with `eval`, `new Function` or `fetch` + inject.
 - **One frontend per page, one component per control, one backend session per
   component.** The bundle is loaded once; a change of `app`, `endpoint` or

@@ -12,6 +12,9 @@ own, and nothing may be left under "Unreleased".
   parses it, refused unless it lands on the page's origin, and only the
   resolved URL is requested. A relative `endpoint` now resolves against the
   page's address.
+- An `endpoint` whose path begins with `//` once `.` and `..` segments are
+  resolved - `"/.//evil.example/..."`, `"..//evil.example/..."` - is
+  refused: no server has such a path, and on its own it names another host.
 - A page with a `<base>` that names another host no longer sends the
   frontend request and the roundtrips there: the control requested the
   checked endpoint as a path, which the browser resolves against the

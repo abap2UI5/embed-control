@@ -56,10 +56,14 @@ sap.ui.define(
     // browser would resolve against the page's <base> - and that may name
     // another host than the one checked here. Only http(s): a blob: URL
     // carries the origin of the page that made it, a file: page has none to
-    // compare, and neither is a path on a server.
+    // compare, and neither is a path on a server. And no path that begins
+    // with //: the parser drops "." and ".." segments, so "/.//evil.example"
+    // and "..//evil.example" come out on this origin with the path
+    // //evil.example - which is another host wherever that path is used on
+    // its own, and a path no server has.
     // Returns the URL - this origin and the path, without a trailing slash -
-    // or null when the endpoint is not on this origin or carries a query or
-    // a fragment.
+    // or null when the endpoint is not on this origin, carries a query or a
+    // fragment, or its path begins with //.
     function sameOriginUrl(endpoint) {
       let url;
       try {
@@ -70,6 +74,7 @@ sap.ui.define(
       if (url.protocol !== "http:" && url.protocol !== "https:") return null;
       if (url.origin !== window.location.origin) return null;
       if (url.search || url.hash) return null;
+      if (url.pathname.startsWith("//")) return null;
       return url.origin + (url.pathname.replace(/\/+$/, "") || "/");
     }
 
