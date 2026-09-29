@@ -18,6 +18,10 @@ own, and nothing may be left under "Unreleased".
   change of `app`, `endpoint` or `params`) asks the backend again; the
   control no longer asks UI5's module loader for `z2ui5/embed`, which
   remembered the module as failed.
+- A change of `app`, `endpoint` or `params`, or the control destroyed, while
+  the component was still being created left that component running unseen,
+  with its backend session. The control creates the component itself now and
+  destroys it when the start it belongs to is no longer the current one.
 
 ## 0.1.0
 

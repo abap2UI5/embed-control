@@ -62,8 +62,8 @@ the generated `z2ui5_cl_ui5f_preload`; its only source is
 - **UI5 1.71 is the floor**, as in abap2UI5. Use no module, class, property or
   enum newer than 1.71, and no `sap/ui/core/Lib` / `sap/ui/core/Element`
   static APIs. What the control uses today and since when:
-  `sap/ui/dom/includeStylesheet` (1.58), `ComponentContainer#lifecycle`
-  (1.56), renderer `apiVersion: 2` (1.67).
+  `sap/ui/dom/includeStylesheet` (1.58), `Component.create` (1.56),
+  `ComponentContainer#lifecycle` (1.56), renderer `apiVersion: 2` (1.67).
   The e2e tests run the freestyle example on 1.71 too
   (`examples/freestyle/ui5-1.71.yaml`, the `ui5-1.71` Playwright project) -
   a change to `src/` is done when every project passes, the

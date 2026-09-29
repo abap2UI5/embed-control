@@ -246,3 +246,89 @@ test("a failed frontend load is tried again by the next start", async ({
     ).toBe(1);
   }
 });
+
+// A change of the app - or the end of the control - while the component is
+// still being created: the component that arrives late is destroyed, not
+// left running unseen with its backend session.
+for (const change of ["a new app", "the control destroyed"]) {
+  test(`a component still being created is destroyed - ${change}`, async ({
+    page,
+  }) => {
+    const acted = await page.evaluate(
+      (change) =>
+        new Promise((resolve, reject) => {
+          sap.ui.require(
+            ["z2ui5/embed/Container", "sap/ui/core/Component"],
+            (Container, Component) => {
+              const z2ui5 = () =>
+                Component.registry.filter(
+                  (c) => c.getMetadata().getName() === "z2ui5.Component",
+                );
+              const before = new Set(z2ui5());
+              const state = (window.leak = { created: 0, before });
+              const host = document.createElement("div");
+              document.body.prepend(host);
+              const control = new Container({
+                app: "Z2UI5_CL_UI5_APP_HI_WORLD",
+                height: "300px",
+                componentCreated: () => state.created++,
+              });
+              // the moment the component is asked for - Component.create
+              // has not resolved yet; whoever creates it goes through here
+              const create = Component.create;
+              Component.create = function (options) {
+                const creating = create.apply(this, arguments);
+                if (options.name !== "z2ui5") return creating;
+                Component.create = create;
+                queueMicrotask(() => {
+                  const acted = state.created === 0;
+                  if (change === "a new app") {
+                    control.setApp("Z2UI5_CL_UI5_APP_START");
+                  } else {
+                    control.destroy();
+                  }
+                  creating.then((component) => {
+                    state.first = component.getId();
+                    resolve(acted);
+                  }, reject);
+                });
+                return creating;
+              };
+              control.placeAt(host);
+            },
+            reject,
+          );
+        }),
+      change,
+    );
+    // the change came before the component was handed over
+    expect(acted).toBe(true);
+
+    const state = () =>
+      page.evaluate(() => {
+        const Component = sap.ui.require("sap/ui/core/Component");
+        return {
+          firstAlive: !!Component.registry.get(window.leak.first),
+          created: window.leak.created,
+          alive: Component.registry.filter(
+            (c) =>
+              c.getMetadata().getName() === "z2ui5.Component" &&
+              !window.leak.before.has(c),
+          ).length,
+        };
+      });
+    if (change === "a new app") {
+      // the new app runs, the first component is gone
+      await expect(
+        page.getByText("Quickstart", { exact: false }).first(),
+      ).toBeVisible();
+      await expect
+        .poll(state)
+        .toEqual({ firstAlive: false, created: 1, alive: 1 });
+    } else {
+      await expect
+        .poll(state)
+        .toEqual({ firstAlive: false, created: 0, alive: 0 });
+    }
+  });
+}

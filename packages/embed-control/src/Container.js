@@ -25,10 +25,11 @@
 sap.ui.define(
   [
     "sap/ui/core/Control",
+    "sap/ui/core/Component",
     "sap/ui/core/ComponentContainer",
     "sap/ui/dom/includeStylesheet",
   ],
-  (Control, ComponentContainer, includeStylesheet) => {
+  (Control, Component, ComponentContainer, includeStylesheet) => {
     "use strict";
 
     // the component name - "sap.app/id" of abap2UI5's app/webapp/manifest.json
@@ -211,9 +212,10 @@ sap.ui.define(
 
       // The three properties the backend session is started with. A change
       // throws the running component away (which ends its session) and lets
-      // the next rendering start a fresh one; a start still waiting for the
-      // frontend is dropped. A destroyed container fires nothing any more,
-      // so an event of the replaced app cannot reach the host.
+      // the next rendering start a fresh one; a start still under way is
+      // dropped, and a component it still creates is destroyed. A destroyed
+      // container fires nothing any more, so an event of the replaced app
+      // cannot reach the host.
       _setStartProperty(name, value) {
         const before = this.getProperty(name);
         this.setProperty(name, value);
@@ -224,13 +226,17 @@ sap.ui.define(
         return this;
       },
 
-      // The start is asynchronous now: the frontend may still have to come
-      // from the backend. The container is set once it is there, which
-      // renders the control again.
+      // The start is asynchronous: the frontend may still have to come from
+      // the backend, and the component loads its manifest. The component is
+      // created here, not by the ComponentContainer - a container destroyed
+      // while its component is still being created hands the late
+      // component to nobody, and it lives on with its backend session. A
+      // start that is no longer the current one destroys what it made.
       onBeforeRendering() {
         if (!this.getApp() || this.getAggregation("_container")) return;
         if (this._start) return;
         const start = (this._start = {});
+        const stale = () => this._exited || this._start !== start;
 
         const path = sameOriginPath(this._endpoint());
         if (!path) {
@@ -242,19 +248,27 @@ sap.ui.define(
           });
           return;
         }
-        loadFrontend(path).then(
-          (embed) => {
-            if (this._exited || this._start !== start) return;
-            this.setAggregation(
-              "_container",
-              this._createContainer(embed, path),
-            );
-          },
-          (reason) => {
-            if (this._exited || this._start !== start) return;
-            this.fireComponentFailed({ reason });
-          },
-        );
+        loadFrontend(path)
+          .then((embed) =>
+            stale() ? null : this._createComponent(embed, path),
+          )
+          .then(
+            (component) => {
+              if (!component) return;
+              if (stale()) {
+                component.destroy();
+                return;
+              }
+              this.setAggregation(
+                "_container",
+                this._createContainer(component),
+              );
+              this.fireComponentCreated({ component });
+            },
+            (reason) => {
+              if (!stale()) this.fireComponentFailed({ reason });
+            },
+          );
       },
 
       exit() {
@@ -265,30 +279,32 @@ sap.ui.define(
         return this.getEndpoint() || DEFAULT_ENDPOINT;
       },
 
-      _createContainer(embed, path) {
+      // Created in the owner component of the control, as a
+      // ComponentContainer would - the host's component, if there is one.
+      _createComponent(embed, path) {
+        const create = () =>
+          Component.create({
+            name: COMPONENT,
+            manifest: true,
+            // the same as the standalone abap2UI5 page (data-handle-validation)
+            handleValidation: true,
+            componentData: this._componentData(embed, path),
+          });
+        const owner = Component.getOwnerComponentFor(this);
+        return owner ? owner.runAsOwner(create) : create();
+      },
+
+      _createContainer(component) {
         return new ComponentContainer({
-          name: COMPONENT,
-          manifest: true,
-          async: true,
           // the component lives and dies with this container - and so does
           // its backend session
           lifecycle: "Container",
           // the models of the host app stay out of the embedded app, which
           // brings its own
           propagateModel: false,
-          // the same as the standalone abap2UI5 page (data-handle-validation)
-          handleValidation: true,
           width: "100%",
           height: "100%",
-          settings: { componentData: this._componentData(embed, path) },
-          componentCreated: (event) => {
-            this.fireComponentCreated({
-              component: event.getParameter("component"),
-            });
-          },
-          componentFailed: (event) => {
-            this.fireComponentFailed({ reason: event.getParameter("reason") });
-          },
+          component,
         });
       },
 
