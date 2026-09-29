@@ -6,6 +6,13 @@ own, and nothing may be left under "Unreleased".
 
 ## Unreleased
 
+- Security: an `endpoint` that the browser reads as another host - a tab
+  or line break after the first slash (`"/\t/evil.example/..."`) - no longer
+  passes the same-origin check. The endpoint is resolved the way the browser
+  resolves it, refused unless it lands on the page's origin, and only the
+  resolved path is requested. A relative `endpoint` now resolves against the
+  page.
+
 ## 0.1.0
 
 The first release.

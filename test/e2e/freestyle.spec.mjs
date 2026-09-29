@@ -72,6 +72,7 @@ test("the embedded app leaves the host's layout alone", async ({ page }) => {
 // The endpoint is handed over as componentData.endpoint, which the frontend
 // reads itself since abap2UI5 2f93737 (#2791) and does not send on - so the
 // POST has to arrive at that path, with only the startup parameters in it.
+// A relative endpoint resolves against the page.
 test("endpoint and params reach the backend", async ({ page }) => {
   const request = page.waitForRequest(
     (r) => r.method() === "POST" && r.url().endsWith("/sap/bc/z2ui5_alt"),
@@ -86,7 +87,7 @@ test("endpoint and params reach the backend", async ({ page }) => {
             document.body.prepend(host);
             new Container({
               app: "Z2UI5_CL_UI5_APP_HI_WORLD",
-              endpoint: "/sap/bc/z2ui5_alt",
+              endpoint: "sap/bc/z2ui5_alt/",
               params: { customer: "4711" },
               height: "300px",
               componentCreated: () => resolve(),
@@ -141,6 +142,12 @@ test("an endpoint on another origin loads no code", async ({ page }) => {
     "https://evil.example/sap/bc/z2ui5",
     "//evil.example/sap/bc/z2ui5",
     "/\\evil.example/sap/bc/z2ui5",
+    // the URL parser drops tabs, line breaks and leading spaces: each of
+    // these is //evil.example to the browser
+    "/\t/evil.example/sap/bc/z2ui5",
+    "/\n/evil.example/sap/bc/z2ui5",
+    "/\r/evil.example/sap/bc/z2ui5",
+    " //evil.example/sap/bc/z2ui5",
   ]) {
     const reason = await page.evaluate(
       (endpoint) =>

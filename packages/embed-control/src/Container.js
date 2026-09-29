@@ -45,7 +45,25 @@ sap.ui.define(
     // scheme, or //host) would hand the page to whoever controls the value -
     // a host that binds the property to a URL parameter, say. The roundtrips
     // have to stay on this origin anyway (abap2UI5's CSRF check).
-    const SAME_ORIGIN_PATH = /^\/(?![/\\])[^?#\\]*$/;
+    //
+    // The value is resolved the way the browser resolves it, and what is
+    // requested is the path of that result - never the raw string. A check
+    // on the string misses what the URL parser does to it: it drops tabs
+    // and line breaks, so "/\t/evil.example" is //evil.example, and reads a
+    // backslash as a slash. A relative path resolves against the page.
+    // Returns the path, or null when the endpoint is not on this origin or
+    // carries a query or a fragment.
+    function sameOriginPath(endpoint) {
+      let url;
+      try {
+        url = new URL(endpoint, window.location.href);
+      } catch (e) {
+        return null;
+      }
+      if (url.origin !== window.location.origin) return null;
+      if (url.search || url.hash) return null;
+      return url.pathname.replace(/\/+$/, "") || "/";
+    }
 
     // Once per page. A stylesheet rather than inline styles, so a host with
     // a strict Content-Security-Policy (no 'unsafe-inline') needs nothing
@@ -206,20 +224,23 @@ sap.ui.define(
         if (this._start) return;
         const start = (this._start = {});
 
-        const endpoint = this._endpoint();
-        if (!SAME_ORIGIN_PATH.test(endpoint)) {
+        const path = sameOriginPath(this._endpoint());
+        if (!path) {
           this.fireComponentFailed({
             reason: new Error(
-              `endpoint '${endpoint}' is not a path on this server - ` +
+              `endpoint '${this._endpoint()}' is not a path on this server - ` +
                 "the abap2UI5 frontend is only loaded from there",
             ),
           });
           return;
         }
-        loadFrontend(endpoint).then(
+        loadFrontend(path).then(
           (embed) => {
             if (this._exited || this._start !== start) return;
-            this.setAggregation("_container", this._createContainer(embed));
+            this.setAggregation(
+              "_container",
+              this._createContainer(embed, path),
+            );
           },
           (reason) => {
             if (this._exited || this._start !== start) return;
@@ -233,10 +254,10 @@ sap.ui.define(
       },
 
       _endpoint() {
-        return (this.getEndpoint() || DEFAULT_ENDPOINT).replace(/\/+$/, "");
+        return this.getEndpoint() || DEFAULT_ENDPOINT;
       },
 
-      _createContainer(embed) {
+      _createContainer(embed, path) {
         return new ComponentContainer({
           name: COMPONENT,
           manifest: true,
@@ -251,7 +272,7 @@ sap.ui.define(
           handleValidation: true,
           width: "100%",
           height: "100%",
-          settings: { componentData: this._componentData(embed) },
+          settings: { componentData: this._componentData(embed, path) },
           componentCreated: (event) => {
             this.fireComponentCreated({
               component: event.getParameter("component"),
@@ -274,7 +295,7 @@ sap.ui.define(
       //   z2ui5/embed        what the bundle hands over - the installation's
       //                      own settings, the paths of the sibling BSPs
       //                      z2ui5_cci/z2ui5_ccc
-      _componentData(embed) {
+      _componentData(embed, path) {
         const startupParameters = {};
         for (const [name, value] of Object.entries(this.getParams() || {})) {
           startupParameters[name] = [String(value)];
@@ -282,7 +303,7 @@ sap.ui.define(
         startupParameters.app_start = [this.getApp()];
         return Object.assign({}, embed.componentData, {
           startupParameters,
-          endpoint: this._endpoint(),
+          endpoint: path,
         });
       },
     });

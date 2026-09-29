@@ -68,7 +68,7 @@ sap.ui.require(["z2ui5/embed/Container"], (Container) => {
 | Property | Type | Default | |
 |---|---|---|---|
 | `app` | string | | The ABAP class to run. Nothing starts while it is empty |
-| `endpoint` | string | `/sap/bc/z2ui5` | Path of the abap2UI5 HTTP service on this server - the frontend is loaded from it, the roundtrips go to it. See [Backend](#backend) |
+| `endpoint` | string | `/sap/bc/z2ui5` | Path of the abap2UI5 HTTP service on this server - absolute, or relative to the page. The frontend is loaded from it, the roundtrips go to it. See [Backend](#backend) |
 | `params` | object | | `{ name: "value" }`, read by the app with `client->get( )-t_comp_params` |
 | `width` | CSSSize | `100%` | |
 | `height` | CSSSize | `100%` | The app fills its container - give it a height, or a parent that has one |
@@ -125,8 +125,8 @@ every roundtrip, and a Fiori elements object page goes back to its list.
 **The page and the service have to share an origin.** abap2UI5 rejects a
 POST whose `Origin` names another host than its own (its CSRF defense), and
 the control loads the frontend only from a path on this server - an
-`endpoint` with a scheme or a host is refused, because what comes back is
-code that runs in your page. So the browser reaches the service through your
+`endpoint` that resolves to another origin is refused, because what comes
+back is code that runs in your page. So the browser reaches the service through your
 app's origin:
 
 - **deployed** - the app is served from the same system (BSP, launchpad), or
