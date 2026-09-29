@@ -72,7 +72,8 @@ test("the embedded app leaves the host's layout alone", async ({ page }) => {
 // The endpoint is handed over as componentData.endpoint, which the frontend
 // reads itself since abap2UI5 2f93737 (#2791) and does not send on - so the
 // POST has to arrive at that path, with only the startup parameters in it.
-// A relative endpoint resolves against the page.
+// A relative endpoint resolves against the page, and a parameter without a
+// value stays out - it would reach the app as the text "null".
 test("endpoint and params reach the backend", async ({ page }) => {
   const request = page.waitForRequest(
     (r) => r.method() === "POST" && r.url().endsWith("/sap/bc/z2ui5_alt"),
@@ -88,7 +89,7 @@ test("endpoint and params reach the backend", async ({ page }) => {
             new Container({
               app: "Z2UI5_CL_UI5_APP_HI_WORLD",
               endpoint: "sap/bc/z2ui5_alt/",
-              params: { customer: "4711" },
+              params: { customer: "4711", note: null, flag: undefined },
               height: "300px",
               componentCreated: () => resolve(),
             }).placeAt(host);
@@ -332,3 +333,47 @@ for (const change of ["a new app", "the control destroyed"]) {
     }
   });
 }
+
+// params is an object, and a binding hands over a new one whenever the
+// model says it changed - model.refresh(true), a formatter. The same
+// parameters must not restart the app, which would lose its state; other
+// ones do.
+test("the same params do not restart the app", async ({ page }) => {
+  await page.evaluate(
+    () =>
+      new Promise((resolve, reject) => {
+        sap.ui.require(
+          ["z2ui5/embed/Container", "sap/ui/model/json/JSONModel"],
+          (Container, JSONModel) => {
+            const model = new JSONModel({ customer: "4711" });
+            const state = (window.params = { created: 0, model });
+            const host = document.createElement("div");
+            document.body.prepend(host);
+            const control = new Container({
+              app: "Z2UI5_CL_UI5_APP_HI_WORLD",
+              height: "300px",
+              params: {
+                path: "/customer",
+                formatter: (customer) => ({ customer, note: undefined }),
+              },
+              componentCreated: () => {
+                state.created++;
+                resolve();
+              },
+            });
+            control.setModel(model);
+            control.placeAt(host);
+          },
+          reject,
+        );
+      }),
+  );
+  await page.evaluate(() => window.params.model.refresh(true));
+  await page.waitForTimeout(3000);
+  expect(await page.evaluate(() => window.params.created)).toBe(1);
+
+  await page.evaluate(() =>
+    window.params.model.setProperty("/customer", "4712"),
+  );
+  await expect.poll(() => page.evaluate(() => window.params.created)).toBe(2);
+});

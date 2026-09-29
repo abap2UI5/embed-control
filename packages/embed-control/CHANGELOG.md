@@ -22,6 +22,11 @@ own, and nothing may be left under "Unreleased".
   the component was still being created left that component running unseen,
   with its backend session. The control creates the component itself now and
   destroys it when the start it belongs to is no longer the current one.
+- `params` are compared by value: a binding that hands over the same
+  parameters in a new object (`model.refresh(true)`, a formatter) no longer
+  restarts the app and loses its state. A parameter whose value is `null` or
+  `undefined` is left out instead of reaching the app as the text "null" or
+  "undefined".
 
 ## 0.1.0
 

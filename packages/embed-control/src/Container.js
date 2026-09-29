@@ -66,6 +66,18 @@ sap.ui.define(
       return url.pathname.replace(/\/+$/, "") || "/";
     }
 
+    // The params as the backend gets them, in the launchpad's shape - one
+    // array of values per name. A parameter without a value (null,
+    // undefined) is left out: it would reach the app as the text "null" or
+    // "undefined". Sorted, so that the same parameters give the same result.
+    function startupParameters(params) {
+      const result = {};
+      for (const name of Object.keys(params || {}).sort()) {
+        if (params[name] != null) result[name] = [String(params[name])];
+      }
+      return result;
+    }
+
     // Once per page. A stylesheet rather than inline styles, so a host with
     // a strict Content-Security-Policy (no 'unsafe-inline') needs nothing
     // extra for it.
@@ -216,10 +228,19 @@ sap.ui.define(
       // dropped, and a component it still creates is destroyed. A destroyed
       // container fires nothing any more, so an event of the replaced app
       // cannot reach the host.
+      //
+      // The params by what the backend gets from them, not by identity: a
+      // binding hands over a new object whenever the model says it changed -
+      // model.refresh(true), a formatter - and the same parameters must not
+      // restart the app and lose its state.
       _setStartProperty(name, value) {
-        const before = this.getProperty(name);
+        const key = () =>
+          name === "params"
+            ? JSON.stringify(startupParameters(this.getParams()))
+            : this.getProperty(name);
+        const before = key();
         this.setProperty(name, value);
-        if (this.getProperty(name) !== before) {
+        if (key() !== before) {
           this.destroyAggregation("_container");
           this._start = null;
         }
@@ -320,13 +341,11 @@ sap.ui.define(
       //                      own settings, the paths of the sibling BSPs
       //                      z2ui5_cci/z2ui5_ccc
       _componentData(embed, path) {
-        const startupParameters = {};
-        for (const [name, value] of Object.entries(this.getParams() || {})) {
-          startupParameters[name] = [String(value)];
-        }
-        startupParameters.app_start = [this.getApp()];
         return Object.assign({}, embed.componentData, {
-          startupParameters,
+          startupParameters: Object.assign(
+            startupParameters(this.getParams()),
+            { app_start: [this.getApp()] },
+          ),
           endpoint: path,
         });
       },

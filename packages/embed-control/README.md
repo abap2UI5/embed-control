@@ -69,7 +69,7 @@ sap.ui.require(["z2ui5/embed/Container"], (Container) => {
 |---|---|---|---|
 | `app` | string | | The ABAP class to run. Nothing starts while it is empty |
 | `endpoint` | string | `/sap/bc/z2ui5` | Path of the abap2UI5 HTTP service on this server - absolute, or relative to the page. The frontend is loaded from it, the roundtrips go to it. See [Backend](#backend) |
-| `params` | object | | `{ name: "value" }`, read by the app with `client->get( )-t_comp_params` |
+| `params` | object | | `{ name: "value" }`, read by the app with `client->get( )-t_comp_params`. A name whose value is `null` or `undefined` is left out |
 | `width` | CSSSize | `100%` | |
 | `height` | CSSSize | `100%` | The app fills its container - give it a height, or a parent that has one |
 
@@ -81,7 +81,9 @@ sap.ui.require(["z2ui5/embed/Container"], (Container) => {
 Every control is its **own abap2UI5 session** - two controls with the same
 class do not share state. Changing `app`, `endpoint` or `params` ends the
 running session and starts a new one; destroying the control ends it too.
-All three are ordinary properties, so they can be bound to your model.
+All three are ordinary properties, so they can be bound to your model -
+`params` is compared by value, so a binding that hands over the same
+parameters in a new object does not restart the app.
 
 ## Examples
 
