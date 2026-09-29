@@ -14,7 +14,8 @@ The same three places as in any UI5 app:
 | File | |
 |---|---|
 | `package.json` | the package is an ordinary dependency - `npm install @abap2ui5/embed-control` |
-| `ui5.yaml` | `includeDependency` takes the control into the build; the proxy to the abap2UI5 backend; every UI5 library the ABAP apps use |
+| `ui5.yaml` | `includeDependency` takes the control into the build; the proxy to the SAP system that runs abap2UI5; every UI5 library the ABAP apps use |
+| `ui5-local.yaml` | the same, with the proxy to abap2UI5 running locally in Node |
 | `webapp/manifest.json` | the `z2ui5.embed` resourceRoot: `./thirdparty/z2ui5/embed/` |
 
 ## The custom section
@@ -91,22 +92,32 @@ URL to the page it is embedded in - **the first abap2UI5 release after
 1.145.0**. An older one clears the URL hash after every roundtrip, and the
 object page goes back to the list.
 
-```bash
-npm install
-npm start                        # ui5 serve, /sap/** proxied to the backend
-```
-
 The app's own OData service is a mockserver of the dev server - the
 metadata with the UI annotations in `webapp/localService/metadata.xml`, the
-customers in `webapp/localService/data/`. The proxy for `/sap` goes to
-`http://localhost:3000` by default: abap2UI5 transpiled to JavaScript and run
-in Node, no SAP system needed. From an abap2UI5 checkout, whose main has what
-the app needs (the first build takes a few minutes):
+customers in `webapp/localService/data/` - with either backend: the list and
+the object page come from the mock data, the section from abap2UI5.
+
+**Against an SAP system** - `npm start`: set the system's URL as `baseUri`
+in `ui5.yaml`, copy `.env.example` to `.env` and put user and password there.
+
+```bash
+npm install
+npm start                        # ui5 serve, /sap/** proxied to the system in ui5.yaml
+```
+
+**Without an SAP system** - `npm run start-local` (`ui5-local.yaml`): abap2UI5
+transpiled to JavaScript and run in Node, on `http://localhost:3000`. From an
+abap2UI5 checkout, whose main has what the app needs (the first build takes a
+few minutes):
 
 ```bash
 git clone https://github.com/abap2UI5/abap2UI5.git && cd abap2UI5
 npm ci && npm run downport && npm run auto_transpile
 npm run express                  # abap2UI5 on http://localhost:3000
+```
+
+```bash
+npm run start-local              # ui5 serve, /sap/** proxied to localhost:3000
 ```
 
 The npm package
@@ -115,9 +126,10 @@ is the same prebuilt, but its version is an abap2UI5 release: once one after
 1.145.0 is out, install that one instead of building a checkout - the
 freestyle example's README shows how.
 
-Against a real system instead: copy `.env.example` to `.env` and set the
-system's URL and user there - the list and the object page still come from
-the mock data, the section from the system.
+The proxy tells the backend the dev server's host in `X-Forwarded-Host`, and
+abap2UI5's CSRF check compares the browser's `Origin` with it - nothing else
+is needed. An installation that switched `check_trust_forwarded_host` off in
+its user exit answers 403 through the proxy.
 
 Fiori elements for OData V4 is part of SAPUI5, not of OpenUI5: `ui5.yaml`
 takes SAPUI5 1.136 from npm, and the first start downloads it.
@@ -128,8 +140,7 @@ A Fiori elements app of your own - generated against your RAP service with
 the SAP Fiori tools, say - needs the three places of the package above, the
 section entry in its manifest and the fragment. Deployed to the system that
 runs abap2UI5 (or behind an approuter that routes `/sap/bc/z2ui5` to it),
-nothing else is needed: the proxy and `lib/sameOrigin.js` are for
-`ui5 serve` only.
+nothing else is needed: the proxy is for `ui5 serve` only.
 
 ## Where it comes from
 

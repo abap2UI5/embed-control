@@ -9,11 +9,11 @@ controls, with the control from npm:
 | File | |
 |---|---|
 | `package.json` | the package is an ordinary dependency - `npm install @abap2ui5/embed-control` |
-| `ui5.yaml` | `includeDependency` takes the control into the build; the proxy to the backend; every UI5 library the ABAP apps use |
+| `ui5.yaml` | `includeDependency` takes the control into the build; the proxy to the SAP system; every UI5 library the ABAP apps use |
+| `ui5-local.yaml` | the same, with the proxy to abap2UI5 running locally in Node |
 | `webapp/manifest.json` | the `z2ui5.embed` resourceRoot: `./thirdparty/z2ui5/embed/` |
 | `webapp/view/Main.view.xml` | `xmlns:z2ui5="z2ui5.embed"` and three `z2ui5:Container` controls |
 | `webapp/controller/Main.controller.js` | starting another app = setting a model property |
-| `lib/sameOrigin.js` | dev server only: why a proxy has to drop `Origin` for abap2UI5 |
 
 No file of the abap2UI5 frontend is in the app or its build: the control
 loads it from the backend (`/sap/bc/z2ui5?z2ui5-bundle`).
@@ -23,13 +23,17 @@ loads it from the backend (`/sap/bc/z2ui5?z2ui5-bundle`).
 It needs an abap2UI5 backend that answers `?z2ui5-bundle` - abap2UI5 1.145.0
 or later.
 
+**Against an SAP system** - `npm start`: set the system's URL as `baseUri`
+in `ui5.yaml`, copy `.env.example` to `.env` and put user and password there.
+
 ```bash
 npm install
-npm start                        # ui5 serve, /sap/** proxied to the backend
+npm start                        # ui5 serve, /sap/** proxied to the system in ui5.yaml
 ```
 
-The proxy goes to `http://localhost:3000` by default: abap2UI5 transpiled to
-JavaScript and run in Node, no SAP system needed. The npm package
+**Without an SAP system** - `npm run start-local` (`ui5-local.yaml`): abap2UI5
+transpiled to JavaScript and run in Node, on `http://localhost:3000`. The npm
+package
 [`@abap2ui5/node-runtime`](https://www.npmjs.com/package/@abap2ui5/node-runtime)
 is exactly that, prebuilt - in a folder of its own, with Node 22 or later:
 
@@ -39,11 +43,17 @@ npm install @abap2ui5/node-runtime express
 node --input-type=module -e 'import { serve } from "@abap2ui5/node-runtime"; await serve({ port: 3000 });'
 ```
 
+```bash
+npm run start-local              # ui5 serve, /sap/** proxied to localhost:3000
+```
+
 Its version is the abap2UI5 release it was built from, and it runs the apps
 that come with abap2UI5, the hello world app among them.
 
-Against a real system instead: copy `.env.example` to `.env` and set the
-system's URL and user there.
+The proxy tells the backend the dev server's host in `X-Forwarded-Host`, and
+abap2UI5's CSRF check compares the browser's `Origin` with it - nothing else
+is needed. An installation that switched `check_trust_forwarded_host` off in
+its user exit answers 403 through the proxy.
 
 `npm run build` writes the app to deploy into `dist/`, the control in
 `dist/thirdparty/z2ui5/embed/`.

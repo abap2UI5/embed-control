@@ -9,12 +9,11 @@ import { defineConfig } from "@playwright/test";
 //                    (SAP Build Work Zone) bring a current UI5; its preview
 //                    page stands in for the host
 //
-// The UI5 dev servers are started here. The backend is NOT: it has to be
-// running already where the examples' proxies point - http://localhost:3000
-// by default, the transpiled abap2UI5 from an abap2UI5 checkout
-// (`npm run express` there, see README), or any system set in an example's
-// .env. The Fiori elements app's own OData service is a mockserver of its
-// dev server (examples/fiori-elements/ui5.yaml).
+// The UI5 dev servers are started here, with the examples' ui5-local.yaml.
+// The backend is NOT: it has to be running already where those proxies point
+// - http://localhost:3000, the transpiled abap2UI5 (`npm run express` in an
+// abap2UI5 checkout, or @abap2ui5/node-runtime; see README). The Fiori
+// elements app's own OData service is a mockserver of its dev server.
 //
 // PW_CHROMIUM_PATH runs a Chromium that is already installed instead of the
 // one `npx playwright install chromium` downloads.
@@ -61,11 +60,11 @@ export default defineConfig({
     },
   ],
   webServer: [
-    serve("freestyle", "ui5.yaml", 8080, 180_000),
+    serve("freestyle", "ui5-local.yaml", 8080, 180_000),
     serve("freestyle", "ui5-1.71.yaml", 8081, 180_000),
     // SAPUI5 with sap.fe and everything it needs is the biggest download
-    serve("fiori-elements", "ui5.yaml", 8082, 300_000),
+    serve("fiori-elements", "ui5-local.yaml", 8082, 300_000),
     // the card itself is no page - its preview is
-    serve("card", "ui5.yaml", 8083, 180_000, "test/index.html"),
+    serve("card", "ui5-local.yaml", 8083, 180_000, "test/index.html"),
   ],
 });

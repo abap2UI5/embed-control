@@ -6,6 +6,7 @@
   "license": "MIT",
   "scripts": {
     "start": "ui5 serve --open test/index.html",
+    "start-local": "ui5 serve --config ui5-local.yaml --open test/index.html",
     "serve": "ui5 serve",
     "build": "ui5 build --clean-dest"
   },

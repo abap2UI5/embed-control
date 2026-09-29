@@ -61,8 +61,21 @@ They need an abap2UI5 backend that answers `?z2ui5-bundle` (1.145.0 or
 later), the Fiori elements one and the card an abap2UI5 that leaves the URL
 hash to the page it is embedded in (the first release after 1.145.0 - its
 main has it).
-Without an SAP system, run abap2UI5 transpiled to JavaScript in Node. For
-the freestyle example, the npm package
+
+**Against an SAP system:** set the system's URL as `baseUri` in the
+example's `ui5.yaml`, copy its `.env.example` to `.env` next to it and put
+user and password there.
+
+```bash
+npm install
+npm start                        # the freestyle example
+npm run start:fe                 # the Fiori elements example, on its mock OData service
+npm run start:card               # the card, on its preview page
+```
+
+**Without an SAP system:** `start-local`, with the examples' `ui5-local.yaml`
+- abap2UI5 transpiled to JavaScript and run in Node on
+`http://localhost:3000`. For the freestyle example, the npm package
 [`@abap2ui5/node-runtime`](https://www.npmjs.com/package/@abap2ui5/node-runtime)
 is enough - abap2UI5 prebuilt, its version the release it was built from
 (Node 22 or later, in a folder of its own):
@@ -85,16 +98,15 @@ npm run express                  # abap2UI5 on http://localhost:3000
 Then, here:
 
 ```bash
-npm install
-npm start                        # the freestyle example
-npm run start:fe                 # the Fiori elements example, on its mock OData service
-npm run start:card               # the card, on its preview page
+npm run start-local              # the freestyle example
+npm run start-local:fe           # the Fiori elements example
+npm run start-local:card         # the card
 ```
 
-Against a real system instead: copy an example's `.env.example` to `.env`
-next to it and set the system's URL and user there. The Fiori elements
-example takes SAPUI5 from npm - Fiori elements for OData V4 is not part of
-OpenUI5 - so its first start downloads more.
+The proxy tells the backend the dev server's host in `X-Forwarded-Host`, and
+abap2UI5's CSRF check compares the browser's `Origin` with it - no middleware
+of our own. The Fiori elements example takes SAPUI5 from npm - Fiori elements
+for OData V4 is not part of OpenUI5 - so its first start downloads more.
 
 ## Checks
 
