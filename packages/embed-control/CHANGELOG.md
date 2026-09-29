@@ -12,6 +12,12 @@ own, and nothing may be left under "Unreleased".
   resolves it, refused unless it lands on the page's origin, and only the
   resolved path is requested. A relative `endpoint` now resolves against the
   page.
+- One failed load of the frontend - a backend that was down, a logon page
+  instead of the bundle - no longer disables every control on the page for
+  good. The failure is forgotten and the next start (a new control, or a
+  change of `app`, `endpoint` or `params`) asks the backend again; the
+  control no longer asks UI5's module loader for `z2ui5/embed`, which
+  remembered the module as failed.
 
 ## 0.1.0
 

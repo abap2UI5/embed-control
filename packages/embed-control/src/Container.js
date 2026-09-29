@@ -84,36 +84,44 @@ sap.ui.define(
     // carries what only the installation knows. A logon page, or the page of
     // an abap2UI5 without the bundle, defines no such module: the script
     // either does not run (HTML under nosniff) or runs into nothing, and the
-    // require below fails.
+    // check below fails.
     //
-    // z2ui5/embed is the bundle's module, not this package's: this control
-    // lives below it, in z2ui5/embed/ - the namespace the app maps to its
-    // thirdparty/ folder. So when the bundle did not define the module, the
-    // require asks for thirdparty/z2ui5/embed.js, which no app has, and fails
-    // as it should.
+    // The check looks the module up and never loads it: once the script
+    // has run, the bundle's sap.ui.define has been handed to the loader,
+    // which settles a module without dependencies before the next task.
+    // Asking the loader for a module nobody defined would make it fetch
+    // z2ui5/embed.js, which no app has (z2ui5/embed is the bundle's module;
+    // this package lives below it, in z2ui5/embed/), and remember the module
+    // as failed for the page's life - a later bundle could never define it.
+    //
+    // A failed load is forgotten, its script element removed: the next
+    // start - a new control, or a change of app, endpoint or params - asks
+    // the backend again, which may be back, or the session valid again.
     let frontend = null;
 
-    function loadFrontend(endpoint) {
+    function loadFrontend(path) {
       if (!frontend) {
         frontend = new Promise((resolve, reject) => {
-          const url = `${endpoint}?${BUNDLE_PARAM}`;
-          const fail = () =>
+          const url = `${path}?${BUNDLE_PARAM}`;
+          const script = document.createElement("script");
+          const fail = () => {
+            frontend = null;
+            script.remove();
             reject(
               new Error(
                 `no abap2UI5 frontend at ${url} - is the service active, ` +
                   "the session valid and abap2UI5 recent enough?",
               ),
             );
-          const script = document.createElement("script");
+          };
           script.src = url;
           script.onerror = fail;
           script.onload = () => {
-            sap.ui.require(
-              ["z2ui5/embed"],
-              (embed) =>
-                embed && embed.componentData ? resolve(embed) : fail(),
-              fail,
-            );
+            setTimeout(() => {
+              const embed = sap.ui.require("z2ui5/embed");
+              if (embed && embed.componentData) resolve(embed);
+              else fail();
+            }, 0);
           };
           document.head.appendChild(script);
         });

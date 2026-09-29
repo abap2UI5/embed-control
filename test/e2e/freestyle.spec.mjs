@@ -191,3 +191,58 @@ test("a logon page instead of the bundle ends in componentFailed", async ({
   });
   await expect(postButtons(page)).toHaveCount(0);
 });
+
+// A failed load is not the end of the page: the next start asks the backend
+// again - it may be back, the session valid again. Nothing may keep the
+// failure: not the control, and not UI5's module loader, which remembers a
+// module it could not load for good - so the control never asks it for
+// z2ui5/embed, it only looks whether the bundle defined it.
+test("a failed frontend load is tried again by the next start", async ({
+  page,
+}, testInfo) => {
+  const failures = {
+    "a logon page": (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "text/html",
+        body: "<!DOCTYPE html><html><body><form>Logon</form></body></html>",
+      }),
+    "a backend that is down": (route) =>
+      route.fulfill({ status: 503, contentType: "text/plain", body: "down" }),
+  };
+  for (const [failure, fail] of Object.entries(failures)) {
+    let answered = 0;
+    await page.unrouteAll();
+    await page.route(
+      (url) => url.searchParams.has("z2ui5-bundle"),
+      (route) => (++answered === 1 ? fail(route) : route.continue()),
+    );
+    const moduleRequests = [];
+    page.on("request", (r) => {
+      if (r.url().endsWith("/z2ui5/embed.js")) moduleRequests.push(r.url());
+    });
+    await page.goto(`/index.html${testInfo.project.metadata.query ?? ""}`);
+    await expect(
+      page.getByText(/abap2UI5 could not start/).first(),
+    ).toBeVisible({ timeout: 45_000 });
+    await expect(postButtons(page), failure).toHaveCount(0);
+
+    // the host starts another app in #single - a new start
+    await page.locator("[id$='--input-inner']").fill("z2ui5_cl_ui5_app_start");
+    await page.locator("[id$='--start']").click();
+    await expect(
+      container(page, "single").getByText("Quickstart", { exact: false }),
+      failure,
+    ).toBeVisible({ timeout: 45_000 });
+
+    expect(answered, failure).toBe(2);
+    expect(moduleRequests, failure).toEqual([]);
+    // the failed script is gone, the loaded one stays
+    expect(
+      await page.evaluate(
+        () => document.querySelectorAll("script[src*='z2ui5-bundle']").length,
+      ),
+      failure,
+    ).toBe(1);
+  }
+});
