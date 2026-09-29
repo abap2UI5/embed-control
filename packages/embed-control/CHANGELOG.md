@@ -31,6 +31,10 @@ own, and nothing may be left under "Unreleased".
   every class it creates as a global, and abap2UI5 dropped its `z2ui5`
   global on purpose (#2777). The module returns the class, which is all that
   views and `sap.ui.require` use.
+- README: the backend floor in Node and CAP too (`@abap2ui5/node-runtime`
+  1.145.0, `@cap2ui5/cds-plugin` 0.3.1), what 1.145.0 does not do yet (the
+  URL hash, a `#/app/<CLASS>` hash that wins over `app`, no CSRF token for an
+  approuter route) and the page-wide behaviour of the embedded frontend.
 
 ## 0.1.0
 

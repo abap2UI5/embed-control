@@ -9,12 +9,17 @@ name: ci
 #         change that breaks it shows here, not in the delivery after the
 #         merge. Here with the control of this commit; the delivery takes it
 #         from npm
-# e2e   - the examples in a browser against a live abap2UI5 backend:
-#         abap2UI5 main, transpiled to JavaScript and served by its own
-#         express server (npm run express) - no SAP system involved. The
-#         control loads the frontend from that backend (?z2ui5-bundle), so
-#         what is tested is the pair a user gets: this control and the
-#         current abap2UI5
+# e2e   - the examples in a browser against a live abap2UI5 backend,
+#         transpiled to JavaScript and served by its express server - no SAP
+#         system involved. The control loads the frontend from that backend
+#         (?z2ui5-bundle), so what is tested is the pair a user gets: this
+#         control and an abap2UI5. Twice: against abap2UI5 main (npm run
+#         express in a checkout), and against the backend floor the package
+#         README names, abap2UI5 1.145.0 - the published
+#         @abap2ui5/node-runtime of that version. The floor leg leaves out
+#         what 1.145.0 cannot do: the Fiori elements example and the tests
+#         tagged @after-1.145.0 need a frontend that leaves the URL hash to
+#         the host (the release after it)
 
 on:
   pull_request:
@@ -106,11 +111,24 @@ jobs:
           ABAP2UI5_DIR: .abap2ui5
 
   e2e:
+    name: e2e (abap2UI5 ${{ matrix.backend }})
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - backend: main
+            playwright-args: ""
+          # the floor - raise it with the package README
+          - backend: "1.145.0"
+            playwright-args: >-
+              --project ui5-1.136 --project ui5-1.71 --project card
+              --grep-invert @after-1.145.0
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: ${{ matrix.backend == 'main' }}
         with:
           repository: abap2UI5/abap2UI5
           path: .abap2ui5
@@ -123,15 +141,31 @@ jobs:
             .abap2ui5/package-lock.json
 
       - name: Build the abap2UI5 backend
+        if: ${{ matrix.backend == 'main' }}
         working-directory: .abap2ui5
         run: |
           npm ci
           npm run downport
           npm run auto_transpile
+      - name: Install the published abap2UI5 ${{ matrix.backend }}
+        if: ${{ matrix.backend != 'main' }}
+        run: |
+          mkdir .abap2ui5 && cd .abap2ui5
+          npm init -y > /dev/null
+          npm install --no-audit --no-fund \
+            "@abap2ui5/node-runtime@${{ matrix.backend }}" express@5
+          cat > serve.mjs <<'EOF'
+          import { serve } from "@abap2ui5/node-runtime";
+          await serve({ port: 3000, host: "127.0.0.1" });
+          EOF
       - name: Start it on port 3000
         working-directory: .abap2ui5
         run: |
-          HOST=127.0.0.1 PORT=3000 nohup npm run express > "$RUNNER_TEMP/express.log" 2>&1 &
+          if [ "${{ matrix.backend }}" = main ]; then
+            HOST=127.0.0.1 PORT=3000 nohup npm run express > "$RUNNER_TEMP/express.log" 2>&1 &
+          else
+            nohup node serve.mjs > "$RUNNER_TEMP/express.log" 2>&1 &
+          fi
           for i in $(seq 1 60); do
             curl -s -o /dev/null http://127.0.0.1:3000/ && exit 0
             sleep 1
@@ -141,7 +175,7 @@ jobs:
 
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - run: npx playwright test
+      - run: npx playwright test ${{ matrix.playwright-args }}
         env:
           CI: "true"
       - if: ${{ failure() }}
@@ -149,6 +183,6 @@ jobs:
       - if: ${{ failure() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.backend }}
           path: playwright-report/
           retention-days: 7

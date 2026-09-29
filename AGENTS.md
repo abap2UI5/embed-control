@@ -55,7 +55,7 @@ the generated `z2ui5_cl_ui5f_preload`; its only source is
 | `scripts/release-check.mjs` | The gate before `npm publish`: tag, version, changelog and repository agree |
 | `scripts/build-bsp.mjs` | The tree abap2UI5/frontend-embed-control delivers - the examples as UI5 projects (`freestyle/`, `fiori-elements/`, `card/`) and the freestyle one as BSP (`src/`), built with abap2UI5's tools into `out/standard/`; `--from-npm` takes the control from the registry |
 | `delivery/README.md` | The README of abap2UI5/frontend-embed-control, on its `main` and its branch |
-| `.github/workflows/` | `ci.yaml` (checks, consumer builds, the delivered tree, e2e against abap2UI5's default branch - on every pull request, every night, and before every publish), `publish.yaml` (npm, on a GitHub release, then the delivery), `frontend_deploy.yaml` (the tree into abap2UI5/frontend-embed-control, after a publish and on every change to the examples, the build or its README) |
+| `.github/workflows/` | `ci.yaml` (checks, consumer builds, the delivered tree, e2e against abap2UI5's default branch and the 1.145.0 floor - on every pull request, every night, and before every publish), `publish.yaml` (npm, on a GitHub release, then the delivery), `frontend_deploy.yaml` (the tree into abap2UI5/frontend-embed-control, after a publish and on every change to the examples, the build or its README) |
 
 ## Rules for `src/`
 
@@ -106,8 +106,13 @@ the generated `z2ui5_cl_ui5f_preload`; its only source is
   CLI reads it, and UI5 CLI 3 refuses a dependency with 4.0.
   `npm run consumer:check` builds the packed package with CLI 3 and 4.
 - **abap2UI5 1.145.0 is the backend floor** - the first release that answers
-  `?z2ui5-bundle`. The package README names it; raise it there when the
-  control starts to rely on something newer.
+  `?z2ui5-bundle`. The package README names it, with what 1.145.0 does not
+  do yet, and the e2e job of `ci.yaml` runs against it (the published
+  `@abap2ui5/node-runtime` of that version) next to abap2UI5 main; raise it
+  in both when the control starts to rely on something newer. A test that
+  needs a newer backend is tagged `@after-1.145.0`, which the floor leg
+  leaves out - as it leaves out the Fiori elements example, which needs the
+  hash.
 - **A host that routes by the hash needs the release after 1.145.0.** Its
   bundle marks the component embedded (`componentData.embedded`, abap2UI5
   `Component.init`), and an embedded component leaves the URL hash to the

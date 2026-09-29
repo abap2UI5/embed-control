@@ -107,7 +107,9 @@ Its README walks through the places the package is wired in.
 The app runs on an ABAP system with
 [abap2UI5 installed](https://abap2ui5.github.io/docs/configuration/installation.html)
 and its HTTP service (by default `/sap/bc/z2ui5`) active. The control needs
-**abap2UI5 1.145.0 or later**, whose service answers `?z2ui5-bundle`:
+**abap2UI5 1.145.0 or later**, whose service answers `?z2ui5-bundle` - in
+Node that is `@abap2ui5/node-runtime` 1.145.0, in CAP
+`@cap2ui5/cds-plugin` 0.3.1, which runs on it:
 
 ```
 GET  /sap/bc/z2ui5?z2ui5-bundle   the frontend as one script - loaded once per page
@@ -118,11 +120,26 @@ GET  /sap/bc/z2ui5                abap2UI5's own page, unchanged
 An older abap2UI5 answers with its page; the control then fires
 `componentFailed` ("no abap2UI5 frontend at ...") instead of starting.
 
-**A host that routes by the URL hash** - a Fiori elements app, an app with a
-UI5 router, SAP Build Work Zone - needs **the first abap2UI5 release after
-1.145.0**. Its frontend
-knows it is embedded and leaves the hash to your app; 1.145.0 clears it after
-every roundtrip, and a Fiori elements object page goes back to its list.
+**What 1.145.0 does not do yet.** The first abap2UI5 release after 1.145.0
+fixes all of these; with 1.145.0 itself plan for them:
+
+- **The URL hash is the frontend's.** 1.145.0 clears the host's hash with the
+  first roundtrip and after every one: a Fiori elements object page goes back
+  to its list, SAP Build Work Zone leaves the page a card sits on. And a
+  host hash shaped like abap2UI5's own deep link, `#/app/<CLASS>`, wins over
+  the `app` property - that class starts instead. A host that routes by the
+  hash - a Fiori elements app, an app with a UI5 router, SAP Build Work
+  Zone - needs the release after 1.145.0, whose frontend knows it is
+  embedded and leaves the hash to your app (abap2UI5 677e71b, #2808).
+- **No CSRF token handshake.** An SAP approuter route checks CSRF tokens by
+  default (`cds add approuter` generates such a route), and 1.145.0 sends
+  none - every roundtrip is refused with 403 "X-CSRF-Token: Required". Give
+  the route to the service `"csrfProtection": false`; abap2UI5's own origin
+  check stays in place. The release after 1.145.0 fetches the token on that
+  403 (abap2UI5 #2802).
+
+Every release is tested against abap2UI5's main and against 1.145.0
+(`@abap2ui5/node-runtime` 1.145.0) - there without what needs the hash.
 
 **The page and the service have to share an origin.** abap2UI5 rejects a
 POST whose `Origin` names another host than its own (its CSRF defense), and
@@ -172,6 +189,11 @@ specVersion 3.0, and every release is built with both.
   an embedded app still shows the global busy indicator during a roundtrip,
   may set the document title and favicon when the ABAP app asks for it, and
   renders its root as `sap.m.App`.
+- **Page-wide behaviour of the embedded frontend.** Its error dialog's
+  "Restart" - and "Refresh" on its fatal error screen - reloads the whole
+  page, your app included. Its developer tools wrap the `window.console`
+  methods while an app runs (the browser console keeps working; its source
+  links point to the wrapper) and listen for Ctrl+F12 on the document.
 
 ## What is inside
 
