@@ -96,17 +96,22 @@ test("the header navigates to the intent it is given", async ({ page }) => {
 // SAP Build Work Zone routes by the URL hash - #Shell-home, the intent of a
 // page - so the cards on it must leave the hash alone: an abap2UI5 whose
 // bundle marks the component embedded does (the release after 1.145.0),
-// 1.145.0 cleared it with the first roundtrip.
-test("the cards leave the page's URL hash alone", async ({ page }) => {
-  await page.goto("/test/index.html#Shell-home");
-  await expect(postButtons(page)).toHaveCount(2, { timeout: 45_000 });
-  const hello = card(page, "hello");
-  await hello.getByRole("textbox").fill("Alice");
-  await hello.getByRole("button", { name: "Post" }).click();
-  await expect(page.getByText("Your name is Alice")).toBeVisible();
+// 1.145.0 cleared it with the first roundtrip - so the CI leg against that
+// floor leaves this test out (@after-1.145.0).
+test(
+  "the cards leave the page's URL hash alone",
+  { tag: "@after-1.145.0" },
+  async ({ page }) => {
+    await page.goto("/test/index.html#Shell-home");
+    await expect(postButtons(page)).toHaveCount(2, { timeout: 45_000 });
+    const hello = card(page, "hello");
+    await hello.getByRole("textbox").fill("Alice");
+    await hello.getByRole("button", { name: "Post" }).click();
+    await expect(page.getByText("Your name is Alice")).toBeVisible();
 
-  expect(await page.evaluate(() => window.location.hash)).toBe("#Shell-home");
-});
+    expect(await page.evaluate(() => window.location.hash)).toBe("#Shell-home");
+  },
+);
 
 // The app takes the room the card gives it and no more: sap.m.App and
 // sap.m.Shell set height:100% on every ancestor up to <html>, unless the

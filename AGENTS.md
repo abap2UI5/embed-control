@@ -55,15 +55,15 @@ the generated `z2ui5_cl_ui5f_preload`; its only source is
 | `scripts/release-check.mjs` | The gate before `npm publish`: tag, version, changelog and repository agree |
 | `scripts/build-bsp.mjs` | The tree abap2UI5/frontend-embed-control delivers - the examples as UI5 projects (`freestyle/`, `fiori-elements/`, `card/`) and the freestyle one as BSP (`src/`), built with abap2UI5's tools into `out/standard/`; `--from-npm` takes the control from the registry |
 | `delivery/README.md` | The README of abap2UI5/frontend-embed-control, on its `main` and its branch |
-| `.github/workflows/` | `ci.yaml` (checks, consumer builds, the delivered tree, e2e against abap2UI5's default branch - on every pull request, every night, and before every publish), `publish.yaml` (npm, on a GitHub release, then the delivery), `frontend_deploy.yaml` (the tree into abap2UI5/frontend-embed-control, after a publish and on every change to the examples, the build or its README) |
+| `.github/workflows/` | `ci.yaml` (checks, consumer builds, the delivered tree, e2e against abap2UI5's default branch and the 1.145.0 floor - on every pull request, every night, and before every publish), `publish.yaml` (npm, on a GitHub release, then the delivery), `frontend_deploy.yaml` (the tree into abap2UI5/frontend-embed-control, after a publish and on every change to the examples, the build or its README) |
 
 ## Rules for `src/`
 
 - **UI5 1.71 is the floor**, as in abap2UI5. Use no module, class, property or
   enum newer than 1.71, and no `sap/ui/core/Lib` / `sap/ui/core/Element`
   static APIs. What the control uses today and since when:
-  `sap/ui/dom/includeStylesheet` (1.58), `ComponentContainer#lifecycle`
-  (1.56), renderer `apiVersion: 2` (1.67).
+  `sap/ui/dom/includeStylesheet` (1.58), `Component.create` (1.56),
+  `ComponentContainer#lifecycle` (1.56), renderer `apiVersion: 2` (1.67).
   The e2e tests run the freestyle example on 1.71 too
   (`examples/freestyle/ui5-1.71.yaml`, the `ui5-1.71` Playwright project) -
   a change to `src/` is done when every project passes, the
@@ -75,8 +75,16 @@ the generated `z2ui5_cl_ui5f_preload`; its only source is
   `z2ui5/embed` module plus `startupParameters` and `endpoint` - never by
   patching the manifest or reaching into the component's state.
 - **The bundle is code - load it only from a path on this server.** Keep the
-  `SAME_ORIGIN_PATH` check: an `endpoint` with a scheme, `//host` or a
-  backslash is refused before anything is requested. Load it with a
+  `sameOriginUrl` check: the `endpoint` is parsed the way the browser parses
+  it (`new URL(endpoint, location.href)`), refused before anything is
+  requested unless it is http(s) on the page's origin, and only the resolved
+  absolute URL is requested and handed to the frontend - never the raw
+  string, which the URL parser rewrites (it drops tabs and line breaks, reads
+  a backslash as a slash), and never a bare path, which the browser resolves
+  against the page's `<base>` - another host, possibly. A path that begins
+  with `//` is refused too: the parser drops `.` and `..` segments, so
+  `/.//host` comes out on the page's origin with the path `//host`, another
+  host wherever that path is used on its own. Load it with a
   `<script src>`, never with `eval`, `new Function` or `fetch` + inject.
 - **One frontend per page, one component per control, one backend session per
   component.** The bundle is loaded once; a change of `app`, `endpoint` or
@@ -102,8 +110,13 @@ the generated `z2ui5_cl_ui5f_preload`; its only source is
   CLI reads it, and UI5 CLI 3 refuses a dependency with 4.0.
   `npm run consumer:check` builds the packed package with CLI 3 and 4.
 - **abap2UI5 1.145.0 is the backend floor** - the first release that answers
-  `?z2ui5-bundle`. The package README names it; raise it there when the
-  control starts to rely on something newer.
+  `?z2ui5-bundle`. The package README names it, with what 1.145.0 does not
+  do yet, and the e2e job of `ci.yaml` runs against it (the published
+  `@abap2ui5/node-runtime` of that version) next to abap2UI5 main; raise it
+  in both when the control starts to rely on something newer. A test that
+  needs a newer backend is tagged `@after-1.145.0`, which the floor leg
+  leaves out - as it leaves out the Fiori elements example, which needs the
+  hash.
 - **A host that routes by the hash needs the release after 1.145.0.** Its
   bundle marks the component embedded (`componentData.embedded`, abap2UI5
   `Component.init`), and an embedded component leaves the URL hash to the
@@ -167,7 +180,7 @@ into frontend-embed-control's `main` as `result/standard`, where the
 npm ci
 npm run lint && npm run format:check
 npm run build          # ui5 build of both examples - the control lands in dist/thirdparty/
-npm run pack:check     # package contents: ui5.yaml and src/ only
+npm run pack:check     # package contents: ui5.yaml, src/ and CHANGELOG.md (npm adds README, LICENSE)
 npm run consumer:check # the tarball in an app of its own, built with UI5 CLI 3 and 4
 ABAP2UI5_DIR=../abap2UI5 npm run bsp   # the frontend-embed-control tree, with abap2UI5's page checks
 npx playwright test    # both examples; needs an abap2UI5 backend with ?z2ui5-bundle on :3000 - see README

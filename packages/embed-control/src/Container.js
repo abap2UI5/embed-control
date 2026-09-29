@@ -25,10 +25,11 @@
 sap.ui.define(
   [
     "sap/ui/core/Control",
+    "sap/ui/core/Component",
     "sap/ui/core/ComponentContainer",
     "sap/ui/dom/includeStylesheet",
   ],
-  (Control, ComponentContainer, includeStylesheet) => {
+  (Control, Component, ComponentContainer, includeStylesheet) => {
     "use strict";
 
     // the component name - "sap.app/id" of abap2UI5's app/webapp/manifest.json
@@ -45,7 +46,49 @@ sap.ui.define(
     // scheme, or //host) would hand the page to whoever controls the value -
     // a host that binds the property to a URL parameter, say. The roundtrips
     // have to stay on this origin anyway (abap2UI5's CSRF check).
-    const SAME_ORIGIN_PATH = /^\/(?![/\\])[^?#\\]*$/;
+    //
+    // The value is parsed the way the browser parses it, and what is
+    // requested is the result - never the raw string. A check on the string
+    // misses what the URL parser does to it: it drops tabs and line breaks,
+    // so "/\t/evil.example" is //evil.example, and reads a backslash as a
+    // slash. A relative path resolves against the page's address. The
+    // result is requested as an absolute URL, never as a path, which the
+    // browser would resolve against the page's <base> - and that may name
+    // another host than the one checked here. Only http(s): a blob: URL
+    // carries the origin of the page that made it, a file: page has none to
+    // compare, and neither is a path on a server. And no path that begins
+    // with //: the parser drops "." and ".." segments, so "/.//evil.example"
+    // and "..//evil.example" come out on this origin with the path
+    // //evil.example - which is another host wherever that path is used on
+    // its own, and a path no server has.
+    // Returns the URL - this origin and the path, without a trailing slash -
+    // or null when the endpoint is not on this origin, carries a query or a
+    // fragment, or its path begins with //.
+    function sameOriginUrl(endpoint) {
+      let url;
+      try {
+        url = new URL(endpoint, window.location.href);
+      } catch (e) {
+        return null;
+      }
+      if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+      if (url.origin !== window.location.origin) return null;
+      if (url.search || url.hash) return null;
+      if (url.pathname.startsWith("//")) return null;
+      return url.origin + (url.pathname.replace(/\/+$/, "") || "/");
+    }
+
+    // The params as the backend gets them, in the launchpad's shape - one
+    // array of values per name. A parameter without a value (null,
+    // undefined) is left out: it would reach the app as the text "null" or
+    // "undefined". Sorted, so that the same parameters give the same result.
+    function startupParameters(params) {
+      const result = {};
+      for (const name of Object.keys(params || {}).sort()) {
+        if (params[name] != null) result[name] = [String(params[name])];
+      }
+      return result;
+    }
 
     // Once per page. A stylesheet rather than inline styles, so a host with
     // a strict Content-Security-Policy (no 'unsafe-inline') needs nothing
@@ -66,36 +109,44 @@ sap.ui.define(
     // carries what only the installation knows. A logon page, or the page of
     // an abap2UI5 without the bundle, defines no such module: the script
     // either does not run (HTML under nosniff) or runs into nothing, and the
-    // require below fails.
+    // check below fails.
     //
-    // z2ui5/embed is the bundle's module, not this package's: this control
-    // lives below it, in z2ui5/embed/ - the namespace the app maps to its
-    // thirdparty/ folder. So when the bundle did not define the module, the
-    // require asks for thirdparty/z2ui5/embed.js, which no app has, and fails
-    // as it should.
+    // The check looks the module up and never loads it: once the script
+    // has run, the bundle's sap.ui.define has been handed to the loader,
+    // which settles a module without dependencies before the next task.
+    // Asking the loader for a module nobody defined would make it fetch
+    // z2ui5/embed.js, which no app has (z2ui5/embed is the bundle's module;
+    // this package lives below it, in z2ui5/embed/), and remember the module
+    // as failed for the page's life - a later bundle could never define it.
+    //
+    // A failed load is forgotten, its script element removed: the next
+    // start - a new control, or a change of app, endpoint or params - asks
+    // the backend again, which may be back, or the session valid again.
     let frontend = null;
 
     function loadFrontend(endpoint) {
       if (!frontend) {
         frontend = new Promise((resolve, reject) => {
           const url = `${endpoint}?${BUNDLE_PARAM}`;
-          const fail = () =>
+          const script = document.createElement("script");
+          const fail = () => {
+            frontend = null;
+            script.remove();
             reject(
               new Error(
                 `no abap2UI5 frontend at ${url} - is the service active, ` +
                   "the session valid and abap2UI5 recent enough?",
               ),
             );
-          const script = document.createElement("script");
+          };
           script.src = url;
           script.onerror = fail;
           script.onload = () => {
-            sap.ui.require(
-              ["z2ui5/embed"],
-              (embed) =>
-                embed && embed.componentData ? resolve(embed) : fail(),
-              fail,
-            );
+            setTimeout(() => {
+              const embed = sap.ui.require("z2ui5/embed");
+              if (embed && embed.componentData) resolve(embed);
+              else fail();
+            }, 0);
           };
           document.head.appendChild(script);
         });
@@ -103,7 +154,16 @@ sap.ui.define(
       return frontend;
     }
 
-    return Control.extend("z2ui5.embed.Container", {
+    // UI5 exports every class it creates as a global as well - here
+    // window.z2ui5.embed.Container and its renderer. Nothing reads them: the
+    // module returns the class, XML views and sap.ui.require take it from
+    // there, and the class keeps its renderer. So what the extend adds to
+    // window is taken off again below: the control puts nothing on a z2ui5
+    // global, which abap2UI5 dropped on purpose (#2777).
+    const globalBefore = window.z2ui5;
+    const embedBefore = globalBefore && globalBefore.embed;
+
+    const Container = Control.extend("z2ui5.embed.Container", {
       metadata: {
         properties: {
           // The ABAP class to run - it implements z2ui5_if_app, e.g.
@@ -185,47 +245,82 @@ sap.ui.define(
 
       // The three properties the backend session is started with. A change
       // throws the running component away (which ends its session) and lets
-      // the next rendering start a fresh one; a start still waiting for the
-      // frontend is dropped. A destroyed container fires nothing any more,
-      // so an event of the replaced app cannot reach the host.
+      // the next rendering start a fresh one; a start still under way is
+      // dropped, and a component it still creates is destroyed. A destroyed
+      // container fires nothing any more, so an event of the replaced app
+      // cannot reach the host.
+      //
+      // A change of what the current start was made of, not of the
+      // property: the params by what the backend gets from them, not by
+      // identity - a binding hands over a new object whenever the model says
+      // it changed (model.refresh(true), a formatter), and the same
+      // parameters must not restart the app and lose its state. And a params
+      // object the host changed in place is no longer what the running app
+      // got, although the property holds it already.
       _setStartProperty(name, value) {
-        const before = this.getProperty(name);
         this.setProperty(name, value);
-        if (this.getProperty(name) !== before) {
+        if (this._start && this._start.key !== this._startKey()) {
           this.destroyAggregation("_container");
           this._start = null;
+          // the same object again does not invalidate by itself
+          this.invalidate();
         }
         return this;
       },
 
-      // The start is asynchronous now: the frontend may still have to come
-      // from the backend. The container is set once it is there, which
-      // renders the control again.
+      // what a start is made of - the class, the endpoint and the params as
+      // the backend gets them
+      _startKey() {
+        return JSON.stringify([
+          this.getApp(),
+          this._endpoint(),
+          startupParameters(this.getParams()),
+        ]);
+      },
+
+      // The start is asynchronous: the frontend may still have to come from
+      // the backend, and the component loads its manifest. The component is
+      // created here, not by the ComponentContainer - a container destroyed
+      // while its component is still being created hands the late
+      // component to nobody, and it lives on with its backend session. A
+      // start that is no longer the current one destroys what it made.
       onBeforeRendering() {
         if (!this.getApp() || this.getAggregation("_container")) return;
         if (this._start) return;
-        const start = (this._start = {});
+        const start = (this._start = { key: this._startKey() });
+        const stale = () => this._exited || this._start !== start;
 
-        const endpoint = this._endpoint();
-        if (!SAME_ORIGIN_PATH.test(endpoint)) {
+        const endpoint = sameOriginUrl(this._endpoint());
+        if (!endpoint) {
           this.fireComponentFailed({
             reason: new Error(
-              `endpoint '${endpoint}' is not a path on this server - ` +
+              `endpoint '${this._endpoint()}' is not a path on this server - ` +
                 "the abap2UI5 frontend is only loaded from there",
             ),
           });
           return;
         }
-        loadFrontend(endpoint).then(
-          (embed) => {
-            if (this._exited || this._start !== start) return;
-            this.setAggregation("_container", this._createContainer(embed));
-          },
-          (reason) => {
-            if (this._exited || this._start !== start) return;
-            this.fireComponentFailed({ reason });
-          },
-        );
+        loadFrontend(endpoint)
+          .then((embed) =>
+            stale() ? null : this._createComponent(embed, endpoint),
+          )
+          .then(
+            (component) => {
+              if (!component) return;
+              if (stale()) {
+                component.destroy();
+                return;
+              }
+              this.setAggregation(
+                "_container",
+                this._createContainer(component),
+              );
+              this.fireComponentCreated({ component });
+            },
+            (reason) => {
+              if (!stale()) this.fireComponentFailed({ reason });
+            },
+          );
       },
 
       exit() {
@@ -233,33 +328,49 @@ sap.ui.define(
       },
 
       _endpoint() {
-        return (this.getEndpoint() || DEFAULT_ENDPOINT).replace(/\/+$/, "");
+        return this.getEndpoint() || DEFAULT_ENDPOINT;
       },
 
-      _createContainer(embed) {
+      // Created in the owner component of the control, as a
+      // ComponentContainer would - the host's component, if there is one.
+      //
+      // Unless that owner is inactive: a host the launchpad keeps alive
+      // (UI5 1.88+) is deactivated when the user leaves it, possibly while
+      // the frontend is still loading, and runAsOwner refuses an inactive
+      // owner - the app would never start. It starts without the owner
+      // then; an error of Component.create itself comes back from that
+      // second call and fails the start.
+      _createComponent(embed, endpoint) {
+        const create = () =>
+          Component.create({
+            name: COMPONENT,
+            manifest: true,
+            // the same as the standalone abap2UI5 page (data-handle-validation)
+            handleValidation: true,
+            componentData: this._componentData(embed, endpoint),
+          });
+        const owner = Component.getOwnerComponentFor(this);
+        if (owner) {
+          try {
+            return owner.runAsOwner(create);
+          } catch (e) {
+            // an inactive owner - see above
+          }
+        }
+        return create();
+      },
+
+      _createContainer(component) {
         return new ComponentContainer({
-          name: COMPONENT,
-          manifest: true,
-          async: true,
           // the component lives and dies with this container - and so does
           // its backend session
           lifecycle: "Container",
           // the models of the host app stay out of the embedded app, which
           // brings its own
           propagateModel: false,
-          // the same as the standalone abap2UI5 page (data-handle-validation)
-          handleValidation: true,
           width: "100%",
           height: "100%",
-          settings: { componentData: this._componentData(embed) },
-          componentCreated: (event) => {
-            this.fireComponentCreated({
-              component: event.getParameter("component"),
-            });
-          },
-          componentFailed: (event) => {
-            this.fireComponentFailed({ reason: event.getParameter("reason") });
-          },
+          component,
         });
       },
 
@@ -274,17 +385,24 @@ sap.ui.define(
       //   z2ui5/embed        what the bundle hands over - the installation's
       //                      own settings, the paths of the sibling BSPs
       //                      z2ui5_cci/z2ui5_ccc
-      _componentData(embed) {
-        const startupParameters = {};
-        for (const [name, value] of Object.entries(this.getParams() || {})) {
-          startupParameters[name] = [String(value)];
-        }
-        startupParameters.app_start = [this.getApp()];
+      _componentData(embed, endpoint) {
         return Object.assign({}, embed.componentData, {
-          startupParameters,
-          endpoint: this._endpoint(),
+          startupParameters: Object.assign(
+            startupParameters(this.getParams()),
+            { app_start: [this.getApp()] },
+          ),
+          endpoint,
         });
       },
     });
+
+    if (!globalBefore) delete window.z2ui5;
+    else if (!embedBefore) delete globalBefore.embed;
+    else {
+      delete embedBefore.Container;
+      delete embedBefore.ContainerRenderer;
+    }
+
+    return Container;
   },
 );
