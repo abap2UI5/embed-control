@@ -47,23 +47,30 @@ sap.ui.define(
     // a host that binds the property to a URL parameter, say. The roundtrips
     // have to stay on this origin anyway (abap2UI5's CSRF check).
     //
-    // The value is resolved the way the browser resolves it, and what is
-    // requested is the path of that result - never the raw string. A check
-    // on the string misses what the URL parser does to it: it drops tabs
-    // and line breaks, so "/\t/evil.example" is //evil.example, and reads a
-    // backslash as a slash. A relative path resolves against the page.
-    // Returns the path, or null when the endpoint is not on this origin or
-    // carries a query or a fragment.
-    function sameOriginPath(endpoint) {
+    // The value is parsed the way the browser parses it, and what is
+    // requested is the result - never the raw string. A check on the string
+    // misses what the URL parser does to it: it drops tabs and line breaks,
+    // so "/\t/evil.example" is //evil.example, and reads a backslash as a
+    // slash. A relative path resolves against the page's address. The
+    // result is requested as an absolute URL, never as a path, which the
+    // browser would resolve against the page's <base> - and that may name
+    // another host than the one checked here. Only http(s): a blob: URL
+    // carries the origin of the page that made it, a file: page has none to
+    // compare, and neither is a path on a server.
+    // Returns the URL - this origin and the path, without a trailing slash -
+    // or null when the endpoint is not on this origin or carries a query or
+    // a fragment.
+    function sameOriginUrl(endpoint) {
       let url;
       try {
         url = new URL(endpoint, window.location.href);
       } catch (e) {
         return null;
       }
+      if (url.protocol !== "http:" && url.protocol !== "https:") return null;
       if (url.origin !== window.location.origin) return null;
       if (url.search || url.hash) return null;
-      return url.pathname.replace(/\/+$/, "") || "/";
+      return url.origin + (url.pathname.replace(/\/+$/, "") || "/");
     }
 
     // The params as the backend gets them, in the launchpad's shape - one
@@ -112,10 +119,10 @@ sap.ui.define(
     // the backend again, which may be back, or the session valid again.
     let frontend = null;
 
-    function loadFrontend(path) {
+    function loadFrontend(endpoint) {
       if (!frontend) {
         frontend = new Promise((resolve, reject) => {
-          const url = `${path}?${BUNDLE_PARAM}`;
+          const url = `${endpoint}?${BUNDLE_PARAM}`;
           const script = document.createElement("script");
           const fail = () => {
             frontend = null;
@@ -268,8 +275,8 @@ sap.ui.define(
         const start = (this._start = {});
         const stale = () => this._exited || this._start !== start;
 
-        const path = sameOriginPath(this._endpoint());
-        if (!path) {
+        const endpoint = sameOriginUrl(this._endpoint());
+        if (!endpoint) {
           this.fireComponentFailed({
             reason: new Error(
               `endpoint '${this._endpoint()}' is not a path on this server - ` +
@@ -278,9 +285,9 @@ sap.ui.define(
           });
           return;
         }
-        loadFrontend(path)
+        loadFrontend(endpoint)
           .then((embed) =>
-            stale() ? null : this._createComponent(embed, path),
+            stale() ? null : this._createComponent(embed, endpoint),
           )
           .then(
             (component) => {
@@ -318,14 +325,14 @@ sap.ui.define(
       // owner - the app would never start. It starts without the owner
       // then; an error of Component.create itself comes back from that
       // second call and fails the start.
-      _createComponent(embed, path) {
+      _createComponent(embed, endpoint) {
         const create = () =>
           Component.create({
             name: COMPONENT,
             manifest: true,
             // the same as the standalone abap2UI5 page (data-handle-validation)
             handleValidation: true,
-            componentData: this._componentData(embed, path),
+            componentData: this._componentData(embed, endpoint),
           });
         const owner = Component.getOwnerComponentFor(this);
         if (owner) {
@@ -363,13 +370,13 @@ sap.ui.define(
       //   z2ui5/embed        what the bundle hands over - the installation's
       //                      own settings, the paths of the sibling BSPs
       //                      z2ui5_cci/z2ui5_ccc
-      _componentData(embed, path) {
+      _componentData(embed, endpoint) {
         return Object.assign({}, embed.componentData, {
           startupParameters: Object.assign(
             startupParameters(this.getParams()),
             { app_start: [this.getApp()] },
           ),
-          endpoint: path,
+          endpoint,
         });
       },
     });

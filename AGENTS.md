@@ -75,13 +75,14 @@ the generated `z2ui5_cl_ui5f_preload`; its only source is
   `z2ui5/embed` module plus `startupParameters` and `endpoint` - never by
   patching the manifest or reaching into the component's state.
 - **The bundle is code - load it only from a path on this server.** Keep the
-  `sameOriginPath` check: the `endpoint` is resolved the way the browser
-  resolves it (`new URL(endpoint, location.href)`), refused before anything
-  is requested unless it lands on the page's origin, and only the resolved
-  path is requested and handed to the frontend - never the raw string, which
-  the URL parser rewrites (it drops tabs and line breaks, reads a backslash
-  as a slash). Load it with a `<script src>`, never with `eval`,
-  `new Function` or `fetch` + inject.
+  `sameOriginUrl` check: the `endpoint` is parsed the way the browser parses
+  it (`new URL(endpoint, location.href)`), refused before anything is
+  requested unless it is http(s) on the page's origin, and only the resolved
+  absolute URL is requested and handed to the frontend - never the raw
+  string, which the URL parser rewrites (it drops tabs and line breaks, reads
+  a backslash as a slash), and never a bare path, which the browser resolves
+  against the page's `<base>` - another host, possibly. Load it with a
+  `<script src>`, never with `eval`, `new Function` or `fetch` + inject.
 - **One frontend per page, one component per control, one backend session per
   component.** The bundle is loaded once; a change of `app`, `endpoint` or
   `params` replaces the component; nothing is patched into a running one.

@@ -8,10 +8,15 @@ own, and nothing may be left under "Unreleased".
 
 - Security: an `endpoint` that the browser reads as another host - a tab
   or line break after the first slash (`"/\t/evil.example/..."`) - no longer
-  passes the same-origin check. The endpoint is resolved the way the browser
-  resolves it, refused unless it lands on the page's origin, and only the
-  resolved path is requested. A relative `endpoint` now resolves against the
-  page.
+  passes the same-origin check. The endpoint is parsed the way the browser
+  parses it, refused unless it lands on the page's origin, and only the
+  resolved URL is requested. A relative `endpoint` now resolves against the
+  page's address.
+- A page with a `<base>` that names another host no longer sends the
+  frontend request and the roundtrips there: the control requested the
+  checked endpoint as a path, which the browser resolves against the
+  `<base>`. It requests, and hands to the frontend, the absolute URL on the
+  page's origin now.
 - One failed load of the frontend - a backend that was down, a logon page
   instead of the bundle - no longer disables every control on the page for
   good. The failure is forgotten and the next start (a new control, or a

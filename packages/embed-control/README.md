@@ -68,7 +68,7 @@ sap.ui.require(["z2ui5/embed/Container"], (Container) => {
 | Property | Type | Default | |
 |---|---|---|---|
 | `app` | string | | The ABAP class to run. Nothing starts while it is empty |
-| `endpoint` | string | `/sap/bc/z2ui5` | Path of the abap2UI5 HTTP service on this server - absolute, or relative to the page. The frontend is loaded from it, the roundtrips go to it. See [Backend](#backend) |
+| `endpoint` | string | `/sap/bc/z2ui5` | Path of the abap2UI5 HTTP service on this server - absolute, or relative to the page's address (a `<base>` does not apply). The frontend is loaded from it, the roundtrips go to it. See [Backend](#backend) |
 | `params` | object | | `{ name: "value" }`, read by the app with `client->get( )-t_comp_params`. A name whose value is `null` or `undefined` is left out |
 | `width` | CSSSize | `100%` | |
 | `height` | CSSSize | `100%` | The app fills its container - give it a height, or a parent that has one |

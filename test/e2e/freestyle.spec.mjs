@@ -171,6 +171,67 @@ test("an endpoint on another origin loads no code", async ({ page }) => {
   expect(foreign).toEqual([]);
 });
 
+// The check resolves the endpoint against the page and compares origins -
+// so what is requested has to be exactly that URL. A path is resolved by
+// the browser against the page's <base>, which may name another host: the
+// bundle (code) and the roundtrips would go there, unchecked.
+test("a <base> on another host takes neither the frontend nor the roundtrips there", async ({
+  page,
+  baseURL,
+}, testInfo) => {
+  const foreign = [];
+  await page.route(
+    (url) => url.hostname === "other.test",
+    (route) => {
+      foreign.push(route.request().url());
+      return route.abort();
+    },
+  );
+  // UI5 and the control come from this server by absolute URLs - only what
+  // the control requests itself is left to the <base>
+  await page.route(
+    (url) => url.pathname === "/base-elsewhere.html",
+    (route) =>
+      route.fulfill({
+        contentType: "text/html",
+        body: `<!DOCTYPE html>
+        <html><head>
+        <base href="http://other.test/">
+        <script id="sap-ui-bootstrap"
+          src="${baseURL}/resources/sap-ui-core.js"
+          data-sap-ui-theme="sap_horizon"
+          data-sap-ui-libs="sap.m"
+          data-sap-ui-resourceroots='{"z2ui5.embed": "${baseURL}/thirdparty/z2ui5/embed/"}'
+          data-sap-ui-compatVersion="edge"
+          data-sap-ui-async="true"></script>
+        </head><body class="sapUiBody"><div id="area"></div></body></html>`,
+      }),
+  );
+  await page.goto(
+    `/base-elsewhere.html${testInfo.project.metadata.query ?? ""}`,
+  );
+  const result = await page.evaluate(
+    () =>
+      new Promise((resolve) => {
+        sap.ui.getCore().attachInit(() =>
+          sap.ui.require(["z2ui5/embed/Container"], (Container) => {
+            new Container({
+              app: "Z2UI5_CL_UI5_APP_HI_WORLD",
+              height: "300px",
+              componentCreated: () => resolve("created"),
+              componentFailed: (e) => resolve(e.getParameter("reason").message),
+            }).placeAt("area");
+          }),
+        );
+      }),
+  );
+
+  expect(result).toBe("created");
+  // the first roundtrip came back: the app's view is there
+  await expect(postButtons(page)).toHaveCount(1);
+  expect(foreign).toEqual([]);
+});
+
 // An expired session answers with a logon page, an abap2UI5 without the
 // bundle with its HTML page - neither defines z2ui5/embed, and the control
 // says so instead of starting nothing.
