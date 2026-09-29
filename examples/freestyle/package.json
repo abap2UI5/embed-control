@@ -13,7 +13,7 @@
     "@abap2ui5/embed-control": "^0.1.0"
   },
   "devDependencies": {
-    "@ui5/cli": "^4.0.69",
+    "@ui5/cli": "^4.0.70",
     "ui5-middleware-simpleproxy": "^3.9.0"
   }
 }
