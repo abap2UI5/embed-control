@@ -377,3 +377,11 @@ test("the same params do not restart the app", async ({ page }) => {
   );
   await expect.poll(() => page.evaluate(() => window.params.created)).toBe(2);
 });
+
+// UI5 exports every class as a global; abap2UI5 dropped its z2ui5 global on
+// purpose (#2777), and the control takes its own export off again.
+test("the control puts nothing on a z2ui5 global", async ({ page }) => {
+  expect(
+    await page.evaluate(() => typeof (window.z2ui5 && window.z2ui5.embed)),
+  ).toBe("undefined");
+});

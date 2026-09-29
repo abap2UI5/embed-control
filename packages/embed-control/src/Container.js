@@ -142,7 +142,16 @@ sap.ui.define(
       return frontend;
     }
 
-    return Control.extend("z2ui5.embed.Container", {
+    // UI5 exports every class it creates as a global as well - here
+    // window.z2ui5.embed.Container and its renderer. Nothing reads them: the
+    // module returns the class, XML views and sap.ui.require take it from
+    // there, and the class keeps its renderer. So what the extend adds to
+    // window is taken off again below: the control puts nothing on a z2ui5
+    // global, which abap2UI5 dropped on purpose (#2777).
+    const globalBefore = window.z2ui5;
+    const embedBefore = globalBefore && globalBefore.embed;
+
+    const Container = Control.extend("z2ui5.embed.Container", {
       metadata: {
         properties: {
           // The ABAP class to run - it implements z2ui5_if_app, e.g.
@@ -350,5 +359,14 @@ sap.ui.define(
         });
       },
     });
+
+    if (!globalBefore) delete window.z2ui5;
+    else if (!embedBefore) delete globalBefore.embed;
+    else {
+      delete embedBefore.Container;
+      delete embedBefore.ContainerRenderer;
+    }
+
+    return Container;
   },
 );

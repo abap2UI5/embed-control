@@ -27,6 +27,10 @@ own, and nothing may be left under "Unreleased".
   restarts the app and loses its state. A parameter whose value is `null` or
   `undefined` is left out instead of reaching the app as the text "null" or
   "undefined".
+- The control no longer leaves `window.z2ui5.embed` behind: UI5 exports
+  every class it creates as a global, and abap2UI5 dropped its `z2ui5`
+  global on purpose (#2777). The module returns the class, which is all that
+  views and `sap.ui.require` use.
 
 ## 0.1.0
 
