@@ -65,7 +65,7 @@ The app is developed in
 `examples/freestyle`, next to the package - there, `npm install` at the
 repository root links the package from `packages/embed-control`. Its
 delivery repository
-[abap2UI5/frontend-embed-control](https://github.com/abap2UI5/frontend-embed-control)
+[abap2UI5/samples-embed-control](https://github.com/abap2UI5/samples-embed-control)
 carries it as this UI5 project and as the BSP `Z2UI5_HOST`, both with the
 control from npm - next to the other example, the control in a custom
 section of a Fiori elements app.

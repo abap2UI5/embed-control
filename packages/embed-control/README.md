@@ -89,7 +89,7 @@ restart the app.
 ## Examples
 
 Complete examples that use the package are in
-[abap2UI5/frontend-embed-control](https://github.com/abap2UI5/frontend-embed-control),
+[abap2UI5/samples-embed-control](https://github.com/abap2UI5/samples-embed-control),
 on its branch `standard`, all taking the package from npm:
 
 - `freestyle/` - a UI5 freestyle app with three controls, also as the BSP
