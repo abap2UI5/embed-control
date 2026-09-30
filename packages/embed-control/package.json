@@ -1,6 +1,6 @@
 {
   "name": "@abap2ui5/embed-control",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Embed abap2UI5 apps in any UI5 app: a UI5 control that runs an ABAP class implementing z2ui5_if_app",
   "keywords": [
     "ui5",

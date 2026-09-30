@@ -6,6 +6,8 @@ own, and nothing may be left under "Unreleased".
 
 ## Unreleased
 
+## 0.1.1
+
 - Security: an `endpoint` that the browser reads as another host - a tab
   or line break after the first slash (`"/\t/evil.example/..."`) - no longer
   passes the same-origin check. The endpoint is parsed the way the browser
@@ -56,6 +58,9 @@ own, and nothing may be left under "Unreleased".
   approuter route), the page-wide behaviour of the embedded frontend and
   that a starting app takes the focus from the host.
 - The package carries this changelog.
+- README: abap2UI5 1.146.0 is out - it names the release that leaves the URL
+  hash to the host and answers an approuter's CSRF check, where it said "the
+  first release after 1.145.0".
 
 ## 0.1.0
 

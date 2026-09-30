@@ -121,8 +121,8 @@ GET  /sap/bc/z2ui5                abap2UI5's own page, unchanged
 An older abap2UI5 answers with its page; the control then fires
 `componentFailed` ("no abap2UI5 frontend at ...") instead of starting.
 
-**What 1.145.0 does not do yet.** The first abap2UI5 release after 1.145.0
-fixes all of these; with 1.145.0 itself plan for them:
+**What 1.145.0 does not do yet.** abap2UI5 1.146.0 fixes all of these; with
+1.145.0 itself plan for them:
 
 - **The URL hash is the frontend's.** 1.145.0 clears the host's hash with the
   first roundtrip and after every one: a Fiori elements object page goes back
@@ -130,13 +130,13 @@ fixes all of these; with 1.145.0 itself plan for them:
   host hash shaped like abap2UI5's own deep link, `#/app/<CLASS>`, wins over
   the `app` property - that class starts instead. A host that routes by the
   hash - a Fiori elements app, an app with a UI5 router, SAP Build Work
-  Zone - needs the release after 1.145.0, whose frontend knows it is
+  Zone - needs 1.146.0 or later, whose frontend knows it is
   embedded and leaves the hash to your app (abap2UI5 677e71b, #2808).
 - **No CSRF token handshake.** An SAP approuter route checks CSRF tokens by
   default (`cds add approuter` generates such a route), and 1.145.0 sends
   none - every roundtrip is refused with 403 "X-CSRF-Token: Required". Give
   the route to the service `"csrfProtection": false`; abap2UI5's own origin
-  check stays in place. The release after 1.145.0 fetches the token on that
+  check stays in place. 1.146.0 fetches the token on that
   403 (abap2UI5 #2802).
 
 Every release is tested against abap2UI5's main and against 1.145.0
@@ -185,7 +185,7 @@ specVersion 3.0, and every release is built with both.
   endpoint the frontend comes from; every control still sends its roundtrips
   to its own endpoint.
 - abap2UI5 was built to own the whole page. Its embedded mode leaves the
-  URL to your app (from the release after 1.145.0); the rest of it is still
+  URL to your app (from 1.146.0 on); the rest of it is still
   to come
   ([backlog item](https://github.com/abap2UI5/abap2UI5/blob/main/backlog/items/embed-as-reuse-component.md)):
   an embedded app still shows the global busy indicator during a roundtrip,
