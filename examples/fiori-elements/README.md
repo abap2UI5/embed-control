@@ -88,8 +88,8 @@ installation has - put your class into `ext/Abap2UI5Section.js`.
 ## Run it
 
 It needs an abap2UI5 backend that answers `?z2ui5-bundle` and leaves the
-URL to the page it is embedded in - **the first abap2UI5 release after
-1.145.0**. An older one clears the URL hash after every roundtrip, and the
+URL to the page it is embedded in - **abap2UI5 1.146.0 or later**. An older
+one clears the URL hash after every roundtrip, and the
 object page goes back to the list.
 
 The app's own OData service is a mockserver of the dev server - the
@@ -106,25 +106,21 @@ npm start                        # ui5 serve, /sap/** proxied to the system in u
 ```
 
 **Without an SAP system** - `npm run start-local` (`ui5-local.yaml`): abap2UI5
-transpiled to JavaScript and run in Node, on `http://localhost:3000`. From an
-abap2UI5 checkout, whose main has what the app needs (the first build takes a
-few minutes):
+transpiled to JavaScript and run in Node, on `http://localhost:3000`. The npm
+package
+[`@abap2ui5/node-runtime`](https://www.npmjs.com/package/@abap2ui5/node-runtime)
+is exactly that, prebuilt - 1.146.0 or later, in a folder of its own, with
+Node 22 or later:
 
 ```bash
-git clone https://github.com/abap2UI5/abap2UI5.git && cd abap2UI5
-npm ci && npm run downport && npm run auto_transpile
-npm run express                  # abap2UI5 on http://localhost:3000
+mkdir abap2ui5-backend && cd abap2ui5-backend
+npm install @abap2ui5/node-runtime express
+node --input-type=module -e 'import { serve } from "@abap2ui5/node-runtime"; await serve({ port: 3000 });'
 ```
 
 ```bash
 npm run start-local              # ui5 serve, /sap/** proxied to localhost:3000
 ```
-
-The npm package
-[`@abap2ui5/node-runtime`](https://www.npmjs.com/package/@abap2ui5/node-runtime)
-is the same prebuilt, but its version is an abap2UI5 release: once one after
-1.145.0 is out, install that one instead of building a checkout - the
-freestyle example's README shows how.
 
 The proxy tells the backend the dev server's host in `X-Forwarded-Host`, and
 abap2UI5's CSRF check compares the browser's `Origin` with it - nothing else

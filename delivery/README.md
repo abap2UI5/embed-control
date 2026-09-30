@@ -132,8 +132,8 @@ Another customer ends the running abap2UI5 session and starts a new one
 with its key.
 
 A Fiori elements app routes by the URL hash, so the abap2UI5 behind it has
-to leave the hash to the page it is embedded in: **the first abap2UI5
-release after 1.145.0** does. An older one clears the hash after every
+to leave the hash to the page it is embedded in: **abap2UI5 1.146.0 or
+later** does. An older one clears the hash after every
 roundtrip, and the object page goes back to the list.
 
 ## In SAP Build Work Zone: a UI Integration Card
@@ -170,7 +170,7 @@ control in
 The further parameters reach the ABAP class as startup parameters,
 `client->get( )-t_comp_params` - one class, configured per card. Work Zone
 routes by the URL hash as well, so the card needs the same abap2UI5 as the
-Fiori elements app: the first release after 1.145.0.
+Fiori elements app: 1.146.0 or later.
 [`card/README.md`](https://github.com/abap2UI5/frontend-embed-control/blob/standard/card/README.md)
 lists the parameters and the way into Work Zone, and what to check on the
 first card.
@@ -188,7 +188,7 @@ npm install
 
 **Without an SAP system** - `npm run start-local`: the proxy goes to
 `http://localhost:3000` (`ui5-local.yaml`), abap2UI5 transpiled to JavaScript
-and run in Node. For the freestyle app that is the npm package
+and run in Node: the npm package
 [`@abap2ui5/node-runtime`](https://www.npmjs.com/package/@abap2ui5/node-runtime),
 in a folder of its own, with Node 22 or later:
 
@@ -198,9 +198,8 @@ npm install @abap2ui5/node-runtime express
 node --input-type=module -e 'import { serve } from "@abap2ui5/node-runtime"; await serve({ port: 3000 });'
 ```
 
-The Fiori elements app and the card need the first abap2UI5 release after
-1.145.0, which is not on npm yet - their READMEs show how to build it from an
-abap2UI5 checkout meanwhile. The READMEs of
+The Fiori elements app and the card need abap2UI5 1.146.0 or later. The
+READMEs of
 [`freestyle/`](https://github.com/abap2UI5/frontend-embed-control/blob/standard/freestyle/README.md),
 [`fiori-elements/`](https://github.com/abap2UI5/frontend-embed-control/blob/standard/fiori-elements/README.md)
 and
@@ -252,7 +251,7 @@ its RAP service. Neither has the card: a card is deployed to its host.
 - Embedding is still page-wide in places - busy indicator, title, the
   `sap.m.App` root - until abap2UI5's embedded mode covers them
   ([backlog item](https://github.com/abap2UI5/abap2UI5/blob/main/backlog/items/embed-as-reuse-component.md));
-  the URL hash is the host's from the release after 1.145.0 on.
+  the URL hash is the host's from abap2UI5 1.146.0 on.
 - Custom controls from `Z2UI5_CCI`/`Z2UI5_CCC`: the bundle hands over their
   paths like abap2UI5's own page does; not tried yet.
 - The card is tried against a stand-in for Work Zone, not yet on a Work Zone

@@ -117,19 +117,15 @@ the generated `z2ui5_cl_ui5f_preload`; its only source is
   needs a newer backend is tagged `@after-1.145.0`, which the floor leg
   leaves out - as it leaves out the Fiori elements example, which needs the
   hash.
-- **A host that routes by the hash needs the release after 1.145.0.** Its
+- **A host that routes by the hash needs abap2UI5 1.146.0.** Its
   bundle marks the component embedded (`componentData.embedded`, abap2UI5
   `Component.init`), and an embedded component leaves the URL hash to the
   host - 1.145.0 clears it after every roundtrip, which sends a Fiori
   elements object page back to its list, and takes SAP Build Work Zone off
   the page a card sits on. The control passes the bundle's component data
-  through and sets no flag of its own. The package README, the READMEs of
-  the Fiori elements and the card example and `delivery/README.md` say "the
-  first abap2UI5 release after 1.145.0" - name the version there once it
-  is out. Until then those READMEs build the local backend from an abap2UI5
-  checkout, and the freestyle one installs `@abap2ui5/node-runtime` from
-  npm (its version is the abap2UI5 release); once the release is on npm,
-  the others switch to the package too.
+  through and sets no flag of its own. The READMEs name 1.146.0 for it, and
+  every example's README runs the local backend from
+  `@abap2ui5/node-runtime` on npm (its version is the abap2UI5 release).
 
 ## Rules for the examples' dev server
 
