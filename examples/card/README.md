@@ -131,5 +131,5 @@ The card is developed in
 examples - there,
 `npm install` at the repository root links the package from
 `packages/embed-control`. Its delivery repository
-[abap2UI5/frontend-embed-control](https://github.com/abap2UI5/frontend-embed-control)
+[abap2UI5/samples-embed-control](https://github.com/abap2UI5/samples-embed-control)
 carries it as `card/`, with the control from npm.

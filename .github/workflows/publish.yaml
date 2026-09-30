@@ -13,7 +13,7 @@ name: publish
 # scripts/release-check.mjs refuses a tag, version or changelog that
 # disagree before anything reaches the registry. Once the version is on the
 # registry, frontend_deploy.yaml delivers the example with it to
-# abap2UI5/frontend-embed-control.
+# abap2UI5/samples-embed-control.
 #
 # Actions -> publish -> Run workflow is a dry run: the same CI and checks,
 # the tarball printed, nothing published and nothing delivered.
@@ -110,7 +110,7 @@ jobs:
         run: echo "No release - everything ran except the publish."
 
   # The example with the version just published - or found on the registry
-  # already - into abap2UI5/frontend-embed-control: app/ and the BSP take the
+  # already - into abap2UI5/samples-embed-control: app/ and the BSP take the
   # control from npm, so a version reaches them only from here on
   frontend:
     needs: publish

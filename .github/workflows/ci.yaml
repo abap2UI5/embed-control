@@ -3,7 +3,7 @@ name: ci
 # check - lint, format, the consumer builds of the examples (the control
 #         has to land in dist/thirdparty/), the package contents, and the
 #         packed package built in an app of its own with UI5 CLI 3 and 4
-# bsp   - the tree abap2UI5/frontend-embed-control delivers
+# bsp   - the tree abap2UI5/samples-embed-control delivers
 #         (frontend_deploy.yaml): the examples as UI5 projects and the
 #         freestyle one as BSP, built and checked with abap2UI5's tools - a
 #         change that breaks it shows here, not in the delivery after the

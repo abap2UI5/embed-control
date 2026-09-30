@@ -1,4 +1,4 @@
-// Builds the branch abap2UI5/frontend-embed-control delivers: the examples of
+// Builds the branch abap2UI5/samples-embed-control delivers: the examples of
 // this repository the way apps take @abap2ui5/embed-control from npm - as UI5
 // projects, and the freestyle one built into the BSP Z2UI5_HOST, to install
 // with abapGit and try the control on a real system. No copy of the abap2UI5
@@ -27,7 +27,7 @@
 //                    any app that names the package under includeDependency.
 //                    Neither is patched
 //   .abapgit.xml, README.md (delivery/README.md), LICENSE
-// frontend_deploy.yaml writes it into frontend-embed-control's main as
+// frontend_deploy.yaml writes it into samples-embed-control's main as
 // result/standard, and the deliver workflow over there makes the branch of it.
 //
 // Where the control comes from:
@@ -129,7 +129,7 @@ const ABAPGIT_XML = `\uFEFF<?xml version="1.0" encoding="utf-8"?>
 <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
  <asx:values>
   <DATA>
-   <NAME>abap2UI5-frontend-embed-control</NAME>
+   <NAME>abap2UI5-samples-embed-control</NAME>
    <MASTER_LANGUAGE>E</MASTER_LANGUAGE>
    <STARTING_FOLDER>/src/</STARTING_FOLDER>
    <FOLDER_LOGIC>PREFIX</FOLDER_LOGIC>
@@ -342,7 +342,7 @@ try {
   });
   node([join(checker, "check.mjs"), "standard"], work);
 
-  // The README every copy of the branch carries - frontend-embed-control's
+  // The README every copy of the branch carries - samples-embed-control's
   // main has the same text without this first line (frontend_deploy.yaml).
   writeFileSync(
     join(tree, "README.md"),

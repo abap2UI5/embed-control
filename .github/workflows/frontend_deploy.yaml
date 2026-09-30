@@ -1,6 +1,6 @@
 name: frontend_deploy
 
-# Delivers the examples into abap2UI5/frontend-embed-control - its branch
+# Delivers the examples into abap2UI5/samples-embed-control - its branch
 # `standard`, the examples the way apps take @abap2ui5/embed-control from
 # npm: the UI5 projects in freestyle/, fiori-elements/ and card/, and built
 # from the freestyle one the BSP Z2UI5_HOST in src/, to try the control on a
@@ -9,9 +9,9 @@ name: frontend_deploy
 #
 #   1. THIS workflow builds the tree (scripts/build-bsp.mjs --from-npm, with
 #      abap2UI5's BSP tools from its main) and writes it as result/standard
-#      into ONE commit on frontend-embed-control's main, together with the
+#      into ONE commit on samples-embed-control's main, together with the
 #      README main shows.
-#   2. frontend-embed-control's `deliver` workflow, triggered by that push,
+#   2. samples-embed-control's `deliver` workflow, triggered by that push,
 #      makes the branch of it: one commit on top of main, tree = the folder's
 #      content.
 #
@@ -35,7 +35,7 @@ name: frontend_deploy
 # comparison.
 #
 # The push needs ACTION_KEY_FRONTEND_EMBED_CONTROL: the private half of a
-# deploy key with write access on abap2UI5/frontend-embed-control (Settings >
+# deploy key with write access on abap2UI5/samples-embed-control (Settings >
 # Deploy keys there, the secret here). Until it is set, the job builds and
 # checks the tree and says with a warning that nothing was delivered.
 
@@ -84,7 +84,7 @@ jobs:
       group: frontend_deploy
       cancel-in-progress: false
     env:
-      TARGET: git@github.com:abap2UI5/frontend-embed-control.git
+      TARGET: git@github.com:abap2UI5/samples-embed-control.git
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       # the BSP tools only - they need nothing but node
@@ -157,7 +157,7 @@ jobs:
           ABAP2UI5_DIR: .abap2ui5
         run: npm run bsp -- --from-npm
 
-      - name: Deliver result/standard to frontend-embed-control main
+      - name: Deliver result/standard to samples-embed-control main
         if: steps.npm.outputs.deliver == 'true'
         env:
           DEPLOY_KEY: ${{ secrets.ACTION_KEY_FRONTEND_EMBED_CONTROL }}
@@ -165,7 +165,7 @@ jobs:
         run: |
           set -euo pipefail
           if [ -z "$DEPLOY_KEY" ]; then
-            echo "::warning::ACTION_KEY_FRONTEND_EMBED_CONTROL is not set - the tree is built and checked, nothing is delivered to abap2UI5/frontend-embed-control (see the header of frontend_deploy.yaml)"
+            echo "::warning::ACTION_KEY_FRONTEND_EMBED_CONTROL is not set - the tree is built and checked, nothing is delivered to abap2UI5/samples-embed-control (see the header of frontend_deploy.yaml)"
             exit 0
           fi
 
@@ -175,7 +175,7 @@ jobs:
           printf '%s\n' "$GITHUB_SSH_HOST_KEYS" >> ~/.ssh/known_hosts
           export GIT_SSH_COMMAND="ssh -i ~/.ssh/id_deploy -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes"
 
-          clone="$RUNNER_TEMP/frontend-embed-control-main"
+          clone="$RUNNER_TEMP/samples-embed-control-main"
           rm -rf "$clone"
           git clone --quiet --depth 1 --branch main "$TARGET" "$clone"
           git -C "$clone" config user.name 'github-actions[bot]'
@@ -189,7 +189,7 @@ jobs:
             mkdir -p "$clone/result"
             cp -a out/standard "$dest"
             printf '%s\n' \
-              "Generated abap2UI5/frontend-embed-control branch standard - provenance" \
+              "Generated abap2UI5/samples-embed-control branch standard - provenance" \
               "built from: abap2UI5/embed-control@$GITHUB_SHA" \
               "control:    $SPEC from npm" \
               "BSP tools:  abap2UI5/abap2UI5@$(git -C .abap2ui5 rev-parse HEAD)" \
@@ -203,7 +203,7 @@ jobs:
           cp delivery/README.md "$clone/README.md"
 
           if [ -z "$(git -C "$clone" status --porcelain -uall)" ]; then
-            echo "frontend-embed-control main carries this state already - nothing to push"
+            echo "samples-embed-control main carries this state already - nothing to push"
             exit 0
           fi
 
@@ -224,5 +224,5 @@ jobs:
             git -C "$clone" fetch --quiet origin main
             git -C "$clone" rebase --quiet FETCH_HEAD
           done
-          echo "::error::could not push to abap2UI5/frontend-embed-control main"
+          echo "::error::could not push to abap2UI5/samples-embed-control main"
           exit 1
