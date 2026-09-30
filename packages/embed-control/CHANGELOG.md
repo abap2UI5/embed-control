@@ -6,6 +6,9 @@ own, and nothing may be left under "Unreleased".
 
 ## Unreleased
 
+- `package.json` names the author (abap2UI5), as npm and the Best of UI5
+  listing show it.
+
 ## 0.1.1
 
 - Security: an `endpoint` that the browser reads as another host - a tab
