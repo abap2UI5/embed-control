@@ -21,6 +21,7 @@
     "url": "git+https://github.com/abap2UI5/embed-control.git",
     "directory": "packages/embed-control"
   },
+  "author": "abap2UI5",
   "license": "MIT",
   "files": [
     "ui5.yaml",
