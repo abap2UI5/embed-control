@@ -60,8 +60,8 @@ over the whole page; a card app keeps it down on its own events with
 ## Run it
 
 It needs an abap2UI5 backend that answers `?z2ui5-bundle` and leaves the URL
-hash to the page it is embedded in - **the first abap2UI5 release after
-1.145.0** (its main has it). 1.145.0 answers the bundle but clears the page's
+hash to the page it is embedded in - **abap2UI5 1.146.0 or later**. 1.145.0
+answers the bundle but clears the page's
 hash with the card's first roundtrip, and SAP Build Work Zone routes by it.
 Both commands open the preview `test/index.html`.
 
@@ -74,32 +74,28 @@ npm start                        # the preview, /sap/** proxied to the system in
 ```
 
 **Without an SAP system** - `npm run start-local` (`ui5-local.yaml`): abap2UI5
-transpiled to JavaScript and run in Node, on `http://localhost:3000`. From an
-abap2UI5 checkout, whose main has what the card needs (the first build takes
-a few minutes):
+transpiled to JavaScript and run in Node, on `http://localhost:3000`. The npm
+package
+[`@abap2ui5/node-runtime`](https://www.npmjs.com/package/@abap2ui5/node-runtime)
+is exactly that, prebuilt - 1.146.0 or later, in a folder of its own, with
+Node 22 or later:
 
 ```bash
-git clone https://github.com/abap2UI5/abap2UI5.git && cd abap2UI5
-npm ci && npm run downport && npm run auto_transpile
-npm run express                  # abap2UI5 on http://localhost:3000
+mkdir abap2ui5-backend && cd abap2ui5-backend
+npm install @abap2ui5/node-runtime express
+node --input-type=module -e 'import { serve } from "@abap2ui5/node-runtime"; await serve({ port: 3000 });'
 ```
 
 ```bash
 npm run start-local              # the preview, /sap/** proxied to localhost:3000
 ```
 
-The npm package
-[`@abap2ui5/node-runtime`](https://www.npmjs.com/package/@abap2ui5/node-runtime)
-is the same prebuilt, but its version is an abap2UI5 release: once one after
-1.145.0 is out, install that one instead of building a checkout - the
-freestyle example's README shows how.
-
 `npm run build` writes the card into `dist/`: the manifest, the component and
 the control in `dist/thirdparty/z2ui5/embed/` - without the preview.
 
 ## Put it into SAP Build Work Zone
 
-1. **The system:** abap2UI5 - the first release after 1.145.0, see above -
+1. **The system:** abap2UI5 - 1.146.0 or later, see above -
    with its HTTP service `/sap/bc/z2ui5` active.
 2. **A destination** in the BTP subaccount to that system - for an on-premise
    system through the Cloud Connector, for example with principal

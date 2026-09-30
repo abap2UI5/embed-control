@@ -59,8 +59,7 @@ on it once the abap2UI5 installations it targets have it.
 
 They need an abap2UI5 backend that answers `?z2ui5-bundle` (1.145.0 or
 later), the Fiori elements one and the card an abap2UI5 that leaves the URL
-hash to the page it is embedded in (the first release after 1.145.0 - its
-main has it).
+hash to the page it is embedded in (1.146.0 or later).
 
 **Against an SAP system:** set the system's URL as `baseUri` in the
 example's `ui5.yaml`, copy its `.env.example` to `.env` next to it and put
@@ -75,24 +74,16 @@ npm run start:card               # the card, on its preview page
 
 **Without an SAP system:** `start-local`, with the examples' `ui5-local.yaml`
 - abap2UI5 transpiled to JavaScript and run in Node on
-`http://localhost:3000`. For the freestyle example, the npm package
+`http://localhost:3000`. The npm package
 [`@abap2ui5/node-runtime`](https://www.npmjs.com/package/@abap2ui5/node-runtime)
-is enough - abap2UI5 prebuilt, its version the release it was built from
-(Node 22 or later, in a folder of its own):
+is that - abap2UI5 prebuilt, its version the release it was built from
+(1.146.0 or later for the Fiori elements example and the card; Node 22 or
+later, in a folder of its own):
 
 ```bash
 mkdir abap2ui5-backend && cd abap2ui5-backend
 npm install @abap2ui5/node-runtime express
 node --input-type=module -e 'import { serve } from "@abap2ui5/node-runtime"; await serve({ port: 3000 });'
-```
-
-The Fiori elements example and the card need an abap2UI5 checkout until a
-release after 1.145.0 is on npm (the first build takes a few minutes):
-
-```bash
-git clone https://github.com/abap2UI5/abap2UI5.git && cd abap2UI5
-npm ci && npm run downport && npm run auto_transpile
-npm run express                  # abap2UI5 on http://localhost:3000
 ```
 
 Then, here:
@@ -207,7 +198,7 @@ What is still open is tracked in abap2UI5 as the
 [embed-as-reuse-component](https://github.com/abap2UI5/abap2UI5/blob/main/backlog/items/embed-as-reuse-component.md)
 backlog item: an embedded mode of the frontend that leaves page-wide things
 to the host app. The first part is there - the bundle marks the component
-embedded, and it leaves the URL hash alone (abap2UI5 after 1.145.0), which
+embedded, and it leaves the URL hash alone (abap2UI5 1.146.0), which
 is what the Fiori elements example needs. Busy indicator, title, favicon
 and the `sap.m.App` root are still the frontend's; nothing in the control
 has to change when they follow.
