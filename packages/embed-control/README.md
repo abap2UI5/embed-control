@@ -203,13 +203,14 @@ specVersion 3.0, and every release is built with both.
   to its own endpoint. A control that shared that load with another
   endpoint of its own, and saw it fail, tries its own endpoint once.
 - **Custom controls from the sibling BSPs `z2ui5_cci` / `z2ui5_ccc`**
-  (abap2UI5-addons/custom-controls, the customer's own library): the bundle
-  names their paths as the system has them, `/sap/bc/ui5_ui5/sap/z2ui5_cci`.
-  Behind a proxy that puts the system under a prefix of its own - SAP Build
-  Work Zone's destination proxy, an approuter route with a prefix - those
-  paths are not found, and an embedded app that uses such a control does
-  not load it. The frontend is the backend's, so the fix is abap2UI5's:
-  paths relative to the service node.
+  (abap2UI5-addons/custom-controls, the customer's own library) behind a
+  proxy that puts the system under a prefix of its own - SAP Build Work
+  Zone's destination proxy, an approuter route with a prefix - need the
+  abap2UI5 release after 1.146.0. Until then the bundle names their paths
+  as the system has them, `/sap/bc/ui5_ui5/sap/z2ui5_cci`, which the host's
+  origin does not have; from then on its bundle names the node it was
+  requested under, and the frontend puts the prefix of the control's
+  `endpoint` in front of the roots. Nothing in the control changes with it.
 - abap2UI5 was built to own the whole page. Its embedded mode leaves the
   URL to your app (from 1.146.0 on); the rest of it is still
   to come

@@ -32,10 +32,12 @@ own, and nothing may be left under "Unreleased".
   and saw it fail tries its own endpoint once, instead of failing for a
   backend it never talks to. The first control that starts still decides
   where the frontend comes from when that load succeeds.
-- README: the sibling BSPs `z2ui5_cci` / `z2ui5_ccc` are named by absolute
-  system path in the bundle, so a custom control from them is not found
+- README: a custom control from the sibling BSPs `z2ui5_cci` / `z2ui5_ccc`
   behind a prefixing proxy (SAP Build Work Zone, an approuter route with a
-  prefix) - an abap2UI5 limitation, listed under known limitations.
+  prefix) needs the abap2UI5 release after 1.146.0, whose bundle names the
+  node it was requested under and whose frontend puts the prefix of the
+  control's `endpoint` in front of the roots - listed under known
+  limitations; nothing in the control changes with it.
 - Examples: the card falls back to its default height, with a message in
   the card, when the `height` parameter is no CSS size - the value threw
   inside the binding and left the card empty. The Fiori elements example
