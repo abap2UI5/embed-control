@@ -38,15 +38,9 @@ own, and nothing may be left under "Unreleased".
   node it was requested under and whose frontend puts the prefix of the
   control's `endpoint` in front of the roots - listed under known
   limitations; nothing in the control changes with it.
-- Examples: the card falls back to its default height, with a message in
-  the card, when the `height` parameter is no CSS size - the value threw
-  inside the binding and left the card empty. The Fiori elements example
-  for OData V2 starts the app only once all three fields of the country are
-  there: a field still on its way started the app without it and again, in
-  a new session, when it arrived.
-- `scripts/consumer-check.mjs` and `scripts/build-bsp.mjs` run npm through
-  the node that started them (`npm_execpath`) instead of looking `npm` up
-  on the PATH, which fails on Windows.
+- `scripts/consumer-check.mjs` runs npm through the node that started it
+  (`npm_execpath`) instead of looking `npm` up on the PATH, which fails on
+  Windows.
 - `package.json` names the author (abap2UI5), as npm and the Best of UI5
   listing show it.
 - `package.json` records the backend floor, `"abap2ui5": { "minBackend":
@@ -57,6 +51,8 @@ own, and nothing may be left under "Unreleased".
   and a UI5 CLI 3 consumer may install it on Node 16 or 18.
 - The README lists the Fiori elements example for OData V2, with the RAP
   service it reads, and names the UI5 release it is tested on.
+- The README links the proxy example in abap2UI5/samples-embed-control,
+  where the examples are developed now.
 
 ## 0.1.1
 

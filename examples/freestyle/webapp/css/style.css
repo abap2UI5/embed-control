@@ -1,6 +1,0 @@
-/* marks where the host app ends and an embedded abap2UI5 app begins */
-.demoHostFrame {
-  border: 1px dashed var(--sapGroup_TitleBorderColor, #a8b2bd);
-  border-radius: 0.5rem;
-  overflow: hidden;
-}

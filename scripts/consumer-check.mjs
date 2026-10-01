@@ -2,11 +2,10 @@
 // into an app outside this workspace, and built there with the UI5 CLI - once
 // for every CLI major a consumer may have.
 //
-// The example app shows neither. It takes the package through the workspace
-// link, where a file left out of "files" in package.json still exists, and it
-// builds with the one CLI this repository uses. UI5 CLI 3 reads specVersion
-// up to 3.2 and refuses a dependency with 4.0 - which is why the package's
-// ui5.yaml stays at 3.0, and why this builds with both.
+// The examples in abap2UI5/samples-embed-control build with the one CLI they
+// use. UI5 CLI 3 reads specVersion up to 3.2 and refuses a dependency with
+// 4.0 - which is why the package's ui5.yaml stays at 3.0, and why this builds
+// with both.
 //
 //   npm run consumer:check          UI5 CLI 3 and 4
 //   npm run consumer:check -- 4     only the majors named

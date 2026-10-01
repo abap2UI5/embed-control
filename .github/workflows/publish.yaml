@@ -4,19 +4,18 @@ name: publish
 # trusted publishing, from a commit that has just passed the whole CI.
 #
 # To cut a release:
-#   1. bump "version" in packages/embed-control/package.json - and the
-#      examples' ranges in examples/*/package.json when the new version
-#      leaves them (ci.yaml fails while an example does not use this package)
+#   1. bump "version" in packages/embed-control/package.json
 #   2. in packages/embed-control/CHANGELOG.md, move what is under
 #      "## Unreleased" under "## <version>"
 #   3. merge, then create a GitHub release with the tag v<version>
 # scripts/release-check.mjs refuses a tag, version or changelog that
-# disagree before anything reaches the registry. Once the version is on the
-# registry, frontend_deploy.yaml delivers the example with it to
-# abap2UI5/samples-embed-control.
+# disagree before anything reaches the registry. The examples in
+# abap2UI5/samples-embed-control take the new version with a bump of their
+# lockfile - dependabot's, or one by hand right after the release (and of
+# their ranges, when the version leaves them).
 #
 # Actions -> publish -> Run workflow is a dry run: the same CI and checks,
-# the tarball printed, nothing published and nothing delivered.
+# the tarball printed, nothing published.
 #
 # Trusted publishing (OIDC), set up like @abap2ui5/linter,
 # @abap2ui5/mcp-server and @abap2ui5/node-runtime: no NPM_TOKEN to leak or
@@ -31,8 +30,7 @@ name: publish
 # npmjs.com -> @abap2ui5/embed-control -> Settings -> Trusted Publisher ->
 # GitHub Actions: organisation abap2UI5, this repository, workflow file
 # publish.yaml, no environment. A release whose version is on the registry
-# already - the hand-published first one, a re-run - publishes nothing, and
-# still delivers the example.
+# already - the hand-published first one, a re-run - publishes nothing.
 #
 # The repository's name is part of that setup and of the provenance: after a
 # rename, repository.url in package.json and the Trusted Publisher entry have
@@ -49,7 +47,8 @@ permissions:
 
 jobs:
   # everything ci.yaml runs - the checks, the packed package built with UI5
-  # CLI 3 and 4, the e2e against abap2UI5's main - on the commit to publish
+  # CLI 3 and 4, the examples of samples-embed-control with this control
+  # against abap2UI5's main and the floor - on the commit to publish
   ci:
     uses: ./.github/workflows/ci.yaml
 
@@ -108,15 +107,3 @@ jobs:
       - name: Dry run
         if: github.event_name != 'release'
         run: echo "No release - everything ran except the publish."
-
-  # The example with the version just published - or found on the registry
-  # already - into abap2UI5/samples-embed-control: app/ and the BSP take the
-  # control from npm, so a version reaches them only from here on
-  frontend:
-    needs: publish
-    if: github.event_name == 'release'
-    permissions:
-      contents: read
-    uses: ./.github/workflows/frontend_deploy.yaml
-    secrets:
-      ACTION_KEY_FRONTEND_EMBED_CONTROL: ${{ secrets.ACTION_KEY_FRONTEND_EMBED_CONTROL }}
