@@ -2,7 +2,5 @@ node_modules/
 dist/
 .env
 *.tgz
-test-results/
-playwright-report/
 .abap2ui5/
-out/
+.samples/

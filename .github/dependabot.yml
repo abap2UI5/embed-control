@@ -1,7 +1,7 @@
-# Monthly, grouped: one pull request per ecosystem and update type, so the
-# e2e suite (against abap2UI5 main and the 1.145.0 floor) decides whether a
-# bump is safe. The control itself has no dependencies; what moves here is
-# the tooling of the workspace and its examples (UI5 CLI, Playwright, lint).
+# Monthly, grouped: one pull request per ecosystem and update type, so CI
+# decides whether a bump is safe. The control itself has no dependencies;
+# what moves here is the tooling of the workspace (lint, format). The
+# examples' tooling is bumped in abap2UI5/samples-embed-control.
 version: 2
 updates:
   - package-ecosystem: npm
