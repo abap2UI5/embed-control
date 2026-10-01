@@ -15,11 +15,13 @@ name: ci
 #         (?z2ui5-bundle), so what is tested is the pair a user gets: this
 #         control and an abap2UI5. Twice: against abap2UI5 main (npm run
 #         express in a checkout), and against the backend floor the package
-#         README names, abap2UI5 1.145.0 - the published
-#         @abap2ui5/node-runtime of that version. The floor leg leaves out
-#         what 1.145.0 cannot do: the Fiori elements example and the tests
-#         tagged @after-1.145.0 need a frontend that leaves the URL hash to
-#         the host (the release after it)
+#         records - "abap2ui5".minBackend in packages/embed-control/
+#         package.json, abap2UI5 1.145.0 today - the published
+#         @abap2ui5/node-runtime of that version (job floor reads it, so the
+#         leg cannot drift from the package). The floor leg leaves out what
+#         1.145.0 cannot do: the Fiori elements example and the tests tagged
+#         @after-<floor> need a frontend that leaves the URL hash to the host
+#         (the release after it)
 
 on:
   pull_request:
@@ -110,8 +112,30 @@ jobs:
         env:
           ABAP2UI5_DIR: .abap2ui5
 
+  # the backend floor the package states - "abap2ui5".minBackend in its
+  # package.json - for the e2e leg against it. Read from the file rather than
+  # written here again, so the version the leg installs is the version the
+  # package names. Raise it there, with the README
+  floor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      backend: ${{ steps.read.outputs.backend }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: packages/embed-control/package.json
+          sparse-checkout-cone-mode: false
+      - id: read
+        run: |
+          backend=$(jq -er '.abap2ui5.minBackend' packages/embed-control/package.json)
+          echo "$backend" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'
+          echo "backend=$backend" >> "$GITHUB_OUTPUT"
+          echo "the backend floor is abap2UI5 $backend"
+
   e2e:
     name: e2e (abap2UI5 ${{ matrix.backend }})
+    needs: floor
     runs-on: ubuntu-latest
     timeout-minutes: 40
     strategy:
@@ -120,11 +144,13 @@ jobs:
         include:
           - backend: main
             playwright-args: ""
-          # the floor - raise it with the package README
-          - backend: "1.145.0"
+          # the floor, from the package (job floor). A test that needs a
+          # newer backend is tagged @after-<floor>, and the leg leaves it
+          # out - with the floor raised, it runs
+          - backend: ${{ needs.floor.outputs.backend }}
             playwright-args: >-
               --project ui5-1.136 --project ui5-1.71 --project card
-              --grep-invert @after-1.145.0
+              --grep-invert @after-${{ needs.floor.outputs.backend }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

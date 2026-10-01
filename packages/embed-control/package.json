@@ -30,5 +30,8 @@
   ],
   "publishConfig": {
     "access": "public"
+  },
+  "abap2ui5": {
+    "minBackend": "1.145.0"
   }
 }
