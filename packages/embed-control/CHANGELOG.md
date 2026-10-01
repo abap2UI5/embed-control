@@ -14,6 +14,8 @@ own, and nothing may be left under "Unreleased".
   installs the `@abap2ui5/node-runtime` of that version, so the two cannot
   drift. No `engines`: the package is a browser control with no Node code,
   and a UI5 CLI 3 consumer may install it on Node 16 or 18.
+- The README lists the Fiori elements example for OData V2, with the RAP
+  service it reads, and names the UI5 release it is tested on.
 
 ## 0.1.1
 

@@ -97,6 +97,9 @@ on its branch `standard`, all taking the package from npm:
 - `fiori-elements/` - a Fiori elements app with the control in a **custom
   section of its object page**: the abap2UI5 app gets the key of the object
   on the page as a parameter
+- `fiori-elements-v2/` - a Fiori elements app for **OData V2** with the
+  control in an **object page extension**, and the **RAP service** it reads;
+  on the branch `rap`, all of it for one abapGit pull on a system with RAP
 - `card/` - a **UI Integration Card** for SAP Build Work Zone that runs any
   abap2UI5 app: the class is a card parameter, the backend a card
   destination
@@ -175,8 +178,8 @@ world app, for instance, needs `sap.ui.layout`.
 ## Supported UI5 versions
 
 The same floor as abap2UI5: OpenUI5 / SAPUI5 **1.71** and later. The
-freestyle example is tested on 1.71 and 1.136, the Fiori elements example on
-SAPUI5 1.136, the card on OpenUI5 1.136.
+freestyle example is tested on 1.71 and 1.136, the Fiori elements examples
+for OData V4 and V2 on SAPUI5 1.136, the card on OpenUI5 1.136.
 
 Your app's tooling: UI5 CLI 3 or 4 - the package's `ui5.yaml` is
 specVersion 3.0, and every release is built with both.

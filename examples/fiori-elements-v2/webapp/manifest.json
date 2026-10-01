@@ -1,0 +1,123 @@
+{
+  "_version": "1.49.0",
+  "sap.app": {
+    "id": "demo.fev2",
+    "type": "application",
+    "applicationVersion": {
+      "version": "0.1.0"
+    },
+    "title": "Countries",
+    "description": "Example of @abap2ui5/embed-control: a Fiori elements app for OData V2 with an abap2UI5 app in an object page extension",
+    "dataSources": {
+      "mainService": {
+        "uri": "/sap/opu/odata/sap/Z2UI5_UI_EMBED_COUNTRY_O2/",
+        "type": "OData",
+        "settings": {
+          "odataVersion": "2.0",
+          "annotations": ["Z2UI5_UI_EMBED_COUNTRY_O2_VAN"],
+          "localUri": "localService/metadata.xml"
+        }
+      },
+      "Z2UI5_UI_EMBED_COUNTRY_O2_VAN": {
+        "uri": "/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Annotations(TechnicalName='Z2UI5_UI_EMBED_COUNTRY_O2_VAN',Version='0001')/$value/",
+        "type": "ODataAnnotation",
+        "settings": {
+          "localUri": "localService/Z2UI5_UI_EMBED_COUNTRY_O2_VAN.xml"
+        }
+      }
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "deviceTypes": {
+      "desktop": true,
+      "tablet": true,
+      "phone": true
+    }
+  },
+  "sap.ui5": {
+    "dependencies": {
+      "minUI5Version": "1.71.0",
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {},
+        "sap.ui.comp": {},
+        "sap.ui.generic.app": {},
+        "sap.suite.ui.generic.template": {}
+      }
+    },
+    "resourceRoots": {
+      "z2ui5.embed": "./thirdparty/z2ui5/embed/"
+    },
+    "contentDensities": {
+      "compact": true,
+      "cozy": true
+    },
+    "models": {
+      "": {
+        "dataSource": "mainService",
+        "preload": true,
+        "settings": {
+          "defaultBindingMode": "TwoWay",
+          "defaultCountMode": "Inline",
+          "refreshAfterChange": false,
+          "metadataUrlParams": {
+            "sap-value-list": "none"
+          }
+        }
+      }
+    },
+    "extends": {
+      "extensions": {
+        "sap.ui.viewExtensions": {
+          "sap.suite.ui.generic.template.ObjectPage.view.Details": {
+            "AfterFacet|Countries|General": {
+              "type": "XML",
+              "className": "sap.ui.core.Fragment",
+              "fragmentName": "demo.fev2.ext.Abap2UI5Section",
+              "sap.ui.generic.app": {
+                "title": "abap2UI5"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "sap.ui.generic.app": {
+    "_version": "1.3.0",
+    "settings": {
+      "forceGlobalRefresh": false,
+      "objectPageHeaderType": "Dynamic",
+      "showDraftToggle": false
+    },
+    "pages": {
+      "ListReport|Countries": {
+        "entitySet": "Countries",
+        "component": {
+          "name": "sap.suite.ui.generic.template.ListReport",
+          "list": true,
+          "settings": {
+            "condensedTableLayout": true,
+            "smartVariantManagement": true,
+            "dataLoadSettings": {
+              "loadDataOnAppLaunch": "always"
+            }
+          }
+        },
+        "pages": {
+          "ObjectPage|Countries": {
+            "entitySet": "Countries",
+            "component": {
+              "name": "sap.suite.ui.generic.template.ObjectPage"
+            }
+          }
+        }
+      }
+    }
+  },
+  "sap.fiori": {
+    "registrationIds": [],
+    "archeType": "transactional"
+  }
+}

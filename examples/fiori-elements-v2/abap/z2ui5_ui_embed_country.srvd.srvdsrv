@@ -1,0 +1,4 @@
+@EndUserText.label: 'abap2UI5 embed control - countries'
+define service Z2UI5_UI_EMBED_COUNTRY {
+  expose Z2UI5_C_EMBED_COUNTRY as Countries;
+}

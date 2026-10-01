@@ -1,19 +1,24 @@
 name: frontend_deploy
 
-# Delivers the examples into abap2UI5/samples-embed-control - its branch
-# `standard`, the examples the way apps take @abap2ui5/embed-control from
-# npm: the UI5 projects in freestyle/, fiori-elements/ and card/, and built
-# from the freestyle one the BSP Z2UI5_HOST in src/, to try the control on a
-# real system with a plain abapGit pull. A relay of two workflows, the way
-# abap2UI5's frontend_deploy delivers the frontend into abap2UI5/frontend:
+# Delivers the examples into abap2UI5/samples-embed-control - the examples
+# the way apps take @abap2ui5/embed-control from npm, on two branches:
+#   standard  the UI5 projects in freestyle/, fiori-elements/,
+#             fiori-elements-v2/ and card/, and built from the freestyle one
+#             the BSP Z2UI5_HOST in src/, to try the control on any abap2UI5
+#             system with a plain abapGit pull
+#   rap       the RAP service of fiori-elements-v2 and the abap2UI5 app it
+#             starts (src/01), and the Fiori elements app for OData V2 as the
+#             BSP Z2UI5_HOST_FE (src/02) - for a system with RAP
+# A relay of two workflows, the way abap2UI5's frontend_deploy delivers the
+# frontend into abap2UI5/frontend:
 #
-#   1. THIS workflow builds the tree (scripts/build-bsp.mjs --from-npm, with
-#      abap2UI5's BSP tools from its main) and writes it as result/standard
+#   1. THIS workflow builds the trees (scripts/build-bsp.mjs --from-npm, with
+#      abap2UI5's BSP tools from its main) and writes them as result/<branch>
 #      into ONE commit on samples-embed-control's main, together with the
 #      README main shows.
 #   2. samples-embed-control's `deliver` workflow, triggered by that push,
-#      makes the branch of it: one commit on top of main, tree = the folder's
-#      content.
+#      makes the branches of them: one commit per branch on top of main,
+#      tree = the folder's content.
 #
 # The control in the tree is the PUBLISHED package: installed from npm in the
 # version packages/embed-control/package.json names, as in any app - never a
@@ -30,9 +35,8 @@ name: frontend_deploy
 # or before the very first publish), or changes to src/ or ui5.yaml that no
 # release carries yet. The release that publishes them delivers the example.
 #
-# A run whose tree matches what result/standard already carries pushes
-# nothing; VERSION, the one file that names a commit, is left out of that
-# comparison.
+# A run whose trees match what result/ already carries pushes nothing;
+# VERSION, the one file that names a commit, is left out of that comparison.
 #
 # The push needs ACTION_KEY_FRONTEND_EMBED_CONTROL: the private half of a
 # deploy key with write access on abap2UI5/samples-embed-control (Settings >
@@ -157,7 +161,7 @@ jobs:
           ABAP2UI5_DIR: .abap2ui5
         run: npm run bsp -- --from-npm
 
-      - name: Deliver result/standard to samples-embed-control main
+      - name: Deliver result/standard and result/rap to samples-embed-control main
         if: steps.npm.outputs.deliver == 'true'
         env:
           DEPLOY_KEY: ${{ secrets.ACTION_KEY_FRONTEND_EMBED_CONTROL }}
@@ -181,21 +185,26 @@ jobs:
           git -C "$clone" config user.name 'github-actions[bot]'
           git -C "$clone" config user.email 'github-actions[bot]@users.noreply.github.com'
 
-          dest="$clone/result/standard"
-          if [ -d "$dest" ] && diff -rq -x VERSION "$dest" out/standard > /dev/null; then
-            echo "standard: unchanged"
-          else
+          # every branch build-bsp.mjs builds (BRANCHES there) - the deliver
+          # workflow over there fans out the same list
+          for branch in standard rap; do
+            test -d "out/$branch"
+            dest="$clone/result/$branch"
+            if [ -d "$dest" ] && diff -rq -x VERSION "$dest" "out/$branch" > /dev/null; then
+              echo "$branch: unchanged"
+              continue
+            fi
             rm -rf "$dest"
             mkdir -p "$clone/result"
-            cp -a out/standard "$dest"
+            cp -a "out/$branch" "$dest"
             printf '%s\n' \
-              "Generated abap2UI5/samples-embed-control branch standard - provenance" \
+              "Generated abap2UI5/samples-embed-control branch $branch - provenance" \
               "built from: abap2UI5/embed-control@$GITHUB_SHA" \
               "control:    $SPEC from npm" \
               "BSP tools:  abap2UI5/abap2UI5@$(git -C .abap2ui5 rev-parse HEAD)" \
               > "$dest/VERSION"
-            echo "standard: updated"
-          fi
+            echo "$branch: updated"
+          done
 
           # main's README is the branch's without its first line - written
           # from delivery/README.md like the branch, so there is no second
