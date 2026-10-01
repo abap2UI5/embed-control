@@ -1,14 +1,16 @@
 name: ci
 
-# check - lint, format, the consumer builds of the examples (the control
-#         has to land in dist/thirdparty/), the package contents, and the
-#         packed package built in an app of its own with UI5 CLI 3 and 4
-# bsp   - the tree abap2UI5/samples-embed-control delivers
-#         (frontend_deploy.yaml): the examples as UI5 projects and the
-#         freestyle one as BSP, built and checked with abap2UI5's tools - a
-#         change that breaks it shows here, not in the delivery after the
-#         merge. Here with the control of this commit; the delivery takes it
-#         from npm
+# check - lint, format, abaplint, the consumer builds of the examples (the
+#         control has to land in dist/thirdparty/), the package contents,
+#         and the packed package built in an app of its own with UI5 CLI 3
+#         and 4
+# bsp   - the trees abap2UI5/samples-embed-control delivers
+#         (frontend_deploy.yaml): standard - the examples as UI5 projects and
+#         the freestyle one as BSP - and rap - the RAP service of the OData V2
+#         example and that example as BSP - built and checked with abap2UI5's
+#         tools: a change that breaks them shows here, not in the delivery
+#         after the merge. Here with the control of this commit; the delivery
+#         takes it from npm
 # e2e   - the examples in a browser against a live abap2UI5 backend,
 #         transpiled to JavaScript and served by its express server - no SAP
 #         system involved. The control loads the frontend from that backend
@@ -17,7 +19,7 @@ name: ci
 #         express in a checkout), and against the backend floor the package
 #         README names, abap2UI5 1.145.0 - the published
 #         @abap2ui5/node-runtime of that version. The floor leg leaves out
-#         what 1.145.0 cannot do: the Fiori elements example and the tests
+#         what 1.145.0 cannot do: the Fiori elements examples and the tests
 #         tagged @after-1.145.0 need a frontend that leaves the URL hash to
 #         the host (the release after it)
 
@@ -67,17 +69,20 @@ jobs:
         if: ${{ !cancelled() }}
       - run: npm run format:check
         if: ${{ !cancelled() }}
+      # the ABAP of the examples (abaplint.jsonc), against abap2UI5's main
+      - run: npm run abaplint
+        if: ${{ !cancelled() }}
       - run: npm run build
         if: ${{ !cancelled() }}
       # the consumer build: the control is copied into each app
       # (includeDependency in its ui5.yaml), next to it and not under
-      # resources/ - the Fiori elements app as much as the freestyle one, and
+      # resources/ - the Fiori elements apps as much as the freestyle one, and
       # the card, which is deployed on its own and registers the control
       # relative to itself - without its preview page
       - name: The control is part of the built apps
         if: ${{ !cancelled() }}
         run: |
-          for example in examples/freestyle examples/fiori-elements examples/card; do
+          for example in examples/freestyle examples/fiori-elements examples/fiori-elements-v2 examples/card; do
             test -f "$example/dist/thirdparty/z2ui5/embed/Container.js"
             test -f "$example/dist/thirdparty/z2ui5/embed/Container.css"
             test ! -e "$example/dist/resources"
