@@ -107,7 +107,18 @@ and runs `npm run bsp` and `npx playwright test` there.
   `<script src>`, never with `eval`, `new Function` or `fetch` + inject.
 - **One frontend per page, one component per control, one backend session per
   component.** The bundle is loaded once; a change of `app`, `endpoint` or
-  `params` replaces the component; nothing is patched into a running one.
+  `params` replaces the component, and so does `restart()`; nothing is
+  patched into a running one. A start is compared by what the backend gets
+  - the resolved endpoint, the params as `startupParameters` makes them -
+  never by the raw property values. A control that shared a load from
+  another control's endpoint and saw it fail tries its own once; a failed
+  start is never repeated by the control itself.
+- **Nothing starts for a control nobody sees.** UI5 calls
+  `onBeforeRendering` for an invisible control too; the control starts only
+  while `visible`, and an app that runs keeps running while it is hidden.
+- **Every failure reaches the host asynchronously**, from the promise chain
+  after the rendering that started the app - the refused endpoint included.
+  Never fire `componentFailed` or `componentCreated` inside a rendering hook.
 - **`thirdparty/`, not `resources/`.** An app deployed to an ABAP system
   answers every `<app>/resources/` path from the system's UI5; the control is
   served and built under `thirdparty/z2ui5/embed/` and registered with a

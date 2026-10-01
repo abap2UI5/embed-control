@@ -6,6 +6,41 @@ own, and nothing may be left under "Unreleased".
 
 ## Unreleased
 
+- `restart()`: ends the running session and starts the app anew with the
+  current `app`, `endpoint` and `params` - the app from scratch, or one more
+  try after `componentFailed`. A failed start was repeated only by a change
+  of one of the three properties.
+- An `endpoint` that names the same place in another spelling - a trailing
+  slash, a relative path, the default written out - no longer restarts the
+  app: what a start is compared by is the endpoint as it is requested. Nor
+  does an `app_start` in `params`, which `app` overrides anyway.
+- An invisible control (`visible="false"`) starts nothing until it is
+  shown. UI5 calls `onBeforeRendering` for the placeholder it renders, and
+  0.1.1 started the app - and its backend session - for a control nobody
+  saw. An app that runs keeps running while its control is hidden.
+- `componentFailed` for a refused endpoint fired inside the rendering, every
+  other failure after it. All of them arrive asynchronously now, so a
+  handler that changes a model or the control never does so in the
+  rendering phase.
+- An `endpoint` with a query or a fragment is refused as before, and the
+  reason says so (`carries a query or a fragment`) instead of calling a
+  path on this server another host.
+- `params` takes an array for a name, `{ ids: ["1", "2"] }`, as several
+  values of that name - the launchpad's shape, which the backend reads;
+  0.1.1 handed an array over as the text `"1,2"`.
+- A control that shared the frontend load of another control's endpoint
+  and saw it fail tries its own endpoint once, instead of failing for a
+  backend it never talks to. The first control that starts still decides
+  where the frontend comes from when that load succeeds.
+- README: a custom control from the sibling BSPs `z2ui5_cci` / `z2ui5_ccc`
+  behind a prefixing proxy (SAP Build Work Zone, an approuter route with a
+  prefix) needs the abap2UI5 release after 1.146.0, whose bundle names the
+  node it was requested under and whose frontend puts the prefix of the
+  control's `endpoint` in front of the roots - listed under known
+  limitations; nothing in the control changes with it.
+- `scripts/consumer-check.mjs` runs npm through the node that started it
+  (`npm_execpath`) instead of looking `npm` up on the PATH, which fails on
+  Windows.
 - `package.json` names the author (abap2UI5), as npm and the Best of UI5
   listing show it.
 - `package.json` records the backend floor, `"abap2ui5": { "minBackend":

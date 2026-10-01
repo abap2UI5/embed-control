@@ -68,8 +68,8 @@ sap.ui.require(["z2ui5/embed/Container"], (Container) => {
 | Property | Type | Default | |
 |---|---|---|---|
 | `app` | string | | The ABAP class to run. Nothing starts while it is empty |
-| `endpoint` | string | `/sap/bc/z2ui5` | Path of the abap2UI5 HTTP service on this server - absolute, or relative to the page's address (a `<base>` does not apply). The frontend is loaded from it, the roundtrips go to it. See [Backend](#backend) |
-| `params` | object | | `{ name: "value" }`, read by the app with `client->get( )-t_comp_params`. A name whose value is `null` or `undefined` is left out |
+| `endpoint` | string | `/sap/bc/z2ui5` | Path of the abap2UI5 HTTP service on this server - absolute, or relative to the page's address (a `<base>` does not apply), without a query or a fragment. The frontend is loaded from it, the roundtrips go to it. See [Backend](#backend) |
+| `params` | object | | `{ name: "value" }`, read by the app with `client->get( )-t_comp_params`; `{ name: ["a", "b"] }` hands several values over under one name. A value that is `null` or `undefined` is left out |
 | `width` | CSSSize | `100%` | |
 | `height` | CSSSize | `100%` | The app fills its container - give it a height, or a parent that has one |
 
@@ -78,13 +78,25 @@ sap.ui.require(["z2ui5/embed/Container"], (Container) => {
 | `componentCreated` | `component` | The app's component exists (the first roundtrip is under way) |
 | `componentFailed` | `reason` | It could not be created - the endpoint is not a path on this server, the frontend could not be loaded, or the component failed |
 
+| Method | |
+|---|---|
+| `restart()` | Ends the running session and starts the app anew with the current `app`, `endpoint` and `params` - the app from scratch, or one more try after `componentFailed` |
+
 Every control is its **own abap2UI5 session** - two controls with the same
 class do not share state. Changing `app`, `endpoint` or `params` ends the
-running session and starts a new one; destroying the control ends it too.
-All three are ordinary properties, so they can be bound to your model -
-`params` is compared by value with what the running app was started with,
-so a binding that hands over the same parameters in a new object does not
-restart the app.
+running session and starts a new one; `restart()` does the same with the
+values as they are; destroying the control ends it too. All three are
+ordinary properties, so they can be bound to your model - `params` is
+compared by value with what the running app was started with, so a binding
+that hands over the same parameters in a new object does not restart the
+app, and an `endpoint` that names the same place in another spelling (a
+trailing slash, a relative path) does not either.
+
+Both events arrive asynchronously, after the rendering that started the
+app - a refused endpoint included. A start that failed is not repeated by
+itself: change one of the three properties, or call `restart()`. An
+invisible control (`visible="false"`) starts nothing until it is shown; an
+app that runs keeps running, with its state, while its control is hidden.
 
 ## Examples
 
@@ -188,7 +200,17 @@ specVersion 3.0, and every release is built with both.
 
 - **One frontend per page**: the first control that starts decides which
   endpoint the frontend comes from; every control still sends its roundtrips
-  to its own endpoint.
+  to its own endpoint. A control that shared that load with another
+  endpoint of its own, and saw it fail, tries its own endpoint once.
+- **Custom controls from the sibling BSPs `z2ui5_cci` / `z2ui5_ccc`**
+  (abap2UI5-addons/custom-controls, the customer's own library) behind a
+  proxy that puts the system under a prefix of its own - SAP Build Work
+  Zone's destination proxy, an approuter route with a prefix - need the
+  abap2UI5 release after 1.146.0. Until then the bundle names their paths
+  as the system has them, `/sap/bc/ui5_ui5/sap/z2ui5_cci`, which the host's
+  origin does not have; from then on its bundle names the node it was
+  requested under, and the frontend puts the prefix of the control's
+  `endpoint` in front of the roots. Nothing in the control changes with it.
 - abap2UI5 was built to own the whole page. Its embedded mode leaves the
   URL to your app (from 1.146.0 on); the rest of it is still
   to come

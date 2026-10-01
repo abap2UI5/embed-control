@@ -39,6 +39,15 @@ function run(command, args, cwd) {
   });
 }
 
+// npm as the one that started this script (npm_execpath, set by `npm run`),
+// run by this node: no shell, and no "npm" to look up on PATH - on Windows
+// that is npm.cmd, which a shell-less spawn refuses since Node 18.20/20.12.
+// Started otherwise, the npm on PATH.
+const npm = process.env.npm_execpath
+  ? [process.execPath, process.env.npm_execpath]
+  : ["npm"];
+const runNpm = (args, cwd) => run(npm[0], [...npm.slice(1), ...args], cwd);
+
 // The smallest app that takes the package the way the README says: the
 // dependency, includeDependency in ui5.yaml, the resourceRoot in the
 // manifest. No framework section - nothing of UI5 itself is downloaded.
@@ -94,8 +103,7 @@ const work = mkdtempSync(join(tmpdir(), "embed-control-consumer-"));
 let failed = false;
 try {
   const [{ filename }] = JSON.parse(
-    run(
-      "npm",
+    runNpm(
       ["pack", "--json", "--workspace", WORKSPACE, "--pack-destination", work],
       root,
     ),
@@ -106,7 +114,7 @@ try {
     const app = join(work, `ui5-cli-${major}`);
     try {
       writeConsumer(app, tarball, major);
-      run("npm", ["install", "--no-audit", "--no-fund"], app);
+      runNpm(["install", "--no-audit", "--no-fund"], app);
       const version = ui5(app, ["--version"]).split(" ")[0].trim();
       ui5(app, ["build", "--clean-dest"]);
       const missing = FILES.filter((f) => !existsSync(join(app, TARGET, f)));
