@@ -90,7 +90,7 @@ step:
    move the entries under `## Unreleased` under `## <version>`.
 3. Merge, then create a GitHub release with the tag `v<version>`.
 
-`publish.yaml` runs the whole CI on that commit, e2e included, checks that
+`publish.yaml` runs the whole CI on that commit, the examples included, checks that
 tag, version, changelog and repository agree (`scripts/release-check.mjs`),
 and publishes by trusted publishing - no token, with npm provenance. Run by
 hand (Actions → publish → Run workflow), it is a dry run: everything except

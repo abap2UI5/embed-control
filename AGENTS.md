@@ -129,13 +129,19 @@ and runs `npm run bsp` and `npx playwright test` there.
   CLI reads it, and UI5 CLI 3 refuses a dependency with 4.0.
   `npm run consumer:check` builds the packed package with CLI 3 and 4.
 - **abap2UI5 1.145.0 is the backend floor** - the first release that answers
-  `?z2ui5-bundle`. The package README names it, with what 1.145.0 does not
-  do yet, and the e2e job of `ci.yaml` runs against it (the published
-  `@abap2ui5/node-runtime` of that version) next to abap2UI5 main; raise it
-  in both, and in samples-embed-control's `ci.yaml`, when the control starts
-  to rely on something newer. A test that needs a newer backend is tagged
-  `@after-1.145.0`, which the floor leg leaves out - as it leaves out the
-  Fiori elements examples, which need the hash.
+  `?z2ui5-bundle`. The package records it in its `package.json`
+  (`"abap2ui5": { "minBackend": "1.145.0" }`, the custom-field style
+  `@abap2ui5/node-runtime` uses), the package README names it in prose,
+  with what 1.145.0 does not do yet, and the samples job of `ci.yaml` runs
+  the examples against it (the published `@abap2ui5/node-runtime` of that
+  version, read from the field by the job `floor`) next to abap2UI5 main;
+  raise it in package.json and the README - and in samples-embed-control's
+  `ci.yaml`, which tests the published control - when the control starts to
+  rely on something newer. A test that needs a newer backend is tagged
+  `@after-<floor>` (`@after-1.145.0` today), which the floor leg leaves
+  out, as it leaves out the Fiori elements examples, which need the hash. The
+  package has no `engines`: it is a browser control without Node code, and a
+  UI5 CLI 3 consumer may install it on Node 16 or 18.
 - **A host that routes by the hash needs abap2UI5 1.146.0.** Its
   bundle marks the component embedded (`componentData.embedded`, abap2UI5
   `Component.init`), and an embedded component leaves the URL hash to the

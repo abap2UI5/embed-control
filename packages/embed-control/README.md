@@ -143,7 +143,9 @@ An older abap2UI5 answers with its page; the control then fires
   403 (abap2UI5 #2802).
 
 Every release is tested against abap2UI5's main and against 1.145.0
-(`@abap2ui5/node-runtime` 1.145.0) - there without what needs the hash.
+(`@abap2ui5/node-runtime` 1.145.0) - there without what needs the hash. The
+package records the floor in its `package.json` (`abap2ui5.minBackend`), and
+that is the version the test installs.
 
 **The page and the service have to share an origin.** abap2UI5 rejects a
 POST whose `Origin` names another host than its own (its CSRF defense), and
