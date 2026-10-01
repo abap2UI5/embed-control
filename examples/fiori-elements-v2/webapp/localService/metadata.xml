@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The OData V2 service of the example, in the shape the RAP service of
+     abap/ serves it: service definition Z2UI5_UI_EMBED_COUNTRY, published by
+     the binding Z2UI5_UI_EMBED_COUNTRY_O2 as /sap/opu/odata/sap/<binding>/.
+     Trimmed to the entity the app reads - the system's metadata also carries
+     the vocabulary references and the SAP__ helper types every RAP service
+     has, which the app does not use. The UI annotations are not here: a RAP
+     service serves them apart, from its metadata extension
+     (Z2UI5_UI_EMBED_COUNTRY_O2_VAN.xml). The mockserver of ui5.yaml answers
+     it with data/Countries.json. -->
+<edmx:Edmx Version="1.0" xmlns:edmx="http://schemas.microsoft.com/ado/2007/06/edmx" xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata" xmlns:sap="http://www.sap.com/Protocols/SAPData">
+    <edmx:DataServices m:DataServiceVersion="2.0">
+        <Schema Namespace="cds_z2ui5_ui_embed_country" xml:lang="en" sap:schema-version="1" xmlns="http://schemas.microsoft.com/ado/2008/09/edm">
+            <EntityType Name="CountriesType" sap:label="abap2UI5 embed control - countries" sap:content-version="1">
+                <Key>
+                    <PropertyRef Name="Country"/>
+                </Key>
+                <Property Name="Country" Type="Edm.String" Nullable="false" MaxLength="3" sap:display-format="UpperCase" sap:label="Country" sap:quickinfo="Country/Region Key" sap:creatable="false" sap:updatable="false"/>
+                <Property Name="CountryName" Type="Edm.String" MaxLength="15" sap:label="Name" sap:creatable="false" sap:updatable="false"/>
+                <Property Name="Nationality" Type="Edm.String" MaxLength="15" sap:label="Nationality" sap:creatable="false" sap:updatable="false"/>
+                <Property Name="Language" Type="Edm.String" MaxLength="2" sap:label="Language" sap:quickinfo="Language Key" sap:creatable="false" sap:updatable="false"/>
+            </EntityType>
+            <EntityContainer Name="cds_z2ui5_ui_embed_country_Entities" m:IsDefaultEntityContainer="true" sap:message-scope-supported="true" sap:supported-formats="atom json xlsx">
+                <EntitySet Name="Countries" EntityType="cds_z2ui5_ui_embed_country.CountriesType" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:content-version="1"/>
+            </EntityContainer>
+        </Schema>
+    </edmx:DataServices>
+</edmx:Edmx>

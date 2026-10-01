@@ -6,9 +6,11 @@ a UI5 custom control, published on npm, that runs an
 examples that show how to use it - a
 **[UI5 freestyle app](examples/freestyle)**, a
 **[Fiori elements app](examples/fiori-elements)** with the control in a custom
-section of its object page and a generic
-**[UI Integration Card](examples/card)** for SAP Build Work Zone - delivered
-with the package from npm to
+section of its object page, a
+**[Fiori elements app for OData V2](examples/fiori-elements-v2)** with the
+control in an object page extension and the RAP service it reads, and a
+generic **[UI Integration Card](examples/card)** for SAP Build Work Zone -
+delivered with the package from npm to
 [abap2UI5/samples-embed-control](https://github.com/abap2UI5/samples-embed-control).
 
 ```xml
@@ -27,10 +29,13 @@ packages/embed-control/        the npm package - a UI5 CLI project of type "modu
   src/                           the control and its stylesheet
 examples/freestyle/            a UI5 freestyle app using the package like any consumer
 examples/fiori-elements/       a Fiori elements app with the control in a custom section
+examples/fiori-elements-v2/    a Fiori elements app for OData V2 with the control in an object page extension
+  abap/                          the RAP service it reads and the abap2UI5 app it starts, in abapGit's format
 examples/card/                 a UI Integration Card (type Component) that runs any abap2UI5 app
 test/e2e/                      Playwright tests of the examples against a live backend
 scripts/                       the consumer check, the release check and the delivery build
 delivery/                      the README of abap2UI5/samples-embed-control
+abaplint.jsonc                 the check of the examples' ABAP
 ```
 
 The workspaces are linked by npm: each example depends on
@@ -58,7 +63,7 @@ on it once the abap2UI5 installations it targets have it.
 ## Run the examples
 
 They need an abap2UI5 backend that answers `?z2ui5-bundle` (1.145.0 or
-later), the Fiori elements one and the card an abap2UI5 that leaves the URL
+later), the Fiori elements ones and the card an abap2UI5 that leaves the URL
 hash to the page it is embedded in (1.146.0 or later).
 
 **Against an SAP system:** set the system's URL as `baseUri` in the
@@ -69,6 +74,7 @@ user and password there.
 npm install
 npm start                        # the freestyle example
 npm run start:fe                 # the Fiori elements example, on its mock OData service
+npm run start:fe-v2              # the one for OData V2, on its mock of the RAP service
 npm run start:card               # the card, on its preview page
 ```
 
@@ -77,7 +83,7 @@ npm run start:card               # the card, on its preview page
 `http://localhost:3000`. The npm package
 [`@abap2ui5/node-runtime`](https://www.npmjs.com/package/@abap2ui5/node-runtime)
 is that - abap2UI5 prebuilt, its version the release it was built from
-(1.146.0 or later for the Fiori elements example and the card; Node 22 or
+(1.146.0 or later for the Fiori elements examples and the card; Node 22 or
 later, in a folder of its own):
 
 ```bash
@@ -91,24 +97,26 @@ Then, here:
 ```bash
 npm run start-local              # the freestyle example
 npm run start-local:fe           # the Fiori elements example
+npm run start-local:fe-v2        # the one for OData V2
 npm run start-local:card         # the card
 ```
 
 The proxy tells the backend the dev server's host in `X-Forwarded-Host`, and
 abap2UI5's CSRF check compares the browser's `Origin` with it - no middleware
-of our own. The Fiori elements example takes SAPUI5 from npm - Fiori elements
-for OData V4 is not part of OpenUI5 - so its first start downloads more.
+of our own. The Fiori elements examples take SAPUI5 from npm - Fiori elements
+is not part of OpenUI5 - so their first start downloads more.
 
 ## Checks
 
 | Command | |
 |---|---|
 | `npm run lint` / `npm run format:check` | ESLint and Prettier |
-| `npm run build` | `ui5 build` of the examples - proves a consumer build takes the control into `dist/thirdparty/z2ui5/embed/`, the Fiori elements app's and the card's too |
+| `npm run abaplint` | the ABAP of the examples - the RAP service and the abap2UI5 app of `examples/fiori-elements-v2/abap` - against abap2UI5's main (`abaplint.jsonc`) |
+| `npm run build` | `ui5 build` of the examples - proves a consumer build takes the control into `dist/thirdparty/z2ui5/embed/`, the Fiori elements apps' and the card's too |
 | `npm run pack:check` | what `npm publish` would put into the package |
 | `npm run consumer:check` | the packed package, installed into an app of its own and built with UI5 CLI 3 and 4 |
-| `ABAP2UI5_DIR=../abap2UI5 npm run bsp` | the tree abap2UI5/samples-embed-control delivers - the examples as UI5 projects, the freestyle one as BSP - into `out/standard/`, checked with abap2UI5's page invariants. With the control of this checkout; `-- --from-npm` takes it from the registry, as the delivery does |
-| `npx playwright test` | the examples in a browser against the backend on port 3000 - the freestyle one on UI5 1.136 and 1.71, the Fiori elements one on SAPUI5 1.136, the card on OpenUI5 1.136 (`PW_CHROMIUM_PATH` for an installed Chromium) |
+| `ABAP2UI5_DIR=../abap2UI5 npm run bsp` | the trees abap2UI5/samples-embed-control delivers - `out/standard/`: the examples as UI5 projects, the freestyle one as BSP; `out/rap/`: the RAP service of the OData V2 example and that example as BSP - checked with abap2UI5's page invariants. With the control of this checkout; `-- --from-npm` takes it from the registry, as the delivery does |
+| `npx playwright test` | the examples in a browser against the backend on port 3000 - the freestyle one on UI5 1.136 and 1.71, the Fiori elements ones on SAPUI5 1.136, the card on OpenUI5 1.136 (`PW_CHROMIUM_PATH` for an installed Chromium) |
 
 CI (`.github/workflows/ci.yaml`) runs all of them; its e2e job builds the
 backend from abap2UI5's default branch, so it tests the pair a user gets
@@ -164,22 +172,32 @@ Then:
 ## Delivery to abap2UI5/samples-embed-control
 
 [abap2UI5/samples-embed-control](https://github.com/abap2UI5/samples-embed-control)
-shows the example the way an app uses the package, on its branch `standard`:
+shows the examples the way an app uses the package, on two branches.
+`standard`:
 
-- `freestyle/`, `fiori-elements/` and `card/` - the examples as UI5 projects,
-  `@abap2ui5/embed-control` an npm dependency: `examples/*` without what
-  only the tests here use
+- `freestyle/`, `fiori-elements/`, `fiori-elements-v2/` and `card/` - the
+  examples as UI5 projects, `@abap2ui5/embed-control` an npm dependency:
+  `examples/*` without what only the tests here use
 - `src/` - the freestyle app as the BSP `Z2UI5_HOST`, with the control where
-  `ui5 build` puts it, to try the control on a real system with a plain
-  abapGit pull (the Fiori elements app needs an OData service, which only
-  the example's mockserver has, and a card is deployed to its host)
+  `ui5 build` puts it, to try the control on any abap2UI5 system with a
+  plain abapGit pull (the Fiori elements app for OData V4 needs an OData
+  service, which only the example's mockserver has, and a card is deployed
+  to its host)
 
-Neither carries a copy of the abap2UI5 frontend, and the control in both is
-the **published** package: `scripts/build-bsp.mjs --from-npm` installs the
-version `packages/embed-control/package.json` names from the registry.
-`frontend_deploy.yaml` builds the tree with abap2UI5's BSP tools and writes
-it into samples-embed-control's `main` as `result/standard`; the `deliver`
-workflow over there makes the branch of it. It runs after every publish, on
+`rap` - the OData V2 example on a system with RAP, one abapGit pull:
+
+- `src/01` - its RAP service and the abap2UI5 app it starts
+  (`examples/fiori-elements-v2/abap`)
+- `src/02` - the app as the BSP `Z2UI5_HOST_FE`, without its mock service
+  and starting that abap2UI5 app
+
+No branch carries a copy of the abap2UI5 frontend, and the control on both
+is the **published** package: `scripts/build-bsp.mjs --from-npm` installs
+the version `packages/embed-control/package.json` names from the registry.
+`frontend_deploy.yaml` builds the trees with abap2UI5's BSP tools and writes
+them into samples-embed-control's `main` as `result/standard` and
+`result/rap`; the `deliver` workflow over there makes the branches of them
+(a branch it does not list yet is written to `main` and not fanned out). It runs after every publish, on
 every change to the example, the build or `delivery/README.md`, and once a
 month - and delivers only from a commit whose control is the published one:
 while main has changes to `src/` or `ui5.yaml` that no release carries yet,

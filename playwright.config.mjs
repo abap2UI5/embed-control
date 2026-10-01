@@ -5,6 +5,9 @@ import { defineConfig } from "@playwright/test";
 //                    oldest one abap2UI5 (and so the control) supports
 //   fiori-elements   on SAPUI5 1.136 - Fiori elements for OData V4 is SAPUI5
 //                    only, and needs far more than 1.71
+//   fiori-elements-v2
+//                    on SAPUI5 1.136 - Fiori elements for OData V2 is SAPUI5
+//                    only as well, and UI5 CLI serves SAPUI5 from 1.76 on
 //   card             on OpenUI5 1.136 - a UI Integration Card, whose hosts
 //                    (SAP Build Work Zone) bring a current UI5; its preview
 //                    page stands in for the host
@@ -13,7 +16,7 @@ import { defineConfig } from "@playwright/test";
 // The backend is NOT: it has to be running already where those proxies point
 // - http://localhost:3000, the transpiled abap2UI5 (`npm run express` in an
 // abap2UI5 checkout, or @abap2ui5/node-runtime; see README). The Fiori
-// elements app's own OData service is a mockserver of its dev server.
+// elements apps' own OData services are mockservers of their dev servers.
 //
 // PW_CHROMIUM_PATH runs a Chromium that is already installed instead of the
 // one `npx playwright install chromium` downloads.
@@ -58,6 +61,11 @@ export default defineConfig({
       testMatch: "card.spec.mjs",
       use: { baseURL: "http://localhost:8083" },
     },
+    {
+      name: "fiori-elements-v2",
+      testMatch: "fiori-elements-v2.spec.mjs",
+      use: { baseURL: "http://localhost:8084" },
+    },
   ],
   webServer: [
     serve("freestyle", "ui5-local.yaml", 8080, 180_000),
@@ -66,5 +74,6 @@ export default defineConfig({
     serve("fiori-elements", "ui5-local.yaml", 8082, 300_000),
     // the card itself is no page - its preview is
     serve("card", "ui5-local.yaml", 8083, 180_000, "test/index.html"),
+    serve("fiori-elements-v2", "ui5-local.yaml", 8084, 300_000),
   ],
 });

@@ -1,0 +1,50 @@
+[
+  {
+    "Country": "DE",
+    "CountryName": "Germany",
+    "Nationality": "German",
+    "Language": "EN"
+  },
+  {
+    "Country": "AT",
+    "CountryName": "Austria",
+    "Nationality": "Austrian",
+    "Language": "EN"
+  },
+  {
+    "Country": "CH",
+    "CountryName": "Switzerland",
+    "Nationality": "Swiss",
+    "Language": "EN"
+  },
+  {
+    "Country": "FR",
+    "CountryName": "France",
+    "Nationality": "French",
+    "Language": "EN"
+  },
+  {
+    "Country": "IT",
+    "CountryName": "Italy",
+    "Nationality": "Italian",
+    "Language": "EN"
+  },
+  {
+    "Country": "ES",
+    "CountryName": "Spain",
+    "Nationality": "Spanish",
+    "Language": "EN"
+  },
+  {
+    "Country": "GB",
+    "CountryName": "United Kingdom",
+    "Nationality": "British",
+    "Language": "EN"
+  },
+  {
+    "Country": "US",
+    "CountryName": "USA",
+    "Nationality": "American",
+    "Language": "EN"
+  }
+]

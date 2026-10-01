@@ -8,6 +8,8 @@ own, and nothing may be left under "Unreleased".
 
 - `package.json` names the author (abap2UI5), as npm and the Best of UI5
   listing show it.
+- The README lists the Fiori elements example for OData V2, with the RAP
+  service it reads, and names the UI5 release it is tested on.
 
 ## 0.1.1
 

@@ -14,15 +14,25 @@ session, wherever the host app places it:
 </mvc:View>
 ```
 
-The branch `standard` has two host apps and a card:
+The branch `standard` has three host apps and a card:
 
 | Path | |
 |---|---|
 | [`freestyle/`](https://github.com/abap2UI5/samples-embed-control/tree/standard/freestyle) | a UI5 freestyle app with three containers - the package is an npm dependency like any other |
-| [`fiori-elements/`](https://github.com/abap2UI5/samples-embed-control/tree/standard/fiori-elements) | a Fiori elements app, list report and object page, with the control in a **custom section** of the object page - the abap2UI5 app gets the key of the object on the page |
+| [`fiori-elements/`](https://github.com/abap2UI5/samples-embed-control/tree/standard/fiori-elements) | a Fiori elements app for OData V4, list report and object page, with the control in a **custom section** of the object page - the abap2UI5 app gets the key of the object on the page |
+| [`fiori-elements-v2/`](https://github.com/abap2UI5/samples-embed-control/tree/standard/fiori-elements-v2) | a Fiori elements app for **OData V2** with the control in an **extension of its object page**, and in `abap/` the **RAP service** it reads and the abap2UI5 app it starts - the app gets fields of the object on the page |
 | [`card/`](https://github.com/abap2UI5/samples-embed-control/tree/standard/card) | a **UI Integration Card** for SAP Build Work Zone that runs any abap2UI5 app - the class is a card parameter, the backend a card destination |
 | [`src/`](https://github.com/abap2UI5/samples-embed-control/tree/standard/src) | the freestyle app as the BSP `Z2UI5_HOST`, with the control from npm where `ui5 build` puts it - to try it on a system with a plain abapGit pull |
 | `VERSION` | the commit of abap2UI5/embed-control and the version of `@abap2ui5/embed-control` the branch is built from |
+
+The branch `rap` is the OData V2 app on a system - one abapGit pull for a
+system with RAP:
+
+| Path | |
+|---|---|
+| [`src/01/`](https://github.com/abap2UI5/samples-embed-control/tree/rap/src/01) | the RAP service of `fiori-elements-v2/abap` - CDS view, metadata extension, service definition, OData V2 binding - and the abap2UI5 app `Z2UI5_CL_EMBED_COUNTRY` |
+| [`src/02/`](https://github.com/abap2UI5/samples-embed-control/tree/rap/src/02) | `fiori-elements-v2` as the BSP `Z2UI5_HOST_FE`, on that service and starting that app |
+| `VERSION` | as on `standard` |
 
 None of them carries a copy of the abap2UI5 frontend: the control loads it
 from the abap2UI5 installation it talks to, so the frontend always has the
@@ -74,7 +84,8 @@ every `<app>/resources/` path from the UI5 of the system.
 ```
 
 or, in a Fiori elements app, in a custom section - [below](#in-a-fiori-elements-app-a-custom-section) -
-or in a card - [further below](#in-sap-build-work-zone-a-ui-integration-card).
+or in an object page extension for OData V2 - [further below](#in-a-fiori-elements-app-for-odata-v2-an-object-page-extension) -
+or in a card - [at the end](#in-sap-build-work-zone-a-ui-integration-card).
 
 That is all a deployed app needs, as long as the page and abap2UI5 share an
 origin: the app served from the same system (BSP, launchpad), or an
@@ -136,6 +147,50 @@ to leave the hash to the page it is embedded in: **abap2UI5 1.146.0 or
 later** does. An older one clears the hash after every
 roundtrip, and the object page goes back to the list.
 
+## In a Fiori elements app for OData V2: an object page extension
+
+The templates for OData V2 take content of their own as a view extension of
+the object page - again an entry in the manifest and a fragment, here a
+section after the facet `General`:
+[`fiori-elements-v2/webapp/manifest.json`](https://github.com/abap2UI5/samples-embed-control/blob/standard/fiori-elements-v2/webapp/manifest.json):
+
+```json
+"sap.ui.viewExtensions": {
+  "sap.suite.ui.generic.template.ObjectPage.view.Details": {
+    "AfterFacet|Countries|General": {
+      "type": "XML",
+      "className": "sap.ui.core.Fragment",
+      "fragmentName": "demo.fev2.ext.Abap2UI5Section",
+      "sap.ui.generic.app": { "title": "abap2UI5" }
+    }
+  }
+}
+```
+
+[`fiori-elements-v2/webapp/ext/Abap2UI5Section.fragment.xml`](https://github.com/abap2UI5/samples-embed-control/blob/standard/fiori-elements-v2/webapp/ext/Abap2UI5Section.fragment.xml)
+hands three fields of the country on the page to the app:
+
+```xml
+<z2ui5:Container
+    core:require="{ Section: 'demo/fev2/ext/Abap2UI5Section' }"
+    app="{ path: 'Country', formatter: 'Section.app' }"
+    params="{ parts: [ 'Country', 'Language', 'Nationality' ], formatter: 'Section.params' }"
+    height="420px"/>
+```
+
+The service is a RAP service, and it is part of the example:
+[`fiori-elements-v2/abap/`](https://github.com/abap2UI5/samples-embed-control/tree/standard/fiori-elements-v2/abap)
+has the CDS view, its metadata extension with the facet, the service
+definition, the OData V2 binding and the abap2UI5 app
+`Z2UI5_CL_EMBED_COUNTRY`, which reads the fields by name and the country
+again from the view. The dev server answers the service from a mock under
+the binding's own paths; the branch `rap` has it all for a system -
+[below](#install-the-branch-rap). It is the successor of
+[abap2UI5-addons/fiori-elements-integration](https://github.com/abap2UI5-addons/fiori-elements-integration),
+without its controller extension and its launchpad target mapping -
+[`fiori-elements-v2/README.md`](https://github.com/abap2UI5/samples-embed-control/blob/standard/fiori-elements-v2/README.md)
+compares the two.
+
 ## In SAP Build Work Zone: a UI Integration Card
 
 The cards of SAP Build Work Zone are UI Integration Cards, and one of type
@@ -179,7 +234,7 @@ first card.
 
 ```bash
 git clone --branch standard https://github.com/abap2UI5/samples-embed-control.git
-cd samples-embed-control/freestyle      # or fiori-elements, or card
+cd samples-embed-control/freestyle      # or fiori-elements, fiori-elements-v2, card
 npm install
 ```
 
@@ -198,14 +253,15 @@ npm install @abap2ui5/node-runtime express
 node --input-type=module -e 'import { serve } from "@abap2ui5/node-runtime"; await serve({ port: 3000 });'
 ```
 
-The Fiori elements app and the card need abap2UI5 1.146.0 or later. The
+The Fiori elements apps and the card need abap2UI5 1.146.0 or later. The
 READMEs of
 [`freestyle/`](https://github.com/abap2UI5/samples-embed-control/blob/standard/freestyle/README.md),
-[`fiori-elements/`](https://github.com/abap2UI5/samples-embed-control/blob/standard/fiori-elements/README.md)
+[`fiori-elements/`](https://github.com/abap2UI5/samples-embed-control/blob/standard/fiori-elements/README.md),
+[`fiori-elements-v2/`](https://github.com/abap2UI5/samples-embed-control/blob/standard/fiori-elements-v2/README.md)
 and
 [`card/`](https://github.com/abap2UI5/samples-embed-control/blob/standard/card/README.md)
-have both ways. The Fiori elements app answers its own OData service from mock
-data, and takes SAPUI5 from npm - Fiori elements for OData V4 is not part of
+have both ways. The Fiori elements apps answer their own OData services from
+mock data, and take SAPUI5 from npm - Fiori elements is not part of
 OpenUI5. The card opens on a preview page: three cards and a stand-in for
 Work Zone. `npm run build` writes an app - or the card - to deploy into
 `dist/`.
@@ -221,7 +277,8 @@ Work Zone. `npm run build` writes an app - or the card - to deploy into
    `/sap/bc/ui5_ui5/sap/z2ui5_host` and `/sap/bc/bsp/sap/z2ui5_host` -
    nothing else, and nothing shared with the `Z2UI5` BSP of
    abap2UI5/frontend. abapGit reads `src/` only; `freestyle/`,
-   `fiori-elements/` and `card/` stay out of the system.
+   `fiori-elements/`, `fiori-elements-v2/` and `card/` stay out of the
+   system.
 3. Activate the two ICF nodes in `SICF`.
 4. Open `/sap/bc/ui5_ui5/sap/z2ui5_host/index.html`.
 
@@ -240,9 +297,45 @@ BSP Z2UI5_HOST                             the host app
        └─ POST /sap/bc/z2ui5                the roundtrips, one session per control
 ```
 
-The Fiori elements app has no BSP here: it needs its OData service, which
-the example mocks and a system does not have - an app of your own brings
-its RAP service. Neither has the card: a card is deployed to its host.
+The Fiori elements app for OData V4 has no BSP: it needs its OData
+service, which the example mocks and a system does not have - an app of your
+own brings its RAP service. The one for OData V2 brings its RAP service, and
+has its BSP on the branch `rap`. The card has none: a card is deployed to
+its host.
+
+## Install the branch `rap`
+
+The Fiori elements app for OData V2 with its RAP service, on a system with
+RAP view entities and OData V2 bindings - SAP S/4HANA 2020 (ABAP 7.55) or
+later, standard ABAP (the view reads `T005T`, which ABAP Cloud does not
+release).
+
+1. abap2UI5 **1.146.0 or later**, with its HTTP service `/sap/bc/z2ui5`
+   active.
+2. Pull the branch `rap` of this repository with abapGit into a new package.
+   It creates the RAP service and `Z2UI5_CL_EMBED_COUNTRY` (`src/01`) and
+   the BSP `Z2UI5_HOST_FE` with the ICF nodes
+   `/sap/bc/ui5_ui5/sap/z2ui5_host_fe` and `/sap/bc/bsp/sap/z2ui5_host_fe`
+   (`src/02`) - nothing shared with the branch `standard`, which installs
+   next to it.
+3. Publish the service binding `Z2UI5_UI_EMBED_COUNTRY_O2` (ADT: open it,
+   **Publish**) if the pull did not, and activate the two ICF nodes in
+   `SICF`.
+4. Open `/sap/bc/ui5_ui5/sap/z2ui5_host_fe/index.html`.
+
+What to look for: the countries of the system in the list report; on the
+object page a section `abap2UI5` after `General Information`, in it the
+startup parameters as the page sent them and the country as the app read it
+from `Z2UI5_C_EMBED_COUNTRY`. Another country starts the app anew, and the
+URL stays on the object page.
+
+```
+BSP Z2UI5_HOST_FE                                  the Fiori elements app
+  ├─ GET  /sap/opu/odata/sap/Z2UI5_UI_EMBED_COUNTRY_O2/   the RAP service
+  └─ z2ui5.embed.Container                         in the object page
+       ├─ GET  /sap/bc/z2ui5?z2ui5-bundle           the frontend, once
+       └─ POST /sap/bc/z2ui5                        Z2UI5_CL_EMBED_COUNTRY
+```
 
 ## Known limitations
 
@@ -264,20 +357,20 @@ its RAP service. Neither has the card: a card is deployed to its host.
 
 ## Where to change what
 
-> **This repository is generated.** The branch is built in
+> **This repository is generated.** The branches are built in
 > [abap2UI5/embed-control](https://github.com/abap2UI5/embed-control) by
 > `scripts/build-bsp.mjs`, with the control installed from npm, and delivered
-> by its `frontend_deploy` workflow: first as `result/standard` into one
-> commit on `main`, then fanned out by the `deliver` workflow here, so the
-> branch is always one commit ahead of `main`. A new version of the package
-> arrives here with its release.
+> by its `frontend_deploy` workflow: first as `result/standard` and
+> `result/rap` into one commit on `main`, then fanned out by the `deliver`
+> workflow here, so each branch is always one commit ahead of `main`. A new
+> version of the package arrives here with its release.
 
 | Content | Owned by |
 |---|---|
-| the examples, the build, this README | [abap2UI5/embed-control](https://github.com/abap2UI5/embed-control) - `examples/freestyle`, `examples/fiori-elements`, `examples/card`, `scripts/build-bsp.mjs`, `delivery/README.md` |
+| the examples, the RAP service, the build, this README | [abap2UI5/embed-control](https://github.com/abap2UI5/embed-control) - `examples/freestyle`, `examples/fiori-elements`, `examples/fiori-elements-v2` (with `abap/`), `examples/card`, `scripts/build-bsp.mjs`, `delivery/README.md` |
 | the control | [abap2UI5/embed-control](https://github.com/abap2UI5/embed-control) - `packages/embed-control`, published to npm as `@abap2ui5/embed-control` |
 | the abap2UI5 frontend and `?z2ui5-bundle`, the BSP tooling | [abap2UI5/abap2UI5](https://github.com/abap2UI5/abap2UI5) - `app/webapp`, `z2ui5_cl_ui5_http_handler`, `tools/` |
-| `result/` on `main`, the branch | machine-written - a hand edit is overwritten by the next delivery |
+| `result/` on `main`, the branches | machine-written - a hand edit is overwritten by the next delivery |
 | this repository's docs and workflows | here, as a maintenance pull request |
 
 ## Issues
