@@ -10,6 +10,8 @@ own, and nothing may be left under "Unreleased".
   listing show it.
 - The README lists the Fiori elements example for OData V2, with the RAP
   service it reads, and names the UI5 release it is tested on.
+- The README links the proxy example in abap2UI5/samples-embed-control,
+  where the examples are developed now.
 
 ## 0.1.1
 

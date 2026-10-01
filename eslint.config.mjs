@@ -15,18 +15,16 @@ export default [
   {
     ignores: [
       "**/node_modules/**",
-      // the abap2UI5 checkout the e2e job builds its backend from
+      // the checkouts the samples job runs: abap2UI5, which it builds its
+      // backend from, and abap2UI5/samples-embed-control
       ".abap2ui5/**",
+      ".samples/**",
       "**/dist/**",
-      // the BSP scripts/build-bsp.mjs writes - generated pages
-      "out/**",
-      "playwright-report/**",
-      "test-results/**",
     ],
   },
-  // UI5 modules: the control and the example app, run in the browser
+  // UI5 modules: the control, run in the browser
   {
-    files: ["packages/*/src/**/*.js", "examples/*/webapp/**/*.js"],
+    files: ["packages/*/src/**/*.js"],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: "script",
@@ -43,12 +41,5 @@ export default [
       globals: globals.node,
     },
     rules,
-  },
-  // e2e tests - the functions passed to page.evaluate( ) run in the page
-  {
-    files: ["test/e2e/**/*.mjs"],
-    languageOptions: {
-      globals: { ...globals.node, ...globals.browser, sap: "readonly" },
-    },
   },
 ];

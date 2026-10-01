@@ -1,35 +1,33 @@
 name: ci
 
-# check - lint, format, abaplint, the consumer builds of the examples (the
-#         control has to land in dist/thirdparty/), the package contents,
-#         and the packed package built in an app of its own with UI5 CLI 3
-#         and 4
-# bsp   - the trees abap2UI5/samples-embed-control delivers
-#         (frontend_deploy.yaml): standard - the examples as UI5 projects and
-#         the freestyle one as BSP - and rap - the RAP service of the OData V2
-#         example and that example as BSP - built and checked with abap2UI5's
-#         tools: a change that breaks them shows here, not in the delivery
-#         after the merge. Here with the control of this commit; the delivery
-#         takes it from npm
-# e2e   - the examples in a browser against a live abap2UI5 backend,
-#         transpiled to JavaScript and served by its express server - no SAP
-#         system involved. The control loads the frontend from that backend
-#         (?z2ui5-bundle), so what is tested is the pair a user gets: this
-#         control and an abap2UI5. Twice: against abap2UI5 main (npm run
-#         express in a checkout), and against the backend floor the package
-#         README names, abap2UI5 1.145.0 - the published
-#         @abap2ui5/node-runtime of that version. The floor leg leaves out
-#         what 1.145.0 cannot do: the Fiori elements examples and the tests
-#         tagged @after-1.145.0 need a frontend that leaves the URL hash to
-#         the host (the release after it)
+# check   - lint, format, the package contents, and the packed package built
+#           in an app of its own with UI5 CLI 3 and 4
+# samples - the examples in abap2UI5/samples-embed-control (its main), with
+#           the control of THIS commit in place of the one from npm: the
+#           packed package unpacked into node_modules/@abap2ui5/embed-control
+#           of the checkout, where every example takes it from. Then, as
+#           samples-embed-control's own CI does with the published control:
+#           its branch build (npm run bsp, with abap2UI5's BSP tools from its
+#           main) and its e2e tests in a browser against a live abap2UI5
+#           backend, transpiled to JavaScript and served by its express
+#           server - no SAP system involved. The control loads the frontend
+#           from that backend (?z2ui5-bundle), so what is tested is the pair a
+#           user gets: this control and an abap2UI5. Twice: against abap2UI5
+#           main (npm run express in a checkout), and against the backend
+#           floor the package README names, abap2UI5 1.145.0 - the published
+#           @abap2ui5/node-runtime of that version. The floor leg leaves out
+#           what 1.145.0 cannot do: the Fiori elements examples and the tests
+#           tagged @after-1.145.0 need a frontend that leaves the URL hash to
+#           the host (the release after it)
 
 on:
   pull_request:
   push:
     branches: [main]
-  # abap2UI5 changes without a pull request here, and the e2e job tests
-  # against its current main - so everything runs every night as well, and a
-  # change there that breaks the control shows up the next morning
+  # abap2UI5 and the examples change without a pull request here, and the
+  # samples job tests against their current main - so everything runs every
+  # night as well, and a change there that breaks the control shows up the
+  # next morning
   schedule:
     - cron: "23 4 * * *"
   workflow_dispatch:
@@ -53,70 +51,20 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      # The examples name the package by version range, as an app from the
-      # registry does, and npm links the workspace only while its version is
-      # inside that range. Past it, npm installs the PUBLISHED version into
-      # an example without a word, and the build and the e2e test that
-      # instead of this commit. Raise the examples' ranges with the version.
-      - name: The examples use this package, not a published one
-        if: ${{ !cancelled() }}
-        run: |
-          test -L node_modules/@abap2ui5/embed-control
-          for example in examples/*/; do
-            test ! -e "${example}node_modules/@abap2ui5/embed-control"
-          done
       - run: npm run lint
         if: ${{ !cancelled() }}
       - run: npm run format:check
         if: ${{ !cancelled() }}
-      # the ABAP of the examples (abaplint.jsonc), against abap2UI5's main
-      - run: npm run abaplint
-        if: ${{ !cancelled() }}
-      - run: npm run build
-        if: ${{ !cancelled() }}
-      # the consumer build: the control is copied into each app
-      # (includeDependency in its ui5.yaml), next to it and not under
-      # resources/ - the Fiori elements apps as much as the freestyle one, and
-      # the card, which is deployed on its own and registers the control
-      # relative to itself - without its preview page
-      - name: The control is part of the built apps
-        if: ${{ !cancelled() }}
-        run: |
-          for example in examples/freestyle examples/fiori-elements examples/fiori-elements-v2 examples/card; do
-            test -f "$example/dist/thirdparty/z2ui5/embed/Container.js"
-            test -f "$example/dist/thirdparty/z2ui5/embed/Container.css"
-            test ! -e "$example/dist/resources"
-          done
-          test -f examples/card/dist/manifest.json
-          test ! -e examples/card/dist/test
       - run: npm run pack:check
         if: ${{ !cancelled() }}
       # the tarball, installed into an app outside this workspace and built
-      # with UI5 CLI 3 and 4 - what a consumer gets, which the example cannot
-      # show: it takes the package through the workspace link, on CLI 4 only
+      # with UI5 CLI 3 and 4 - what a consumer gets, on every CLI major a
+      # consumer may have
       - run: npm run consumer:check
         if: ${{ !cancelled() }}
 
-  bsp:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      # the BSP tools only - they need nothing but node
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          repository: abap2UI5/abap2UI5
-          path: .abap2ui5
-          sparse-checkout: tools
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version-file: .nvmrc
-      - run: npm run bsp
-        env:
-          ABAP2UI5_DIR: .abap2ui5
-
-  e2e:
-    name: e2e (abap2UI5 ${{ matrix.backend }})
+  samples:
+    name: samples (abap2UI5 ${{ matrix.backend }})
     runs-on: ubuntu-latest
     timeout-minutes: 40
     strategy:
@@ -125,13 +73,19 @@ jobs:
         include:
           - backend: main
             playwright-args: ""
-          # the floor - raise it with the package README
+          # the floor - raise it with the package README; the project names
+          # and the tag are samples-embed-control's (its playwright.config.mjs
+          # and its ci.yaml, which names the same)
           - backend: "1.145.0"
             playwright-args: >-
               --project ui5-1.136 --project ui5-1.71 --project card
               --grep-invert @after-1.145.0
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: abap2UI5/samples-embed-control
+          path: .samples
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: ${{ matrix.backend == 'main' }}
         with:
@@ -142,7 +96,7 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
           cache-dependency-path: |
-            package-lock.json
+            .samples/package-lock.json
             .abap2ui5/package-lock.json
 
       - name: Build the abap2UI5 backend
@@ -181,8 +135,36 @@ jobs:
           exit 1
 
       - run: npm ci
+        working-directory: .samples
+      # The examples take the control from the root of their workspace, one
+      # copy for all (samples-embed-control's ci.yaml checks that) - this
+      # commit's, packed as npm would publish it, goes there instead
+      - name: The examples run the control of this commit
+        run: |
+          set -euo pipefail
+          tarball=$(npm pack --json --workspace packages/embed-control --pack-destination "$RUNNER_TEMP" \
+            | node -p "JSON.parse(require('fs').readFileSync(0, 'utf8'))[0].filename")
+          dest=.samples/node_modules/@abap2ui5/embed-control
+          test -d "$dest"
+          for example in .samples/*/package.json; do
+            test ! -e "$(dirname "$example")/node_modules/@abap2ui5/embed-control"
+          done
+          rm -rf "$dest"
+          mkdir -p "$dest"
+          tar -xzf "$RUNNER_TEMP/$tarball" -C "$dest" --strip-components 1
+          echo "$(node -p "require('./$dest/package.json').version") of $GITHUB_SHA in $dest"
+      # the branches samples-embed-control delivers, with this control: the
+      # BSP tools are the ones of the abap2UI5 checkout of this leg
+      - name: The branch build of the examples
+        if: ${{ matrix.backend == 'main' }}
+        working-directory: .samples
+        run: npm run bsp
+        env:
+          ABAP2UI5_DIR: ${{ github.workspace }}/.abap2ui5
       - run: npx playwright install --with-deps chromium
+        working-directory: .samples
       - run: npx playwright test ${{ matrix.playwright-args }}
+        working-directory: .samples
         env:
           CI: "true"
       - if: ${{ failure() }}
@@ -191,5 +173,5 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: playwright-report-${{ matrix.backend }}
-          path: playwright-report/
+          path: .samples/playwright-report/
           retention-days: 7

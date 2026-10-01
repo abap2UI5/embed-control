@@ -156,7 +156,7 @@ app's origin:
   an approuter / destination routes `/sap/bc/z2ui5` to it
 - **`ui5 serve`** - a proxy middleware forwards `/sap` to the system, like
   `ui5-middleware-simpleproxy` in the
-  [examples](https://github.com/abap2UI5/embed-control/tree/main/examples/freestyle).
+  [examples](https://github.com/abap2UI5/samples-embed-control/tree/main/freestyle).
   It rewrites `Host` and tells the backend the dev server's host in
   `X-Forwarded-Host`, which abap2UI5 compares the browser's `Origin` with
   (trusted by default; `check_trust_forwarded_host` in the user exit)
