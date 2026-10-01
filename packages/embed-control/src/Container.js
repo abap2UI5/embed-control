@@ -20,8 +20,9 @@
 // Everything the app shows and does is decided by the ABAP class on the
 // backend. This control only decides WHICH class runs, against WHICH
 // endpoint, and how much room it gets. Every instance is its own abap2UI5
-// session; changing app, endpoint or params starts a NEW component, and
-// destroying the control destroys the component, which ends the session.
+// session; changing app, endpoint or params starts a NEW component, restart()
+// does too, and destroying the control destroys the component, which ends
+// the session.
 sap.ui.define(
   [
     "sap/ui/core/Control",
@@ -78,14 +79,46 @@ sap.ui.define(
       return url.origin + (url.pathname.replace(/\/+$/, "") || "/");
     }
 
+    // Why sameOriginUrl refused an endpoint - the reason of componentFailed.
+    // One refusal is no other host: a query or a fragment on a path of this
+    // server. The control takes neither - the bundle is asked for with a
+    // query of its own, and the roundtrips go to the path - and says so,
+    // instead of calling a path on this server something else.
+    function endpointRefusal(endpoint) {
+      let url;
+      try {
+        url = new URL(endpoint, window.location.href);
+      } catch (e) {
+        url = null;
+      }
+      const onThisServer =
+        url &&
+        (url.protocol === "http:" || url.protocol === "https:") &&
+        url.origin === window.location.origin &&
+        !url.pathname.startsWith("//");
+      return new Error(
+        onThisServer && (url.search || url.hash)
+          ? `endpoint '${endpoint}' carries a query or a fragment - the ` +
+              "control takes a path on this server, without either"
+          : `endpoint '${endpoint}' is not a path on this server - the ` +
+              "abap2UI5 frontend is only loaded from there",
+      );
+    }
+
     // The params as the backend gets them, in the launchpad's shape - one
-    // array of values per name. A parameter without a value (null,
-    // undefined) is left out: it would reach the app as the text "null" or
-    // "undefined". Sorted, so that the same parameters give the same result.
+    // array of values per name; an array is handed over as it is, so one name
+    // can carry several values. A value that is no value (null, undefined)
+    // is left out: it would reach the app as the text "null" or "undefined";
+    // a name left without a value is left out with it. Sorted, so that the
+    // same parameters give the same result.
     function startupParameters(params) {
       const result = {};
       for (const name of Object.keys(params || {}).sort()) {
-        if (params[name] != null) result[name] = [String(params[name])];
+        const value = params[name];
+        const values = (Array.isArray(value) ? value : [value])
+          .filter((v) => v != null)
+          .map(String);
+        if (values.length) result[name] = values;
       }
       return result;
     }
@@ -121,7 +154,11 @@ sap.ui.define(
     //
     // A failed load is forgotten, its script element removed: the next
     // start - a new control, or a change of app, endpoint or params - asks
-    // the backend again, which may be back, or the session valid again.
+    // the backend again, which may be back, or the session valid again. The
+    // error names the endpoint the load came from (frontendEndpoint): a
+    // control that shared the load of another control's endpoint tries its
+    // own once (onBeforeRendering), instead of failing for a backend it
+    // never talks to.
     let frontend = null;
 
     function loadFrontend(endpoint) {
@@ -132,12 +169,12 @@ sap.ui.define(
           const fail = () => {
             frontend = null;
             script.remove();
-            reject(
-              new Error(
-                `no abap2UI5 frontend at ${url} - is the service active, ` +
-                  "the session valid and abap2UI5 recent enough?",
-              ),
+            const error = new Error(
+              `no abap2UI5 frontend at ${url} - is the service active, ` +
+                "the session valid and abap2UI5 recent enough?",
             );
+            error.frontendEndpoint = endpoint;
+            reject(error);
           };
           script.src = url;
           script.onerror = fail;
@@ -177,8 +214,9 @@ sap.ui.define(
           // to it.
           endpoint: { type: "string", defaultValue: "" },
 
-          // Startup parameters for the app, { name: "value", ... }. The app
-          // reads them with client->get( )-t_comp_params.
+          // Startup parameters for the app, { name: "value", ... } - or
+          // { name: ["value", "value"] } for several values of one name.
+          // The app reads them with client->get( )-t_comp_params.
           params: { type: "object", defaultValue: null },
 
           width: { type: "sap.ui.core.CSSSize", defaultValue: "100%" },
@@ -243,6 +281,17 @@ sap.ui.define(
         return this._setStartProperty("params", value);
       },
 
+      // Starts the app anew with the current app, endpoint and params: the
+      // running session ends, and the next rendering starts a fresh one -
+      // the app from scratch, or one more try after componentFailed. A
+      // failed start is not repeated by itself (a backend that is down would
+      // be asked on every rendering), only by a change of app, endpoint or
+      // params, or by this.
+      restart() {
+        this._dropStart();
+        return this;
+      },
+
       // The three properties the backend session is started with. A change
       // throws the running component away (which ends its session) and lets
       // the next rendering start a fresh one; a start still under way is
@@ -260,21 +309,33 @@ sap.ui.define(
       _setStartProperty(name, value) {
         this.setProperty(name, value);
         if (this._start && this._start.key !== this._startKey()) {
-          this.destroyAggregation("_container");
-          this._start = null;
-          // the same object again does not invalidate by itself
-          this.invalidate();
+          this._dropStart();
         }
         return this;
       },
 
-      // what a start is made of - the class, the endpoint and the params as
-      // the backend gets them
+      // The running component goes - which ends its session - and so does
+      // a start under way (what it still creates is destroyed, see
+      // onBeforeRendering); the next rendering starts afresh.
+      _dropStart() {
+        this.destroyAggregation("_container");
+        this._start = null;
+        // the same object again does not invalidate by itself
+        this.invalidate();
+      },
+
+      // What a start is made of: the class, the endpoint as it is requested
+      // - resolved, so that "/sap/bc/z2ui5", "/sap/bc/z2ui5/" and a relative
+      // path to the same place are one start, not three - and the params as
+      // the backend gets them, without an app_start of their own, which the
+      // class overrides anyway (_componentData).
       _startKey() {
+        const params = startupParameters(this.getParams());
+        delete params.app_start;
         return JSON.stringify([
           this.getApp(),
-          this._endpoint(),
-          startupParameters(this.getParams()),
+          sameOriginUrl(this._endpoint()) || this._endpoint(),
+          params,
         ]);
       },
 
@@ -284,23 +345,37 @@ sap.ui.define(
       // while its component is still being created hands the late
       // component to nobody, and it lives on with its backend session. A
       // start that is no longer the current one destroys what it made.
+      //
+      // Every failure reaches the host the same way, from the promise chain
+      // after this rendering - a refused endpoint included: a handler that
+      // then changes a model or the control does so outside the rendering
+      // phase, whichever the failure was.
       onBeforeRendering() {
-        if (!this.getApp() || this.getAggregation("_container")) return;
-        if (this._start) return;
+        // UI5 calls this hook for an invisible control too (it renders a
+        // placeholder for it). Nothing starts for an app nobody sees - a
+        // backend session for every hidden tab - the rendering that shows
+        // the control starts it. An app that runs keeps running while the
+        // control is hidden: only a change of app, endpoint or params,
+        // restart( ) or the end of the control ends its session.
+        if (!this.getVisible() || !this.getApp()) return;
+        if (this.getAggregation("_container") || this._start) return;
         const start = (this._start = { key: this._startKey() });
         const stale = () => this._exited || this._start !== start;
 
         const endpoint = sameOriginUrl(this._endpoint());
-        if (!endpoint) {
-          this.fireComponentFailed({
-            reason: new Error(
-              `endpoint '${this._endpoint()}' is not a path on this server - ` +
-                "the abap2UI5 frontend is only loaded from there",
-            ),
-          });
-          return;
-        }
-        loadFrontend(endpoint)
+        const load = endpoint
+          ? loadFrontend(endpoint).then(null, (reason) => {
+              // The load this control shared came from another control's
+              // endpoint and failed; its own may answer - tried once, as a
+              // new load (loadFrontend forgot the failed one).
+              const other = reason && reason.frontendEndpoint;
+              if (other && other !== endpoint && !stale()) {
+                return loadFrontend(endpoint);
+              }
+              throw reason;
+            })
+          : Promise.reject(endpointRefusal(this._endpoint()));
+        load
           .then((embed) =>
             stale() ? null : this._createComponent(embed, endpoint),
           )

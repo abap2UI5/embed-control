@@ -173,7 +173,7 @@ hands three fields of the country on the page to the app:
 ```xml
 <z2ui5:Container
     core:require="{ Section: 'demo/fev2/ext/Abap2UI5Section' }"
-    app="{ path: 'Country', formatter: 'Section.app' }"
+    app="{ parts: [ 'Country', 'Language', 'Nationality' ], formatter: 'Section.app' }"
     params="{ parts: [ 'Country', 'Language', 'Nationality' ], formatter: 'Section.params' }"
     height="420px"/>
 ```

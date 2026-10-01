@@ -210,3 +210,19 @@ test("the configuration editor offers the card's parameters", async ({
   ).toBeVisible();
   await expect(page.getByText("abap2UI5 service path")).toBeVisible();
 });
+
+// A height that is no CSS size would throw inside the binding and leave the
+// card empty: the card takes its default instead and says so.
+test("a height that is no CSS size falls back to the default, with a word", async ({
+  page,
+}) => {
+  await placeCard(page, "sized", "{origin}", { height: { value: "big" } });
+
+  await expect(card(page, "sized").getByText(/is no CSS size/)).toBeVisible();
+  await expect(postButtons(page)).toHaveCount(3);
+  const app = await card(page, "sized")
+    .locator(".z2ui5EmbedContainer")
+    .boundingBox();
+  // 25rem, the default
+  expect(app.height).toBe(400);
+});

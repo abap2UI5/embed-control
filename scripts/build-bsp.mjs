@@ -245,6 +245,15 @@ function run(command, commandArgs, cwd) {
 }
 const node = (nodeArgs, cwd) => run(process.execPath, nodeArgs, cwd);
 
+// npm as the one that started this script (npm_execpath, set by `npm run`),
+// run by this node: no shell, and no "npm" to look up on PATH - on Windows
+// that is npm.cmd, which a shell-less spawn refuses since Node 18.20/20.12.
+// Started otherwise, the npm on PATH.
+const npm = process.env.npm_execpath
+  ? [process.execPath, process.env.npm_execpath]
+  : ["npm"];
+const runNpm = (args, cwd) => run(npm[0], [...npm.slice(1), ...args], cwd);
+
 // An example as git has it - so never a local .env, node_modules or dist/ -
 // without what only this repository's tests use
 function copyExample(name, dest) {
@@ -288,8 +297,7 @@ function installFromNpm(work) {
   mkdirSync(dir);
   writeFileSync(join(dir, "package.json"), '{ "private": true }\n');
   try {
-    run(
-      "npm",
+    runNpm(
       [
         "install",
         spec,

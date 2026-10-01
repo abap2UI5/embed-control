@@ -72,8 +72,9 @@ test("the embedded app leaves the host's layout alone", async ({ page }) => {
 // The endpoint is handed over as componentData.endpoint, which the frontend
 // reads itself since abap2UI5 2f93737 (#2791) and does not send on - so the
 // POST has to arrive at that path, with only the startup parameters in it.
-// A relative endpoint resolves against the page, and a parameter without a
-// value stays out - it would reach the app as the text "null".
+// A relative endpoint resolves against the page, a parameter without a
+// value stays out - it would reach the app as the text "null" - and an
+// array is several values of one name, the launchpad's shape.
 test("endpoint and params reach the backend", async ({ page }) => {
   const request = page.waitForRequest(
     (r) => r.method() === "POST" && r.url().endsWith("/sap/bc/z2ui5_alt"),
@@ -89,7 +90,13 @@ test("endpoint and params reach the backend", async ({ page }) => {
             new Container({
               app: "Z2UI5_CL_UI5_APP_HI_WORLD",
               endpoint: "sap/bc/z2ui5_alt/",
-              params: { customer: "4711", note: null, flag: undefined },
+              params: {
+                customer: "4711",
+                note: null,
+                flag: undefined,
+                ids: ["1", 2, null],
+                none: [],
+              },
               height: "300px",
               componentCreated: () => resolve(),
             }).placeAt(host);
@@ -103,6 +110,7 @@ test("endpoint and params reach the backend", async ({ page }) => {
   expect(body.value.S_FRONT.CONFIG.ComponentData).toEqual({
     startupParameters: {
       customer: ["4711"],
+      ids: ["1", "2"],
       app_start: ["Z2UI5_CL_UI5_APP_HI_WORLD"],
     },
   });
@@ -179,6 +187,21 @@ test("an endpoint on another origin loads no code", async ({ page }) => {
   expect(foreign).toEqual([]);
 });
 
+// A page of a host's own, with nothing started on it: UI5 and the control
+// come from this server by absolute URLs, so only what the control requests
+// itself is left to the page - its <base>, when `head` has one.
+const hostPage = (baseURL, head = "") => `<!DOCTYPE html>
+  <html><head>
+  ${head}
+  <script id="sap-ui-bootstrap"
+    src="${baseURL}/resources/sap-ui-core.js"
+    data-sap-ui-theme="sap_horizon"
+    data-sap-ui-libs="sap.m"
+    data-sap-ui-resourceroots='{"z2ui5.embed": "${baseURL}/thirdparty/z2ui5/embed/"}'
+    data-sap-ui-compatVersion="edge"
+    data-sap-ui-async="true"></script>
+  </head><body class="sapUiBody"><div id="area"></div></body></html>`;
+
 // The check resolves the endpoint against the page and compares origins -
 // so what is requested has to be exactly that URL. A path is resolved by
 // the browser against the page's <base>, which may name another host: the
@@ -195,24 +218,12 @@ test("a <base> on another host takes neither the frontend nor the roundtrips the
       return route.abort();
     },
   );
-  // UI5 and the control come from this server by absolute URLs - only what
-  // the control requests itself is left to the <base>
   await page.route(
     (url) => url.pathname === "/base-elsewhere.html",
     (route) =>
       route.fulfill({
         contentType: "text/html",
-        body: `<!DOCTYPE html>
-        <html><head>
-        <base href="http://other.test/">
-        <script id="sap-ui-bootstrap"
-          src="${baseURL}/resources/sap-ui-core.js"
-          data-sap-ui-theme="sap_horizon"
-          data-sap-ui-libs="sap.m"
-          data-sap-ui-resourceroots='{"z2ui5.embed": "${baseURL}/thirdparty/z2ui5/embed/"}'
-          data-sap-ui-compatVersion="edge"
-          data-sap-ui-async="true"></script>
-        </head><body class="sapUiBody"><div id="area"></div></body></html>`,
+        body: hostPage(baseURL, '<base href="http://other.test/">'),
       }),
   );
   await page.goto(
@@ -555,4 +566,269 @@ test("an app whose host is deactivated while it starts still starts", async ({
   test.skip(result === "no keep-alive", "keep-alive needs UI5 1.88");
   expect(result).toBe("created");
   await expect(postButtons(page)).toHaveCount(4);
+});
+
+// A query or a fragment on the endpoint is refused as well - the bundle is
+// asked for with a query of its own, the roundtrips go to the path - and
+// the reason says which, instead of calling a path on this server another
+// host. Like every failure it arrives after the rendering that started
+// the app.
+test("a query or a fragment on the endpoint is refused, and named", async ({
+  page,
+}) => {
+  for (const endpoint of [
+    "/sap/bc/z2ui5?sap-client=100",
+    "/sap/bc/z2ui5#top",
+  ]) {
+    const reason = await page.evaluate(
+      (endpoint) =>
+        new Promise((resolve) => {
+          sap.ui.require(["z2ui5/embed/Container"], (Container) => {
+            const host = document.createElement("div");
+            document.body.appendChild(host);
+            new Container({
+              app: "Z2UI5_CL_UI5_APP_HI_WORLD",
+              endpoint,
+              componentCreated: () => resolve("created"),
+              componentFailed: (e) => resolve(e.getParameter("reason").message),
+            }).placeAt(host);
+          });
+        }),
+      endpoint,
+    );
+    expect(reason).toContain("carries a query or a fragment");
+  }
+  await expect(postButtons(page)).toHaveCount(3);
+});
+
+// What a start is made of is the endpoint as it is requested and the params
+// as the backend gets them: the same endpoint in another spelling, or an
+// app_start in the params (the app wins over it anyway), is no change and
+// keeps the app and its state; another endpoint is a change.
+test("the same endpoint spelled differently does not restart the app", async ({
+  page,
+}) => {
+  await page.evaluate(
+    () =>
+      new Promise((resolve, reject) => {
+        sap.ui.require(
+          ["z2ui5/embed/Container"],
+          (Container) => {
+            const state = (window.spelling = { created: 0 });
+            const host = document.createElement("div");
+            document.body.prepend(host);
+            state.control = new Container({
+              app: "Z2UI5_CL_UI5_APP_HI_WORLD",
+              endpoint: "/sap/bc/z2ui5",
+              height: "300px",
+              componentCreated: () => {
+                state.created++;
+                resolve();
+              },
+            });
+            state.control.placeAt(host);
+          },
+          reject,
+        );
+      }),
+  );
+  await page.evaluate(() => {
+    const { control } = window.spelling;
+    control.setEndpoint("/sap/bc/z2ui5/");
+    control.setEndpoint("sap/bc/z2ui5");
+    control.setEndpoint("");
+    control.setParams({ app_start: "Z2UI5_CL_UI5_APP_START" });
+  });
+  await page.waitForTimeout(3000);
+  expect(await page.evaluate(() => window.spelling.created)).toBe(1);
+  await expect(postButtons(page)).toHaveCount(4);
+
+  await page.evaluate(() =>
+    window.spelling.control.setEndpoint("/sap/bc/z2ui5_alt"),
+  );
+  await expect.poll(() => page.evaluate(() => window.spelling.created)).toBe(2);
+});
+
+// restart( ) starts the app anew: the running session ends, and with it
+// what the user typed.
+test("restart() starts the app anew", async ({ page }) => {
+  const single = container(page, "single");
+  await single.getByRole("textbox").fill("Alice");
+  await page.evaluate(
+    () =>
+      new Promise((resolve) => {
+        const el = document.querySelector(
+          ".z2ui5EmbedContainer[id$='--single']",
+        );
+        const control = sap.ui.getCore().byId(el.id);
+        control.attachComponentCreated(() => resolve());
+        control.restart();
+      }),
+  );
+  await expect(single.getByRole("textbox")).toHaveValue("");
+  await expect(postButtons(page)).toHaveCount(3);
+});
+
+// A failed start is not repeated by the control itself - a backend that is
+// down would be asked on every rendering - and restart( ) is the host's way
+// to try again without changing anything.
+test("restart() after a failed start asks the backend again", async ({
+  page,
+}, testInfo) => {
+  let answered = 0;
+  await page.route(
+    (url) => url.searchParams.has("z2ui5-bundle"),
+    (route) =>
+      ++answered === 1
+        ? route.fulfill({
+            status: 503,
+            contentType: "text/plain",
+            body: "down",
+          })
+        : route.continue(),
+  );
+  await page.goto(`/index.html${testInfo.project.metadata.query ?? ""}`);
+  await expect(page.getByText(/abap2UI5 could not start/).first()).toBeVisible({
+    timeout: 45_000,
+  });
+  await expect(postButtons(page)).toHaveCount(0);
+  await page.waitForTimeout(2000);
+  expect(answered).toBe(1);
+
+  await page.evaluate(() => {
+    const el = document.querySelector(".z2ui5EmbedContainer[id$='--single']");
+    sap.ui.getCore().byId(el.id).restart();
+  });
+  await expect(
+    container(page, "single").getByRole("button", { name: "Post" }),
+  ).toBeVisible({ timeout: 45_000 });
+  expect(answered).toBe(2);
+  // the two others failed as well and were not restarted
+  await expect(postButtons(page)).toHaveCount(1);
+});
+
+// UI5 renders a placeholder for an invisible control and calls its
+// onBeforeRendering all the same: nothing starts for an app nobody sees,
+// until the control is shown - and a running app keeps running, with its
+// state, while the control is hidden.
+test("an invisible control starts nothing until it is shown", async ({
+  page,
+}) => {
+  await page.evaluate(
+    () =>
+      new Promise((resolve, reject) => {
+        sap.ui.require(
+          ["z2ui5/embed/Container"],
+          (Container) => {
+            const state = (window.hidden = { created: 0 });
+            const host = document.createElement("div");
+            document.body.prepend(host);
+            state.control = new Container({
+              app: "Z2UI5_CL_UI5_APP_HI_WORLD",
+              height: "300px",
+              visible: false,
+              componentCreated: () => state.created++,
+            });
+            state.control.placeAt(host);
+            resolve();
+          },
+          reject,
+        );
+      }),
+  );
+  await page.waitForTimeout(3000);
+  expect(await page.evaluate(() => window.hidden.created)).toBe(0);
+  await expect(postButtons(page)).toHaveCount(3);
+
+  await page.evaluate(() => window.hidden.control.setVisible(true));
+  await expect.poll(() => page.evaluate(() => window.hidden.created)).toBe(1);
+  await expect(postButtons(page)).toHaveCount(4);
+  await page
+    .locator(".z2ui5EmbedContainer")
+    .first()
+    .getByRole("textbox")
+    .fill("Alice");
+
+  await page.evaluate(() => window.hidden.control.setVisible(false));
+  await expect(postButtons(page)).toHaveCount(3);
+  await page.evaluate(() => window.hidden.control.setVisible(true));
+  await expect(postButtons(page)).toHaveCount(4);
+  expect(await page.evaluate(() => window.hidden.created)).toBe(1);
+  await expect(
+    page.locator(".z2ui5EmbedContainer").first().getByRole("textbox"),
+  ).toHaveValue("Alice");
+});
+
+// The first control decides where the frontend comes from - but when that
+// load fails, a control with an endpoint of its own is not failed for a
+// backend it never talks to: it tries its own endpoint once.
+test("a frontend load that failed from another control's endpoint is tried from the control's own", async ({
+  page,
+  baseURL,
+}, testInfo) => {
+  const bundles = [];
+  await page.route(
+    (url) => url.searchParams.has("z2ui5-bundle"),
+    (route) => {
+      const url = new URL(route.request().url());
+      bundles.push(url.pathname);
+      return url.pathname.endsWith("/z2ui5_down")
+        ? route.fulfill({
+            status: 503,
+            contentType: "text/plain",
+            body: "down",
+          })
+        : route.continue();
+    },
+  );
+  await page.route(
+    (url) => url.pathname === "/two-endpoints.html",
+    (route) =>
+      route.fulfill({ contentType: "text/html", body: hostPage(baseURL) }),
+  );
+  await page.goto(
+    `/two-endpoints.html${testInfo.project.metadata.query ?? ""}`,
+  );
+  const result = await page.evaluate(
+    () =>
+      new Promise((resolve) => {
+        sap.ui.getCore().attachInit(() =>
+          sap.ui.require(
+            ["z2ui5/embed/Container", "sap/m/VBox"],
+            (Container, VBox) => {
+              const result = {};
+              const done = () => {
+                if ("down" in result && "ok" in result) resolve(result);
+              };
+              const control = (name, endpoint) =>
+                new Container({
+                  app: "Z2UI5_CL_UI5_APP_HI_WORLD",
+                  endpoint,
+                  height: "300px",
+                  componentCreated: () => {
+                    result[name] = "created";
+                    done();
+                  },
+                  componentFailed: (e) => {
+                    result[name] = e.getParameter("reason").message;
+                    done();
+                  },
+                });
+              // rendered in this order: the first one starts the load
+              new VBox({
+                items: [
+                  control("down", "/sap/bc/z2ui5_down"),
+                  control("ok", "/sap/bc/z2ui5"),
+                ],
+              }).placeAt("area");
+            },
+          ),
+        );
+      }),
+  );
+
+  expect(result.down).toContain("/sap/bc/z2ui5_down?z2ui5-bundle");
+  expect(result.ok).toBe("created");
+  await expect(postButtons(page)).toHaveCount(1);
+  expect(bundles).toEqual(["/sap/bc/z2ui5_down", "/sap/bc/z2ui5"]);
 });

@@ -16,9 +16,17 @@
 // has to resolve to this page's origin: what comes back is code that runs in
 // the page.
 sap.ui.define(
-  ["sap/ui/core/UIComponent", "sap/ui/model/json/JSONModel"],
-  (UIComponent, JSONModel) => {
+  [
+    "sap/ui/core/UIComponent",
+    "sap/ui/model/json/JSONModel",
+    "sap/ui/base/DataType",
+  ],
+  (UIComponent, JSONModel, DataType) => {
     "use strict";
+
+    // the height of the app in the card unless the parameter names a CSS
+    // size of its own
+    const DEFAULT_HEIGHT = "25rem";
 
     // the parameters the card reads itself - every other parameter of
     // sap.card/configuration reaches the app as a startup parameter
@@ -48,7 +56,7 @@ sap.ui.define(
             app: "",
             endpoint: "",
             params: null,
-            height: "25rem",
+            height: DEFAULT_HEIGHT,
             error: "",
           }),
           "embed",
@@ -97,12 +105,22 @@ sap.ui.define(
           }
         }
 
+        // The control's height takes a CSS size and nothing else: a value it
+        // refuses ("400", "big") would throw inside the binding, and the card
+        // stayed empty without a word. The default instead, and a word.
+        const height = String(values.height || "").trim();
+        const validHeight =
+          !height || DataType.getType("sap.ui.core.CSSSize").isValid(height);
+
         this.getModel("embed").setData({
           app,
           endpoint: destination.pathname.replace(/\/+$/, "") + service,
           params: Object.keys(params).length ? params : null,
-          height: values.height || "25rem",
-          error: "",
+          height: validHeight && height ? height : DEFAULT_HEIGHT,
+          error: validHeight
+            ? ""
+            : `'${height}' is no CSS size - the card parameter 'height' ` +
+              `takes one like '30rem' or '400px'; using ${DEFAULT_HEIGHT}.`,
         });
       },
 

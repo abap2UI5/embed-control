@@ -50,14 +50,16 @@ for OData V2 have for content of their own:
 ```xml
 <z2ui5:Container
     core:require="{ Section: 'demo/fev2/ext/Abap2UI5Section' }"
-    app="{ path: 'Country', formatter: 'Section.app' }"
+    app="{ parts: [ 'Country', 'Language', 'Nationality' ], formatter: 'Section.app' }"
     params="{ parts: [ 'Country', 'Language', 'Nationality' ], formatter: 'Section.params' }"
     height="420px"/>
 ```
 
 - The extension is bound to the object, so `Country`, `Language` and
   `Nationality` are the fields of the country on the page. Nothing starts
-  before the page has one.
+  before the page has one with all three fields: `app` waits for the same
+  parts as `params`, so a field still on its way does not start the app
+  without it - and again, in a new session, once it arrives.
 - The templates keep the object page and bind it to the next object, so the
   control stays on the page: another country ends the running abap2UI5
   session, and the control starts a new one in place with the new fields.
