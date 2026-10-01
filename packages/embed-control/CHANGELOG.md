@@ -8,6 +8,12 @@ own, and nothing may be left under "Unreleased".
 
 - `package.json` names the author (abap2UI5), as npm and the Best of UI5
   listing show it.
+- `package.json` records the backend floor, `"abap2ui5": { "minBackend":
+  "1.145.0" }` - the first abap2UI5 whose service answers `?z2ui5-bundle`,
+  which the README names in prose. The CI's e2e leg against the floor
+  installs the `@abap2ui5/node-runtime` of that version, so the two cannot
+  drift. No `engines`: the package is a browser control with no Node code,
+  and a UI5 CLI 3 consumer may install it on Node 16 or 18.
 - The README lists the Fiori elements example for OData V2, with the RAP
   service it reads, and names the UI5 release it is tested on.
 
