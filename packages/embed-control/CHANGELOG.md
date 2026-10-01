@@ -6,6 +6,9 @@ own, and nothing may be left under "Unreleased".
 
 ## Unreleased
 
+- README: with the UI5 CLI serving the framework, `sap.ui.codeeditor` has
+  to be among the libraries as well - abap2UI5's developer tools need it,
+  and `ui5 serve` serves only what `ui5.yaml` names.
 - `width` and `height` are applied to the control's area without a
   rendering. A change re-rendered the ComponentContainer and with it every
   control of the running app - on UI5 1.71 a value the user was typing and

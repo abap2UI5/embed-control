@@ -185,7 +185,10 @@ extra (UI5 1.71 itself still needs `'unsafe-eval'`).
 The embedded app loads whatever UI5 library its ABAP view names. With the UI5
 CLI serving the framework (`framework:` in `ui5.yaml`), list every library
 your ABAP apps use there, not only the ones your own views use - the hello
-world app, for instance, needs `sap.ui.layout`.
+world app, for instance, needs `sap.ui.layout` - and `sap.ui.codeeditor`,
+which abap2UI5's developer tools (Ctrl+F12 in the embedded app) need. A
+library missing there fails in the browser console with a script load
+error; an app deployed to a system has every library of that system.
 
 ## Supported UI5 versions
 
