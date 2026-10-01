@@ -6,6 +6,29 @@ own, and nothing may be left under "Unreleased".
 
 ## Unreleased
 
+- `width` and `height` are applied to the control's area without a
+  rendering. A change re-rendered the ComponentContainer and with it every
+  control of the running app - on UI5 1.71 a value the user was typing and
+  the focus were lost with it, and a host that binds the height to the
+  window size re-rendered the app on every resize.
+- A bundle the host loaded itself - a `<script>` of its page - is not loaded
+  again: the control takes the `z2ui5/embed` module that is there. 0.1.1
+  loaded it a second time, and UI5 warned that the module was defined twice.
+- An object among the `params` - a structure, a nested array - is handed over
+  as JSON text; 0.1.1 handed it over as the text `[object Object]`.
+- An error thrown by a `componentCreated` or `componentFailed` handler is
+  logged (`sap/base/Log`, with the control's id) instead of ending as an
+  unhandled promise rejection that nothing attributes to the control.
+- Node tests of the control (`npm test`, `test/container.test.mjs`): the
+  endpoints it accepts and what it requests, what the component gets, when
+  it starts, restarts and gives up - without a browser or a backend. The
+  examples' Playwright tests in abap2UI5/samples-embed-control keep covering
+  the shipped control against a live abap2UI5.
+- README: the host page's mobile setup with abap2UI5 1.146.0 and earlier -
+  `sap/ui/util/Mobile.init` through the embedded `sap.m.App`: `height: 100%`
+  on `<html>`, a viewport meta tag, native scrolling off on iOS - listed
+  under known limitations; the abap2UI5 release after 1.146.0 leaves the
+  host's page alone. Nothing in the control changes with it.
 - `restart()`: ends the running session and starts the app anew with the
   current `app`, `endpoint` and `params` - the app from scratch, or one more
   try after `componentFailed`. A failed start was repeated only by a change

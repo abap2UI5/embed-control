@@ -49,6 +49,7 @@ the generated `z2ui5_cl_ui5f_preload`; its only source is
 | `packages/embed-control/CHANGELOG.md` | Every release; the publish checks it |
 | `scripts/consumer-check.mjs` | The packed package in an app of its own, built with UI5 CLI 3 and 4 |
 | `scripts/release-check.mjs` | The gate before `npm publish`: tag, version, changelog and repository agree |
+| `test/container.test.mjs` | The Node tests of the control: its module run with stubs for UI5 - no browser, no backend (`npm test`) |
 | `.github/workflows/` | `ci.yaml` (checks, consumer builds, and the examples of samples-embed-control with the control of the commit - their branch build and their e2e tests against abap2UI5's default branch and the 1.145.0 floor - on every pull request, every night, and before every publish), `publish.yaml` (npm, on a GitHub release) |
 
 ## The examples are tested here, but live there
@@ -63,7 +64,12 @@ and runs `npm run bsp` and `npx playwright test` there.
 
 - **Never add an example, a test app or a copy of the examples here.** A
   test of the control is a test in samples-embed-control, against one of its
-  examples; a new example goes there too.
+  examples; a new example goes there too. The one exception needs no
+  browser: `test/container.test.mjs` runs the control's module in Node with
+  stubs for UI5 and pins what the control decides before UI5 is involved -
+  the endpoint check and what is requested, what the component gets, when a
+  start happens, is repeated or given up. A case of that kind goes there;
+  everything that renders or talks to a backend goes over there.
 - **The floor leg names samples-embed-control's Playwright projects** and
   its tag `@after-1.145.0`. A project renamed over there is renamed in
   `ci.yaml` here in the same breath.
@@ -80,8 +86,9 @@ and runs `npm run bsp` and `npx playwright test` there.
 - **UI5 1.71 is the floor**, as in abap2UI5. Use no module, class, property or
   enum newer than 1.71, and no `sap/ui/core/Lib` / `sap/ui/core/Element`
   static APIs. What the control uses today and since when:
-  `sap/ui/dom/includeStylesheet` (1.58), `Component.create` (1.56),
-  `ComponentContainer#lifecycle` (1.56), renderer `apiVersion: 2` (1.67).
+  `sap/ui/dom/includeStylesheet` (1.58), `sap/base/Log` (1.58),
+  `Component.create` (1.56), `ComponentContainer#lifecycle` (1.56), renderer
+  `apiVersion: 2` (1.67).
   The e2e tests run the freestyle example on 1.71 too
   (samples-embed-control's `freestyle/ui5-1.71.yaml`, the `ui5-1.71`
   Playwright project) - a change to `src/` is done when every project of the
@@ -113,6 +120,12 @@ and runs `npm run bsp` and `npx playwright test` there.
   never by the raw property values. A control that shared a load from
   another control's endpoint and saw it fail tries its own once; a failed
   start is never repeated by the control itself.
+- **`width` and `height` go to the live DOM, not through a rendering**
+  (`_setSizeProperty`): a re-rendering of the control re-renders the
+  ComponentContainer and with it every control of the app, and UI5 1.71
+  rebuilds their DOM - the value the user was typing and the focus went with
+  it. A property the ComponentContainer does not draw from is written with
+  `setProperty(name, value, true)` and applied to the DOM the same way.
 - **Nothing starts for a control nobody sees.** UI5 calls
   `onBeforeRendering` for an invisible control too; the control starts only
   while `visible`, and an app that runs keeps running while it is hidden.
@@ -166,6 +179,7 @@ and runs `npm run bsp` and `npx playwright test` there.
 ```bash
 npm ci
 npm run lint && npm run format:check
+npm test              # the Node tests of the control (test/), no browser, no backend
 npm run pack:check     # package contents: ui5.yaml, src/ and CHANGELOG.md (npm adds README, LICENSE)
 npm run consumer:check # the tarball in an app of its own, built with UI5 CLI 3 and 4
 ```
@@ -176,7 +190,9 @@ samples-embed-control, with this package copied into its
 and `npx playwright test` there, against an abap2UI5 backend with
 `?z2ui5-bundle` on `:3000`.
 
-All text files are LF-only, formatted with Prettier (`.prettierrc`).
+All text files are LF-only. The JavaScript, JSON and CSS files are formatted
+with Prettier (`.prettierrc`, `npm run format:check`); the Markdown files are
+not - Prettier would pad every table to its column width.
 
 ## Publishing
 

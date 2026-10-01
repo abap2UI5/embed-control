@@ -29,8 +29,9 @@ sap.ui.define(
     "sap/ui/core/Component",
     "sap/ui/core/ComponentContainer",
     "sap/ui/dom/includeStylesheet",
+    "sap/base/Log",
   ],
-  (Control, Component, ComponentContainer, includeStylesheet) => {
+  (Control, Component, ComponentContainer, includeStylesheet, Log) => {
     "use strict";
 
     // the component name - "sap.app/id" of abap2UI5's app/webapp/manifest.json
@@ -109,15 +110,17 @@ sap.ui.define(
     // array of values per name; an array is handed over as it is, so one name
     // can carry several values. A value that is no value (null, undefined)
     // is left out: it would reach the app as the text "null" or "undefined";
-    // a name left without a value is left out with it. Sorted, so that the
-    // same parameters give the same result.
+    // a name left without a value is left out with it. An object - a
+    // structure, a nested array - goes over as JSON, which the app can read;
+    // String( ) would make it the text "[object Object]". Sorted, so that
+    // the same parameters give the same result.
     function startupParameters(params) {
       const result = {};
       for (const name of Object.keys(params || {}).sort()) {
         const value = params[name];
         const values = (Array.isArray(value) ? value : [value])
           .filter((v) => v != null)
-          .map(String);
+          .map((v) => (typeof v === "object" ? JSON.stringify(v) : String(v)));
         if (values.length) result[name] = values;
       }
       return result;
@@ -161,7 +164,22 @@ sap.ui.define(
     // never talks to.
     let frontend = null;
 
+    // The bundle's module, when the bundle has run on this page - the
+    // look-up never loads (see above). A host may have loaded the bundle
+    // itself, with a <script> of its page to have it warm before the first
+    // control starts: that is the frontend of this page then, and loading
+    // it again would only run it a second time, with the loader warning that
+    // z2ui5/embed is defined twice.
+    function loadedFrontend() {
+      const embed = sap.ui.require("z2ui5/embed");
+      return embed && embed.componentData ? embed : null;
+    }
+
     function loadFrontend(endpoint) {
+      if (!frontend) {
+        const loaded = loadedFrontend();
+        if (loaded) frontend = Promise.resolve(loaded);
+      }
       if (!frontend) {
         frontend = new Promise((resolve, reject) => {
           const url = `${endpoint}?${BUNDLE_PARAM}`;
@@ -180,8 +198,8 @@ sap.ui.define(
           script.onerror = fail;
           script.onload = () => {
             setTimeout(() => {
-              const embed = sap.ui.require("z2ui5/embed");
-              if (embed && embed.componentData) resolve(embed);
+              const embed = loadedFrontend();
+              if (embed) resolve(embed);
               else fail();
             }, 0);
           };
@@ -267,6 +285,28 @@ sap.ui.define(
           if (container) rm.renderControl(container);
           rm.close("div");
         },
+      },
+
+      // The size goes to the DOM, not through a rendering: a re-rendering of
+      // the control re-renders the ComponentContainer and with it every
+      // control of the app - UI5 1.71 rebuilds their DOM, and a value the
+      // user was typing and the focus were gone with the next height change
+      // (a host that binds the height to the window size re-rendered the app
+      // on every resize). The renderer writes both for the first rendering,
+      // and for one the host causes.
+      setWidth(value) {
+        return this._setSizeProperty("width", value);
+      },
+
+      setHeight(value) {
+        return this._setSizeProperty("height", value);
+      },
+
+      _setSizeProperty(name, value) {
+        this.setProperty(name, value, true);
+        const dom = this.getDomRef();
+        if (dom) dom.style[name] = this.getProperty(name);
+        return this;
       },
 
       setApp(value) {
@@ -395,6 +435,16 @@ sap.ui.define(
             (reason) => {
               if (!stale()) this.fireComponentFailed({ reason });
             },
+          )
+          // an error of the host's handler of either event - or, before it,
+          // of the container - is logged, instead of ending as an unhandled
+          // rejection that nothing attributes to the control
+          .catch((error) =>
+            Log.error(
+              `z2ui5.embed.Container ${this.getId()}: a handler of ` +
+                "componentCreated or componentFailed failed",
+              String((error && error.stack) || error),
+            ),
           );
       },
 

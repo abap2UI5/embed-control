@@ -24,6 +24,7 @@ How to use the package is in its [README](packages/embed-control/README.md)
 packages/embed-control/        the npm package - a UI5 CLI project of type "module"
   src/                           the control and its stylesheet
 scripts/                       the consumer check and the release check
+test/                          the Node tests of the control
 ```
 
 ## The frontend is not here
@@ -56,6 +57,7 @@ follows over there with the release that brings it.
 | Command | |
 |---|---|
 | `npm run lint` / `npm run format:check` | ESLint and Prettier |
+| `npm test` | the Node tests of the control - its module with stubs for UI5, no browser, no backend |
 | `npm run pack:check` | what `npm publish` would put into the package |
 | `npm run consumer:check` | the packed package, installed into an app of its own and built with UI5 CLI 3 and 4 |
 
