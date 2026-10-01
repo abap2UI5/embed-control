@@ -69,9 +69,9 @@ sap.ui.require(["z2ui5/embed/Container"], (Container) => {
 |---|---|---|---|
 | `app` | string | | The ABAP class to run. Nothing starts while it is empty |
 | `endpoint` | string | `/sap/bc/z2ui5` | Path of the abap2UI5 HTTP service on this server - absolute, or relative to the page's address (a `<base>` does not apply), without a query or a fragment. The frontend is loaded from it, the roundtrips go to it. See [Backend](#backend) |
-| `params` | object | | `{ name: "value" }`, read by the app with `client->get( )-t_comp_params`; `{ name: ["a", "b"] }` hands several values over under one name. A value that is `null` or `undefined` is left out |
+| `params` | object | | `{ name: "value" }`, read by the app with `client->get( )-t_comp_params`; `{ name: ["a", "b"] }` hands several values over under one name. A value that is `null` or `undefined` is left out; an object is handed over as JSON text |
 | `width` | CSSSize | `100%` | |
-| `height` | CSSSize | `100%` | The app fills its container - give it a height, or a parent that has one |
+| `height` | CSSSize | `100%` | The app fills its container - give it a height, or a parent that has one. A change of `width` or `height` resizes the area in place; the running app is not re-rendered |
 
 | Event | Parameters | |
 |---|---|---|
@@ -201,7 +201,21 @@ specVersion 3.0, and every release is built with both.
 - **One frontend per page**: the first control that starts decides which
   endpoint the frontend comes from; every control still sends its roundtrips
   to its own endpoint. A control that shared that load with another
-  endpoint of its own, and saw it fail, tries its own endpoint once.
+  endpoint of its own, and saw it fail, tries its own endpoint once. A
+  bundle the host loaded itself - a `<script src="<endpoint>?z2ui5-bundle">`
+  of its page, to have it warm - is taken as it is, not loaded again.
+- **The host page's mobile setup, with abap2UI5 1.146.0 and earlier.**
+  `sap.m.App`, the root of the embedded frontend, runs UI5's
+  `sap/ui/util/Mobile.init` when it is created - once per page, with the
+  settings of whoever calls it first. On a host page without a `sap.m.App`
+  of its own that puts `height: 100%` on `<html>`, adds a viewport meta tag
+  that disables zooming and a format-detection meta tag, and on iOS turns
+  native scrolling off (`position: fixed` on `<html>`) and hides the
+  browser's UI. The abap2UI5 release after 1.146.0 makes that call first,
+  with everything off, so the host keeps its page; what stays on a phone or
+  tablet is the web-app-capable meta tag `sap.m.App` sets on every
+  rendering. A host with a `sap.m.App` of its own is not affected on any
+  release.
 - **Custom controls from the sibling BSPs `z2ui5_cci` / `z2ui5_ccc`**
   (abap2UI5-addons/custom-controls, the customer's own library) behind a
   proxy that puts the system under a prefix of its own - SAP Build Work

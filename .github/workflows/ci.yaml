@@ -1,7 +1,8 @@
 name: ci
 
-# check   - lint, format, the package contents, and the packed package built
-#           in an app of its own with UI5 CLI 3 and 4
+# check   - lint, the Node tests of the control, format, the package contents,
+#           and the packed package built in an app of its own with UI5 CLI 3
+#           and 4
 # floor   - the backend floor the package records, for the samples job
 # samples - the examples in abap2UI5/samples-embed-control (its main), with
 #           the control of THIS commit in place of the one from npm: the
@@ -55,6 +56,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
+        if: ${{ !cancelled() }}
+      - run: npm test
         if: ${{ !cancelled() }}
       - run: npm run format:check
         if: ${{ !cancelled() }}

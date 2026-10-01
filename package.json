@@ -12,9 +12,10 @@
   "scripts": {
     "pack:check": "npm pack --dry-run --workspace packages/embed-control",
     "consumer:check": "node scripts/consumer-check.mjs",
+    "test": "node --test \"test/*.test.mjs\"",
     "lint": "eslint .",
-    "format": "prettier --write \"**/*.{js,mjs,json}\"",
-    "format:check": "prettier --check \"**/*.{js,mjs,json}\""
+    "format": "prettier --write \"**/*.{js,mjs,json,css}\"",
+    "format:check": "prettier --check \"**/*.{js,mjs,json,css}\""
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
