@@ -455,6 +455,29 @@ test("the component gets the bundle's data, the params in the launchpad's shape 
   });
 });
 
+// A bundle that registers the component under a second name too (abap2UI5
+// after 1.146.0) names it - the control creates the frontend under it, so a
+// page whose own component is z2ui5 (abap2UI5/frontend-new) works; an older
+// bundle names none, and the frontend runs as z2ui5
+test("the component is created under the bundle's second name, else as z2ui5", async () => {
+  const { Container, page } = load();
+  const c = control(Container, { app: APP });
+  await render(c);
+  await bundleArrives(page, {
+    ...EMBED,
+    componentName: "z2ui5.embed.frontend",
+  });
+  assert.equal(page.created[0].name, "z2ui5.embed.frontend");
+  // the name is no component data
+  assert.equal("componentName" in page.created[0].componentData, false);
+
+  const old = load();
+  const d = control(old.Container, { app: APP });
+  await render(d);
+  await bundleArrives(old.page);
+  assert.equal(old.page.created[0].name, "z2ui5");
+});
+
 test("the bundle is loaded once, from the first control's endpoint, and shared", async () => {
   const { Container, page } = load();
   const first = control(Container, { app: APP });

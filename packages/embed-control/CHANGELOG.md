@@ -6,6 +6,12 @@ own, and nothing may be left under "Unreleased".
 
 ## Unreleased
 
+- The component is created under the name the bundle's `z2ui5/embed`
+  module gives (`componentName`) when it gives one - the abap2UI5 release
+  after 1.146.0 registers the frontend as `z2ui5.embed.frontend` as well.
+  That lets a page whose own component is `z2ui5` embed it: the BSP `Z2UI5`
+  of abap2UI5/frontend-new, which existing launchpad target mappings name.
+  An older bundle names none, and the frontend runs as `z2ui5` as before.
 - `ownsHash` (boolean, default `false`): hands the page's URL hash to the
   app, as `componentData.ownsHash` - for a host whose page is the control
   and nothing else (abap2UI5/frontend-new). The app then routes as on a

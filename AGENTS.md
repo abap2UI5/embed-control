@@ -137,6 +137,12 @@ and runs `npm run bsp` and `npx playwright test` there.
   served and built under `thirdparty/z2ui5/embed/` and registered with a
   relative resourceRoot. Keep `ui5.yaml`, the consumer README and the
   examples' manifests in samples-embed-control in step.
+- **The component name comes from the bundle.** `z2ui5/embed` names a
+  second name for the frontend (`componentName`, `z2ui5.embed.frontend` -
+  abap2UI5 registers its `Component.js` and `manifest.json` under
+  `z2ui5/embed/frontend/` too), and the control creates the component under
+  it whenever it is there - a host whose own component is `z2ui5`
+  (abap2UI5/frontend-new) has that name taken. Without it, `z2ui5`.
 - **`z2ui5/embed` is the backend's module, `z2ui5/embed/` this package's
   namespace.** The bundle defines the module; the control's own modules live
   below it. Never add a module named `z2ui5/embed` here, and a folder
