@@ -237,6 +237,18 @@ sap.ui.define(
           // The app reads them with client->get( )-t_comp_params.
           params: { type: "object", defaultValue: null },
 
+          // Hands the page's URL hash to the app - for a host whose page is
+          // this control and nothing else, which routes by nothing. The app
+          // then has what it has on a page of its own: hash routing,
+          // set_push_state / hash_replace, browser Back and Forward between
+          // routed apps, a route restored on reload. Off, the hash is the
+          // host's, and the app neither reads nor writes it - right for a
+          // host that routes by it (a Fiori elements object page). One such
+          // control per page: the hash is page-wide. abap2UI5 reads it as
+          // componentData.ownsHash from the release after 1.146.0 on; an
+          // older backend ignores it.
+          ownsHash: { type: "boolean", defaultValue: false },
+
           width: { type: "sap.ui.core.CSSSize", defaultValue: "100%" },
 
           // The embedded app fills its container, so the height has to come
@@ -321,6 +333,10 @@ sap.ui.define(
         return this._setStartProperty("params", value);
       },
 
+      setOwnsHash(value) {
+        return this._setStartProperty("ownsHash", value);
+      },
+
       // Starts the app anew with the current app, endpoint and params: the
       // running session ends, and the next rendering starts a fresh one -
       // the app from scratch, or one more try after componentFailed. A
@@ -332,7 +348,7 @@ sap.ui.define(
         return this;
       },
 
-      // The three properties the backend session is started with. A change
+      // The properties the backend session is started with. A change
       // throws the running component away (which ends its session) and lets
       // the next rendering start a fresh one; a start still under way is
       // dropped, and a component it still creates is destroyed. A destroyed
@@ -368,7 +384,8 @@ sap.ui.define(
       // - resolved, so that "/sap/bc/z2ui5", "/sap/bc/z2ui5/" and a relative
       // path to the same place are one start, not three - and the params as
       // the backend gets them, without an app_start of their own, which the
-      // class overrides anyway (_componentData).
+      // class overrides anyway (_componentData) - and whether the app owns
+      // the hash, which only a new component can change.
       _startKey() {
         const params = startupParameters(this.getParams());
         delete params.app_start;
@@ -376,6 +393,7 @@ sap.ui.define(
           this.getApp(),
           sameOriginUrl(this._endpoint()) || this._endpoint(),
           params,
+          this.getOwnsHash() === true,
         ]);
       },
 
@@ -507,17 +525,21 @@ sap.ui.define(
       //                      launchpad's shape, one array of values per name
       //   endpoint           the backend URL, read by the frontend and not
       //                      sent on (Component.init in abap2UI5 app/webapp)
+      //   ownsHash           only when the host set it: the URL hash is the
+      //                      app's (Component.init as well)
       //   z2ui5/embed        what the bundle hands over - the installation's
       //                      own settings, the paths of the sibling BSPs
       //                      z2ui5_cci/z2ui5_ccc
       _componentData(embed, endpoint) {
-        return Object.assign({}, embed.componentData, {
+        const data = Object.assign({}, embed.componentData, {
           startupParameters: Object.assign(
             startupParameters(this.getParams()),
             { app_start: [this.getApp()] },
           ),
           endpoint,
         });
+        if (this.getOwnsHash() === true) data.ownsHash = true;
+        return data;
       },
     });
 
