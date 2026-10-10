@@ -34,7 +34,15 @@ sap.ui.define(
   (Control, Component, ComponentContainer, includeStylesheet, Log) => {
     "use strict";
 
-    // the component name - "sap.app/id" of abap2UI5's app/webapp/manifest.json
+    // the component name - "sap.app/id" of abap2UI5's app/webapp/manifest.json.
+    // A bundle that registers the component under a second name as well
+    // names it in its z2ui5/embed module (componentName) - the abap2UI5
+    // release after 1.146.0: a page whose own component is z2ui5 (the BSP
+    // Z2UI5 of abap2UI5/frontend-new, which a launchpad's target mappings
+    // name) has defined z2ui5/Component itself, and the loader would never
+    // hand out the frontend's under that name. The control takes the second
+    // name whenever the bundle has one, so every page runs the frontend the
+    // same way; an older bundle has none, and the frontend runs as z2ui5.
     const COMPONENT = "z2ui5";
 
     // abap2UI5's own service node - the page, the roundtrips and the bundle
@@ -486,7 +494,7 @@ sap.ui.define(
       _createComponent(embed, endpoint) {
         const create = () =>
           Component.create({
-            name: COMPONENT,
+            name: embed.componentName || COMPONENT,
             manifest: true,
             // the same as the standalone abap2UI5 page (data-handle-validation)
             handleValidation: true,
