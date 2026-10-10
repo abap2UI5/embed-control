@@ -6,6 +6,8 @@ own, and nothing may be left under "Unreleased".
 
 ## Unreleased
 
+## 0.2.0
+
 - The component is created under the name the bundle's `z2ui5/embed`
   module gives (`componentName`) when it gives one - the abap2UI5 release
   after 1.146.0 registers the frontend as `z2ui5.embed.frontend` as well.
