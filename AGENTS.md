@@ -172,7 +172,11 @@ and runs `npm run bsp` and `npx playwright test` there.
   host - 1.145.0 clears it after every roundtrip, which sends a Fiori
   elements object page back to its list, and takes SAP Build Work Zone off
   the page a card sits on. The control passes the bundle's component data
-  through and sets no flag of its own. The READMEs name 1.146.0 for it.
+  through and sets no flag of its own - except `ownsHash`, and only when
+  the host sets the property: a host whose page is the control and nothing
+  else hands the hash back to the app (abap2UI5's `state.ownsHash`, the
+  release after 1.146.0). It stays off by default. The READMEs name 1.146.0
+  for the embedded flag.
 
 ## Validation
 

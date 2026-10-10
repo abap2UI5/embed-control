@@ -130,6 +130,7 @@ function control(Container, settings = {}) {
     app: "",
     endpoint: "",
     params: null,
+    ownsHash: false,
     width: "100%",
     height: "100%",
     visible: true,
@@ -155,6 +156,7 @@ function control(Container, settings = {}) {
     getApp: () => props.app,
     getEndpoint: () => props.endpoint,
     getParams: () => props.params,
+    getOwnsHash: () => props.ownsHash,
     getVisible: () => props.visible,
     getWidth: () => props.width,
     getHeight: () => props.height,
@@ -372,6 +374,31 @@ test("one start is the class, the endpoint as requested and the params as the ba
   assert.notEqual(key({ endpoint: "", params: { a: "2" } }), base);
   assert.notEqual(key({ endpoint: "", params: { a: ["1", "1"] } }), base);
   assert.notEqual(key({ app: "ZCL_OTHER", params: { a: "1" } }), base);
+  assert.notEqual(
+    key({ endpoint: "", params: { a: "1" }, ownsHash: true }),
+    base,
+  );
+});
+
+// ownsHash: the host's page is this control and nothing else, and the app
+// gets the URL hash (abap2UI5 Component.init, componentData.ownsHash) - a
+// top-level setting next to the endpoint, only when set; a change is a new
+// start, the hash belongs to a component from its creation on
+test("ownsHash hands the hash to the app, only when set, and a change starts anew", async () => {
+  const { Container, page } = load();
+  const c = control(Container, { app: APP, ownsHash: true });
+  await render(c);
+  await bundleArrives(page);
+  assert.equal(page.created[0].componentData.ownsHash, true);
+  assert.deepEqual(plain(page.created[0].componentData.startupParameters), {
+    app_start: [APP],
+  });
+
+  c.setOwnsHash(false);
+  assert.equal(container(c), undefined);
+  await render(c);
+  assert.equal(page.created.length, 2);
+  assert.equal("ownsHash" in page.created[1].componentData, false);
 });
 
 test("the component gets the bundle's data, the params in the launchpad's shape and the endpoint", async () => {

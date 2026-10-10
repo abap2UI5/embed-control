@@ -6,6 +6,13 @@ own, and nothing may be left under "Unreleased".
 
 ## Unreleased
 
+- `ownsHash` (boolean, default `false`): hands the page's URL hash to the
+  app, as `componentData.ownsHash` - for a host whose page is the control
+  and nothing else (abap2UI5/frontend-new). The app then routes as on a
+  page of its own: hash routing, `set_push_state`, `hash_replace`, browser
+  Back and Forward between routed apps, a route restored on reload. A change
+  starts the app anew, like one of `app`, `endpoint` or `params`. Needs the
+  abap2UI5 release after 1.146.0, which reads it; an older one ignores it.
 - README: with the UI5 CLI serving the framework, `sap.ui.codeeditor` has
   to be among the libraries as well - abap2UI5's developer tools need it,
   and `ui5 serve` serves only what `ui5.yaml` names.
