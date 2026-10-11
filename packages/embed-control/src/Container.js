@@ -36,10 +36,10 @@ sap.ui.define(
 
     // the component name - "sap.app/id" of abap2UI5's app/webapp/manifest.json.
     // A bundle that registers the component under a second name as well
-    // names it in its z2ui5/embed module (componentName) - the abap2UI5
-    // release after 1.146.0: a page whose own component is z2ui5 (the BSP
-    // Z2UI5 of abap2UI5/frontend-new, which a launchpad's target mappings
-    // name) has defined z2ui5/Component itself, and the loader would never
+    // names it in its z2ui5/embed module (componentName) - abap2UI5
+    // 1.147.0: a page whose own component is z2ui5 (the BSP Z2UI5 of
+    // abap2UI5's embed app, which a launchpad's target mappings name) has
+    // defined z2ui5/Component itself, and the loader would never
     // hand out the frontend's under that name. The control takes the second
     // name whenever the bundle has one, so every page runs the frontend the
     // same way; an older bundle has none, and the frontend runs as z2ui5.
@@ -253,7 +253,7 @@ sap.ui.define(
           // host's, and the app neither reads nor writes it - right for a
           // host that routes by it (a Fiori elements object page). One such
           // control per page: the hash is page-wide. abap2UI5 reads it as
-          // componentData.ownsHash from the release after 1.146.0 on; an
+          // componentData.ownsHash from 1.147.0 on; an
           // older backend ignores it.
           ownsHash: { type: "boolean", defaultValue: false },
 

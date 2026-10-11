@@ -70,7 +70,7 @@ sap.ui.require(["z2ui5/embed/Container"], (Container) => {
 | `app` | string | | The ABAP class to run. Nothing starts while it is empty |
 | `endpoint` | string | `/sap/bc/z2ui5` | Path of the abap2UI5 HTTP service on this server - absolute, or relative to the page's address (a `<base>` does not apply), without a query or a fragment. The frontend is loaded from it, the roundtrips go to it. See [Backend](#backend) |
 | `params` | object | | `{ name: "value" }`, read by the app with `client->get( )-t_comp_params`; `{ name: ["a", "b"] }` hands several values over under one name. A value that is `null` or `undefined` is left out; an object is handed over as JSON text |
-| `ownsHash` | boolean | `false` | Hands the page's URL hash to the app - for a page that is this control and nothing else, which routes by nothing: the app then routes as on a page of its own (hash routing, `set_push_state`, `hash_replace`, browser Back and Forward between routed apps, a route restored on reload). Leave it off when your app routes by the hash - a Fiori elements object page does. One such control per page. A change starts the app anew, like one of `app`, `endpoint` or `params`. Needs the abap2UI5 release after 1.146.0; an older one ignores it |
+| `ownsHash` | boolean | `false` | Hands the page's URL hash to the app - for a page that is this control and nothing else, which routes by nothing: the app then routes as on a page of its own (hash routing, `set_push_state`, `hash_replace`, browser Back and Forward between routed apps, a route restored on reload). Leave it off when your app routes by the hash - a Fiori elements object page does. One such control per page. A change starts the app anew, like one of `app`, `endpoint` or `params`. Needs abap2UI5 1.147.0; an older one ignores it |
 | `width` | CSSSize | `100%` | |
 | `height` | CSSSize | `100%` | The app fills its container - give it a height, or a parent that has one. A change of `width` or `height` resizes the area in place; the running app is not re-rendered |
 
@@ -215,7 +215,7 @@ specVersion 3.0, and every release is built with both.
   of its own that puts `height: 100%` on `<html>`, adds a viewport meta tag
   that disables zooming and a format-detection meta tag, and on iOS turns
   native scrolling off (`position: fixed` on `<html>`) and hides the
-  browser's UI. The abap2UI5 release after 1.146.0 makes that call first,
+  browser's UI. abap2UI5 1.147.0 makes that call first,
   with everything off, so the host keeps its page; what stays on a phone or
   tablet is the web-app-capable meta tag `sap.m.App` sets on every
   rendering. A host with a `sap.m.App` of its own is not affected on any
@@ -223,15 +223,15 @@ specVersion 3.0, and every release is built with both.
 - **Custom controls from the sibling BSPs `z2ui5_cci` / `z2ui5_ccc`**
   (abap2UI5-addons/custom-controls, the customer's own library) behind a
   proxy that puts the system under a prefix of its own - SAP Build Work
-  Zone's destination proxy, an approuter route with a prefix - need the
-  abap2UI5 release after 1.146.0. Until then the bundle names their paths
+  Zone's destination proxy, an approuter route with a prefix - need
+  abap2UI5 1.147.0. Until then the bundle names their paths
   as the system has them, `/sap/bc/ui5_ui5/sap/z2ui5_cci`, which the host's
   origin does not have; from then on its bundle names the node it was
   requested under, and the frontend puts the prefix of the control's
   `endpoint` in front of the roots. Nothing in the control changes with it.
 - abap2UI5 was built to own the whole page. Its embedded mode leaves the
   URL to your app (from 1.146.0 on) - unless `ownsHash` hands the hash
-  back (the release after 1.146.0); the rest of it is still
+  back (from 1.147.0 on); the rest of it is still
   to come
   ([backlog item](https://github.com/abap2UI5/abap2UI5/blob/main/backlog/items/embed-as-reuse-component.md)):
   an embedded app still shows the global busy indicator during a roundtrip,

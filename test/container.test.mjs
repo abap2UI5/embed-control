@@ -456,8 +456,8 @@ test("the component gets the bundle's data, the params in the launchpad's shape 
 });
 
 // A bundle that registers the component under a second name too (abap2UI5
-// after 1.146.0) names it - the control creates the frontend under it, so a
-// page whose own component is z2ui5 (abap2UI5/frontend-new) works; an older
+// 1.147.0) names it - the control creates the frontend under it, so a page
+// whose own component is z2ui5 (abap2UI5's embed app) works; an older
 // bundle names none, and the frontend runs as z2ui5
 test("the component is created under the bundle's second name, else as z2ui5", async () => {
   const { Container, page } = load();
