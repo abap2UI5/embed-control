@@ -142,7 +142,7 @@ and runs `npm run bsp` and `npx playwright test` there.
   abap2UI5 registers its `Component.js` and `manifest.json` under
   `z2ui5/embed/frontend/` too), and the control creates the component under
   it whenever it is there - a host whose own component is `z2ui5`
-  (abap2UI5/frontend-new) has that name taken. Without it, `z2ui5`.
+  (abap2UI5's embed app, `frontend/embed` there) has that name taken. Without it, `z2ui5`.
 - **`z2ui5/embed` is the backend's module, `z2ui5/embed/` this package's
   namespace.** The bundle defines the module; the control's own modules live
   below it. Never add a module named `z2ui5/embed` here, and a folder
@@ -180,8 +180,8 @@ and runs `npm run bsp` and `npx playwright test` there.
   the page a card sits on. The control passes the bundle's component data
   through and sets no flag of its own - except `ownsHash`, and only when
   the host sets the property: a host whose page is the control and nothing
-  else hands the hash back to the app (abap2UI5's `state.ownsHash`, the
-  release after 1.146.0). It stays off by default. The READMEs name 1.146.0
+  else hands the hash back to the app (abap2UI5's `state.ownsHash`, from
+  1.147.0 on). It stays off by default. The READMEs name 1.146.0
   for the embedded flag.
 
 ## Validation

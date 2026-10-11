@@ -9,18 +9,19 @@ own, and nothing may be left under "Unreleased".
 ## 0.2.0
 
 - The component is created under the name the bundle's `z2ui5/embed`
-  module gives (`componentName`) when it gives one - the abap2UI5 release
-  after 1.146.0 registers the frontend as `z2ui5.embed.frontend` as well.
-  That lets a page whose own component is `z2ui5` embed it: the BSP `Z2UI5`
-  of abap2UI5/frontend-new, which existing launchpad target mappings name.
+  module gives (`componentName`) when it gives one - abap2UI5 1.147.0
+  registers the frontend as `z2ui5.embed.frontend` as well. That lets a
+  page whose own component is `z2ui5` embed it: the BSP `Z2UI5` of
+  abap2UI5's embed app (the `standard_new` and `cloud_new` branches of
+  abap2UI5/frontend), which existing launchpad target mappings name.
   An older bundle names none, and the frontend runs as `z2ui5` as before.
 - `ownsHash` (boolean, default `false`): hands the page's URL hash to the
   app, as `componentData.ownsHash` - for a host whose page is the control
-  and nothing else (abap2UI5/frontend-new). The app then routes as on a
+  and nothing else (abap2UI5's embed app). The app then routes as on a
   page of its own: hash routing, `set_push_state`, `hash_replace`, browser
   Back and Forward between routed apps, a route restored on reload. A change
-  starts the app anew, like one of `app`, `endpoint` or `params`. Needs the
-  abap2UI5 release after 1.146.0, which reads it; an older one ignores it.
+  starts the app anew, like one of `app`, `endpoint` or `params`. Needs
+  abap2UI5 1.147.0, which reads it; an older one ignores it.
 - README: with the UI5 CLI serving the framework, `sap.ui.codeeditor` has
   to be among the libraries as well - abap2UI5's developer tools need it,
   and `ui5 serve` serves only what `ui5.yaml` names.
@@ -45,8 +46,8 @@ own, and nothing may be left under "Unreleased".
 - README: the host page's mobile setup with abap2UI5 1.146.0 and earlier -
   `sap/ui/util/Mobile.init` through the embedded `sap.m.App`: `height: 100%`
   on `<html>`, a viewport meta tag, native scrolling off on iOS - listed
-  under known limitations; the abap2UI5 release after 1.146.0 leaves the
-  host's page alone. Nothing in the control changes with it.
+  under known limitations; abap2UI5 1.147.0 leaves the host's page
+  alone. Nothing in the control changes with it.
 - `restart()`: ends the running session and starts the app anew with the
   current `app`, `endpoint` and `params` - the app from scratch, or one more
   try after `componentFailed`. A failed start was repeated only by a change
@@ -75,7 +76,7 @@ own, and nothing may be left under "Unreleased".
   where the frontend comes from when that load succeeds.
 - README: a custom control from the sibling BSPs `z2ui5_cci` / `z2ui5_ccc`
   behind a prefixing proxy (SAP Build Work Zone, an approuter route with a
-  prefix) needs the abap2UI5 release after 1.146.0, whose bundle names the
+  prefix) needs abap2UI5 1.147.0, whose bundle names the
   node it was requested under and whose frontend puts the prefix of the
   control's `endpoint` in front of the roots - listed under known
   limitations; nothing in the control changes with it.
