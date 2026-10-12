@@ -70,7 +70,8 @@ sap.ui.require(["z2ui5/embed/Container"], (Container) => {
 | `app` | string | | The ABAP class to run. Nothing starts while it is empty |
 | `endpoint` | string | `/sap/bc/z2ui5` | Path of the abap2UI5 HTTP service on this server - absolute, or relative to the page's address (a `<base>` does not apply), without a query or a fragment. The frontend is loaded from it, the roundtrips go to it. See [Backend](#backend) |
 | `params` | object | | `{ name: "value" }`, read by the app with `client->get( )-t_comp_params`; `{ name: ["a", "b"] }` hands several values over under one name. A value that is `null` or `undefined` is left out; an object is handed over as JSON text |
-| `ownsHash` | boolean | `false` | Hands the page's URL hash to the app - for a page that is this control and nothing else, which routes by nothing: the app then routes as on a page of its own (hash routing, `set_push_state`, `hash_replace`, browser Back and Forward between routed apps, a route restored on reload). Leave it off when your app routes by the hash - a Fiori elements object page does. One such control per page. A change starts the app anew, like one of `app`, `endpoint` or `params`. Needs abap2UI5 1.147.0; an older one ignores it |
+| `ownsPage` | boolean | `false` | Hands the page to the app - for a page that is this control and nothing else: the app then has what it has on a page of its own - the URL hash (hash routing, `set_push_state`, `hash_replace`, browser Back and Forward between routed apps, a route restored on reload), the document title and the favicon, the global busy indicator during a roundtrip, the browser's "leave page?" prompt for unsaved changes. Off, they are your app's: the embedded app leaves the title, the favicon and the hash alone, is busy on its own area and raises no prompt. Leave it off when your page has more than the control - a Fiori elements object page. One such control per page. A change starts the app anew, like one of `app`, `endpoint` or `params`. Needs an abap2UI5 newer than 1.147.0; 1.147.0 takes it as `ownsHash` (the control passes both), an older one ignores it |
+| `ownsHash` | boolean | `false` | The older, narrower name of `ownsPage`: hands the page's URL hash to the app - for a page that is this control and nothing else, which routes by nothing: the app then routes as on a page of its own (hash routing, `set_push_state`, `hash_replace`, browser Back and Forward between routed apps, a route restored on reload). Leave it off when your app routes by the hash - a Fiori elements object page does. One such control per page. A change starts the app anew, like one of `app`, `endpoint` or `params`. Needs abap2UI5 1.147.0; an older one ignores it, a newer one hands the whole page over for it, as for `ownsPage` |
 | `width` | CSSSize | `100%` | |
 | `height` | CSSSize | `100%` | The app fills its container - give it a height, or a parent that has one. A change of `width` or `height` resizes the area in place; the running app is not re-rendered |
 
@@ -231,12 +232,14 @@ specVersion 3.0, and every release is built with both.
   `endpoint` in front of the roots. Nothing in the control changes with it.
 - abap2UI5 was built to own the whole page. Its embedded mode leaves the
   URL to your app (from 1.146.0 on) - unless `ownsHash` hands the hash
-  back (from 1.147.0 on); the rest of it is still
-  to come
+  back (from 1.147.0 on) - and, in the release after 1.147.0, the document
+  title, the favicon, the busy indicator and the "leave page?" prompt as
+  well, unless `ownsPage` hands the page back; before that an embedded app
+  shows the global busy indicator during a roundtrip and may set the
+  document title and favicon when the ABAP app asks for it. The rest is
+  still to come
   ([backlog item](https://github.com/abap2UI5/abap2UI5/blob/main/backlog/items/embed-as-reuse-component.md)):
-  an embedded app still shows the global busy indicator during a roundtrip,
-  may set the document title and favicon when the ABAP app asks for it,
-  renders its root as `sap.m.App`, and takes the focus when it starts, from
+  an embedded app renders its root as `sap.m.App`, and takes the focus when it starts, from
   wherever it is in your app - `sap.m.App` focuses the first field of its
   first page, and the ABAP app may set the focus as well.
 - **Page-wide behaviour of the embedded frontend.** Its error dialog's

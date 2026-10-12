@@ -6,6 +6,15 @@ own, and nothing may be left under "Unreleased".
 
 ## Unreleased
 
+- `ownsPage` (boolean, default `false`): hands the page to the app, as
+  `componentData.ownsPage` - for a host whose page is the control and
+  nothing else (abap2UI5's embed app). The app then has the URL hash, the
+  document title and the favicon, the global busy indicator and the
+  browser's "leave page?" prompt as on a page of its own; without it an
+  abap2UI5 newer than 1.147.0 leaves all of them to the host. The control
+  passes `ownsHash` with it, so 1.147.0 hands over the hash. A change
+  starts the app anew, like one of `app`, `endpoint` or `params`.
+
 ## 0.2.0
 
 - The component is created under the name the bundle's `z2ui5/embed`

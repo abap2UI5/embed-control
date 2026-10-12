@@ -245,7 +245,24 @@ sap.ui.define(
           // The app reads them with client->get( )-t_comp_params.
           params: { type: "object", defaultValue: null },
 
-          // Hands the page's URL hash to the app - for a host whose page is
+          // Hands the page to the app - for a host whose page is this control
+          // and nothing else. The app then has what it has on a page of its
+          // own: the URL hash (hash routing, set_push_state / hash_replace,
+          // browser Back and Forward between routed apps, a route restored on
+          // reload), the document title and the favicon, the global busy
+          // indicator, the browser's "leave page?" prompt for unsaved
+          // changes. Off, all of them are the host's: the app leaves the
+          // title, the favicon and the hash alone, is busy on its own area,
+          // and raises no prompt for the host's page - right for a host with
+          // a page of its own around the control (a Fiori elements object
+          // page). One such control per page. abap2UI5 reads it as
+          // componentData.ownsPage from the release after 1.147.0 on; the
+          // control passes ownsHash with it, so 1.147.0 hands over the hash
+          // at least.
+          ownsPage: { type: "boolean", defaultValue: false },
+
+          // The older, narrower name of ownsPage: hands the page's URL hash
+          // to the app - for a host whose page is
           // this control and nothing else, which routes by nothing. The app
           // then has what it has on a page of its own: hash routing,
           // set_push_state / hash_replace, browser Back and Forward between
@@ -254,7 +271,9 @@ sap.ui.define(
           // host that routes by it (a Fiori elements object page). One such
           // control per page: the hash is page-wide. abap2UI5 reads it as
           // componentData.ownsHash from 1.147.0 on; an
-          // older backend ignores it.
+          // older backend ignores it. From the release after 1.147.0 on
+          // abap2UI5 hands the whole page over for it, as for ownsPage -
+          // its host is the same page.
           ownsHash: { type: "boolean", defaultValue: false },
 
           width: { type: "sap.ui.core.CSSSize", defaultValue: "100%" },
@@ -345,6 +364,10 @@ sap.ui.define(
         return this._setStartProperty("ownsHash", value);
       },
 
+      setOwnsPage(value) {
+        return this._setStartProperty("ownsPage", value);
+      },
+
       // Starts the app anew with the current app, endpoint and params: the
       // running session ends, and the next rendering starts a fresh one -
       // the app from scratch, or one more try after componentFailed. A
@@ -393,7 +416,7 @@ sap.ui.define(
       // path to the same place are one start, not three - and the params as
       // the backend gets them, without an app_start of their own, which the
       // class overrides anyway (_componentData) - and whether the app owns
-      // the hash, which only a new component can change.
+      // the hash or the page, which only a new component can change.
       _startKey() {
         const params = startupParameters(this.getParams());
         delete params.app_start;
@@ -402,6 +425,7 @@ sap.ui.define(
           sameOriginUrl(this._endpoint()) || this._endpoint(),
           params,
           this.getOwnsHash() === true,
+          this.getOwnsPage() === true,
         ]);
       },
 
@@ -533,8 +557,11 @@ sap.ui.define(
       //                      launchpad's shape, one array of values per name
       //   endpoint           the backend URL, read by the frontend and not
       //                      sent on (Component.init in abap2UI5 app/webapp)
-      //   ownsHash           only when the host set it: the URL hash is the
-      //                      app's (Component.init as well)
+      //   ownsPage           only when the host set it: the page is the
+      //                      app's (Component.init as well) - with ownsHash
+      //                      next to it, which a 1.147.0 backend reads
+      //   ownsHash           only when the host set it or ownsPage: the URL
+      //                      hash is the app's (Component.init as well)
       //   z2ui5/embed        what the bundle hands over - the installation's
       //                      own settings, the paths of the sibling BSPs
       //                      z2ui5_cci/z2ui5_ccc
@@ -546,7 +573,8 @@ sap.ui.define(
           ),
           endpoint,
         });
-        if (this.getOwnsHash() === true) data.ownsHash = true;
+        if (this.getOwnsPage() === true) data.ownsPage = true;
+        if (this.getOwnsHash() === true || data.ownsPage) data.ownsHash = true;
         return data;
       },
     });
