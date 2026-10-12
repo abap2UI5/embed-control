@@ -131,6 +131,7 @@ function control(Container, settings = {}) {
     endpoint: "",
     params: null,
     ownsHash: false,
+    ownsPage: false,
     width: "100%",
     height: "100%",
     visible: true,
@@ -157,6 +158,7 @@ function control(Container, settings = {}) {
     getEndpoint: () => props.endpoint,
     getParams: () => props.params,
     getOwnsHash: () => props.ownsHash,
+    getOwnsPage: () => props.ownsPage,
     getVisible: () => props.visible,
     getWidth: () => props.width,
     getHeight: () => props.height,
@@ -378,6 +380,10 @@ test("one start is the class, the endpoint as requested and the params as the ba
     key({ endpoint: "", params: { a: "1" }, ownsHash: true }),
     base,
   );
+  assert.notEqual(
+    key({ endpoint: "", params: { a: "1" }, ownsPage: true }),
+    base,
+  );
 });
 
 // ownsHash: the host's page is this control and nothing else, and the app
@@ -398,6 +404,27 @@ test("ownsHash hands the hash to the app, only when set, and a change starts ane
   assert.equal(container(c), undefined);
   await render(c);
   assert.equal(page.created.length, 2);
+  assert.equal("ownsHash" in page.created[1].componentData, false);
+});
+
+// ownsPage: the host's page is this control and nothing else, and the app
+// gets all of it - the hash, the title, the favicon, the busy indicator, the
+// leave-page prompt (abap2UI5 Component.init, componentData.ownsPage). The
+// control passes ownsHash with it, which a 1.147.0 backend reads; a change
+// is a new start, like one of ownsHash
+test("ownsPage hands the page to the app, with ownsHash, only when set, and a change starts anew", async () => {
+  const { Container, page } = load();
+  const c = control(Container, { app: APP, ownsPage: true });
+  await render(c);
+  await bundleArrives(page);
+  assert.equal(page.created[0].componentData.ownsPage, true);
+  assert.equal(page.created[0].componentData.ownsHash, true);
+
+  c.setOwnsPage(false);
+  assert.equal(container(c), undefined);
+  await render(c);
+  assert.equal(page.created.length, 2);
+  assert.equal("ownsPage" in page.created[1].componentData, false);
   assert.equal("ownsHash" in page.created[1].componentData, false);
 });
 
