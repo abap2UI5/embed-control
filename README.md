@@ -134,9 +134,10 @@ What is still open is tracked in abap2UI5 as the
 backlog item: an embedded mode of the frontend that leaves page-wide things
 to the host app. The first part is there - the bundle marks the component
 embedded, and it leaves the URL hash alone (abap2UI5 1.146.0), which
-is what the Fiori elements examples need. Busy indicator, title, favicon
-and the `sap.m.App` root are still the frontend's; nothing in the control
-has to change when they follow.
+is what the Fiori elements examples need. The release after 1.147.0 leaves
+the busy indicator, the title, the favicon and the "leave page?" prompt to
+the host as well, and its root is a `sap.m.NavContainer` instead of the
+full-screen `sap.m.App`; nothing in the control had to change for it.
 
 ## License
 
