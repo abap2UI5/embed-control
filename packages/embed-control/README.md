@@ -219,8 +219,10 @@ specVersion 3.0, and every release is built with both.
   browser's UI. abap2UI5 1.147.0 makes that call first,
   with everything off, so the host keeps its page; what stays on a phone or
   tablet is the web-app-capable meta tag `sap.m.App` sets on every
-  rendering. A host with a `sap.m.App` of its own is not affected on any
-  release.
+  rendering. In the release after 1.147.0 the root of an embedded app is a
+  `sap.m.NavContainer`, which sets none of it; with `ownsPage` the root is
+  the `sap.m.App` again, as on a page of the app's own. A host with a
+  `sap.m.App` of its own is not affected on any release.
 - **Custom controls from the sibling BSPs `z2ui5_cci` / `z2ui5_ccc`**
   (abap2UI5-addons/custom-controls, the customer's own library) behind a
   proxy that puts the system under a prefix of its own - SAP Build Work
@@ -238,10 +240,15 @@ specVersion 3.0, and every release is built with both.
   shows the global busy indicator during a roundtrip and may set the
   document title and favicon when the ABAP app asks for it. The rest is
   still to come
-  ([backlog item](https://github.com/abap2UI5/abap2UI5/blob/main/backlog/items/embed-as-reuse-component.md)):
-  an embedded app renders its root as `sap.m.App`, and takes the focus when it starts, from
-  wherever it is in your app - `sap.m.App` focuses the first field of its
-  first page, and the ABAP app may set the focus as well.
+  ([backlog item](https://github.com/abap2UI5/abap2UI5/blob/main/backlog/items/embed-as-reuse-component.md)).
+  Up to 1.147.0 an embedded app renders its root as `sap.m.App`, the
+  full-screen root: the theme's background of its own, and a height of
+  100% on every ancestor up to the control's area. In the release after
+  1.147.0 it is a `sap.m.NavContainer` that only fills the area, unless
+  `ownsPage` hands the page back. Before 1.146.0 the app also takes the
+  focus when it starts, from wherever it is in your app - the root focuses
+  the first field of its first page, and the ABAP app may set the focus as
+  well.
 - **Page-wide behaviour of the embedded frontend.** Its error dialog's
   "Restart" - and "Refresh" on its fatal error screen - reloads the whole
   page, your app included. Its developer tools wrap the `window.console`

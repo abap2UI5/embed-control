@@ -307,8 +307,8 @@ sap.ui.define(
         apiVersion: 2,
         render(rm, control) {
           rm.openStart("div", control);
-          // The app's root - sap.m.App, and sap.m.Shell in many abap2UI5
-          // views - walks up the DOM from itself and sets height:100% on
+          // The app's root - sap.m.App up to abap2UI5 1.147.0, and
+          // sap.m.Shell in many abap2UI5 views - walks up the DOM from itself and sets height:100% on
           // every ancestor that has none, up to <html>, unless it meets an
           // element marked as root content, the way sap.m.Shell and
           // sap.ui.unified.SplitContainer mark theirs. Unmarked, the app

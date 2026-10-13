@@ -14,6 +14,9 @@ own, and nothing may be left under "Unreleased".
   abap2UI5 newer than 1.147.0 leaves all of them to the host. The control
   passes `ownsHash` with it, so 1.147.0 hands over the hash. A change
   starts the app anew, like one of `app`, `endpoint` or `params`.
+- Docs: the embedded app's root is a `sap.m.NavContainer` from the abap2UI5
+  release after 1.147.0 on (abap2UI5/abap2UI5#2913); the README's notes on
+  the mobile setup and on the root say so. Nothing in the control changes.
 
 ## 0.2.0
 
