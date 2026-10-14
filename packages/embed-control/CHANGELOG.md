@@ -6,17 +6,22 @@ own, and nothing may be left under "Unreleased".
 
 ## Unreleased
 
+## 0.3.0
+
 - `ownsPage` (boolean, default `false`): hands the page to the app, as
   `componentData.ownsPage` - for a host whose page is the control and
   nothing else (abap2UI5's embed app). The app then has the URL hash, the
   document title and the favicon, the global busy indicator and the
-  browser's "leave page?" prompt as on a page of its own; without it an
-  abap2UI5 newer than 1.147.0 leaves all of them to the host. The control
-  passes `ownsHash` with it, so 1.147.0 hands over the hash. A change
-  starts the app anew, like one of `app`, `endpoint` or `params`.
-- Docs: the embedded app's root is a `sap.m.NavContainer` from the abap2UI5
-  release after 1.147.0 on (abap2UI5/abap2UI5#2913); the README's notes on
-  the mobile setup and on the root say so. Nothing in the control changes.
+  browser's "leave page?" prompt as on a page of its own; without it
+  abap2UI5 1.147.0 leaves all of them to the host. The control passes
+  `ownsHash` with it, which 1.147.0 reads the same way. A change starts
+  the app anew, like one of `app`, `endpoint` or `params`.
+- Docs: the embedded app's root is a `sap.m.NavContainer` from abap2UI5
+  1.147.0 on (abap2UI5/abap2UI5#2913); the README's notes on the mobile
+  setup and on the root say so. Nothing in the control changes.
+- Docs: what 0.2.0 and these notes called "the release after 1.147.0" -
+  `ownsPage`, the page left to the host, the `sap.m.NavContainer` root -
+  is in 1.147.0: its tag went out on 2026-10-14 with all three in it.
 
 ## 0.2.0
 

@@ -256,9 +256,8 @@ sap.ui.define(
           // and raises no prompt for the host's page - right for a host with
           // a page of its own around the control (a Fiori elements object
           // page). One such control per page. abap2UI5 reads it as
-          // componentData.ownsPage from the release after 1.147.0 on; the
-          // control passes ownsHash with it, so 1.147.0 hands over the hash
-          // at least.
+          // componentData.ownsPage from 1.147.0 on; the control passes
+          // ownsHash with it, which 1.147.0 reads the same way.
           ownsPage: { type: "boolean", defaultValue: false },
 
           // The older, narrower name of ownsPage: hands the page's URL hash
@@ -271,8 +270,8 @@ sap.ui.define(
           // host that routes by it (a Fiori elements object page). One such
           // control per page: the hash is page-wide. abap2UI5 reads it as
           // componentData.ownsHash from 1.147.0 on; an
-          // older backend ignores it. From the release after 1.147.0 on
-          // abap2UI5 hands the whole page over for it, as for ownsPage -
+          // older backend ignores it. From 1.147.0 on abap2UI5 hands the
+          // whole page over for it, as for ownsPage -
           // its host is the same page.
           ownsHash: { type: "boolean", defaultValue: false },
 
@@ -307,7 +306,7 @@ sap.ui.define(
         apiVersion: 2,
         render(rm, control) {
           rm.openStart("div", control);
-          // The app's root - sap.m.App up to abap2UI5 1.147.0, and
+          // The app's root - sap.m.App up to abap2UI5 1.146.0, and
           // sap.m.Shell in many abap2UI5 views - walks up the DOM from itself and sets height:100% on
           // every ancestor that has none, up to <html>, unless it meets an
           // element marked as root content, the way sap.m.Shell and
